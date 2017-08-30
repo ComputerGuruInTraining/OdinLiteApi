@@ -6,7 +6,5 @@ Homestead.json
 Homestead.yaml
 .env
 custom-hosts
-/storage/app
 /storage/debugbar
-/storage/framework
 /storage/logs
