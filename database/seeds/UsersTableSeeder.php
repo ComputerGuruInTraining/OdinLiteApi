@@ -12,20 +12,23 @@ class UsersTableSeeder extends Seeder
      */
     public function run()
     {
-    	        $manager = DB::table('users')->insert([
-                'first_name' => 'John',
-		'last_name'  => 'Doe',
-		'dob' => date("2017-03-01 10:00:00"),
-		'gender' => 'M',
-		'mobile' => 111,
-                'email'      => 'johnd@exampleemail.com',
-		'password'   => bcrypt('secret'),
-                'company_id' => 1,
-                'remember_token' => str_random(10)
+        $manager = DB::table('users')->insert([
+            'first_name' => 'John',
+            'last_name'  => 'Doe',
+            'email'      => 'johnd@odin.com',
+            'password'   => bcrypt('secret'),
+            'company_id' => 1,
+            'remember_token' => str_random(10)
 		]);
+
+        $manager = DB::table('users')->insert([
+            'first_name' => 'Jane',
+            'last_name'  => 'Smith',
+            'email'      => 'janes@odin.com',
+            'password'   => bcrypt('secret'),
+            'company_id' => 2,
+            'remember_token' => str_random(10)
+        ]);
     
-    
-    
-        //factory(App\User::class, 50)->create();
     }
 }
