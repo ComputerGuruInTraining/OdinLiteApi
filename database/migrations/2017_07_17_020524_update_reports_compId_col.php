@@ -15,8 +15,8 @@ class UpdateReportsCompIdCol extends Migration
     {
        Schema::table('reports', function (Blueprint $table) {
     		$table->integer('company_id')->unsigned();
-    		$table->foreign('company_id')
-            		->references('id')->on('companies');
+//    		$table->foreign('company_id')
+//            		->references('id')->on('companies');
 	});
     }
 
@@ -29,7 +29,7 @@ class UpdateReportsCompIdCol extends Migration
     {
        Schema::table('reports', function (Blueprint $table) {
     		$table->dropColumn('company_id');
-    		$table->dropForeign('reports_company_id_foreign');
+//    		$table->dropForeign('reports_company_id_foreign');
     		
 	});
     }

@@ -17,8 +17,8 @@ class UpdateCompaniesAddCols extends Migration
     		$table->dropColumn('description');
     		$table->integer('primary_contact')->unsigned();
     		$table->string('status');
-    		$table->foreign('primary_contact')
-            		->references('id')->on('users');
+//    		$table->foreign('primary_contact')
+//            		->references('id')->on('users');
 	});
     }
 
@@ -33,7 +33,7 @@ class UpdateCompaniesAddCols extends Migration
     		$table->string('description');
     		$table->dropColumn('primary_contact');
     		$table->dropColumn('status');
-    		$table->dropForeign('companies_primary_contact_foreign');
+//    		$table->dropForeign('companies_primary_contact_foreign');
 	});
     }
 }

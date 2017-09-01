@@ -20,8 +20,8 @@ class CreateEmployeesTable extends Migration
             $table->integer('mobile');
             $table->integer('user_id')->unsigned();
             $table->timestamps();
-            $table->foreign('user_id')
-            	->references('id')->on('users');
+//            $table->foreign('user_id')
+//            	->references('id')->on('users');
             $table->softDeletes();
         });
     }

@@ -15,13 +15,13 @@ class UpdateCaseNotesTable extends Migration
     {
         Schema::table('case_notes', function (Blueprint $table) {
     		$table->renameColumn('mobile_user_id', 'user_id');//console users may also create a case_note
-    		$table->integer('shift_id')->unsigned()->nullable()->change();
-    		$table->integer('case_id')->unsigned();
-    		$table->dropForeign('case_notes_mobile_user_id_foreign');
-    		$table->foreign('user_id')
-            		->references('id')->on('users');
-                $table->foreign('case_id')
-            		->references('id')->on('cases');
+    		$table->integer('shift_id')->unsigned()->nullable()->change();//change column to be nullable
+    		$table->integer('case_id')->unsigned();//add column
+//    		$table->dropForeign('case_notes_mobile_user_id_foreign');
+//    		$table->foreign('user_id')
+//            		->references('id')->on('users');
+//                $table->foreign('case_id')
+//            		->references('id')->on('cases');
 	});
     }
 
@@ -36,10 +36,10 @@ class UpdateCaseNotesTable extends Migration
     		$table->renameColumn('user_id', 'mobile_user_id');
     		$table->integer('shift_id')->unsigned()->change();
     		$table->dropColumn('case_id');
-    		$table->dropForeign('case_notes_user_id_foreign');
-    		$table->foreign('mobile_user_id')
-            		->references('id')->on('users');
-            	$table->dropForeign('case_notes_case_id_foreign');
+////    		$table->dropForeign('case_notes_user_id_foreign');
+//    		$table->foreign('mobile_user_id')
+//            		->references('id')->on('users');
+//            	$table->dropForeign('case_notes_case_id_foreign');
 	});
     }
 }

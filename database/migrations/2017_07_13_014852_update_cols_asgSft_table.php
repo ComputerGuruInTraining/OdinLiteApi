@@ -15,8 +15,8 @@ class UpdateColsAsgSftTable extends Migration
     {
         Schema::table('assigned_shifts', function (Blueprint $table) {
     		$table->integer('company_id')->unsigned()->default(0);
-    		$table->foreign('company_id')
-            		->references('id')->on('companies');		
+//    		$table->foreign('company_id')
+//            		->references('id')->on('companies');
 	});
     }
 

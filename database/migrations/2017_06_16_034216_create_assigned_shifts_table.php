@@ -22,11 +22,11 @@ class CreateAssignedShiftsTable extends Migration
             $table->string('shift_description');
             $table->integer('roster_id')->nullable()->unsigned();
             $table->timestamps();
-            $table->foreign('roster_id')
-            	->references('id')->on('rosters');
-            	//->onDelete('set null');
-            $table->foreign('console_user_id')
-            	->references('id')->on('console_users');
+//            $table->foreign('roster_id')
+//            	->references('id')->on('rosters');
+//            	//->onDelete('set null');
+//            $table->foreign('console_user_id')
+//            	->references('id')->on('console_users');
             	//->onDelete('set null');
             $table->softDeletes();
         });

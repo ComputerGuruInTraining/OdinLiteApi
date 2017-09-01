@@ -18,10 +18,10 @@ class CreateShiftCheckCasesTable extends Migration
             $table->integer('shift_check_id')->unsigned();//fk
             $table->integer('case_note_id')->unsigned();//fk
             $table->timestamps();
-            $table->foreign('shift_check_id')
-            	->references('id')->on('shift_checks');
-            $table->foreign('case_note_id')
-            	->references('id')->on('case_notes');
+//            $table->foreign('shift_check_id')
+//            	->references('id')->on('shift_checks');
+//            $table->foreign('case_note_id')
+//            	->references('id')->on('case_notes');
             $table->softDeletes();
          });
     }

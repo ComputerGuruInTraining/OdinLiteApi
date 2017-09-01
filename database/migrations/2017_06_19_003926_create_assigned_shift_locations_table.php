@@ -19,11 +19,11 @@ class CreateAssignedShiftLocationsTable extends Migration
             $table->integer('location_id')->unsigned();
             $table->integer('checks');
             $table->timestamps();
-            $table->foreign('location_id')
-            	->references('id')->on('locations');
-            	//->onDelete('cascade');
-            $table->foreign('assigned_shift_id')
-            	->references('id')->on('assigned_shifts');
+//            $table->foreign('location_id')
+//            	->references('id')->on('locations');
+//            	//->onDelete('cascade');
+//            $table->foreign('assigned_shift_id')
+//            	->references('id')->on('assigned_shifts');
             	//->onDelete('cascade');
             $table->softDeletes();
         });

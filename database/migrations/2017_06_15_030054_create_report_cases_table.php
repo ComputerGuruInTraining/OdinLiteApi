@@ -15,16 +15,16 @@ class CreateReportCasesTable extends Migration
     {
         Schema::create('report_cases', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('location_id')->unsigned();//fk
+            $table->integer('location_id')->unsigned()->nullable();//fk
             $table->double('total_hours');
             $table->integer('total_guards');
             $table->integer('report_id')->unsigned();//fk
             $table->timestamps();
-            $table->foreign('location_id')
-            	->references('id')->on('locations');
-            //	->onDelete('set null');
-            $table->foreign('report_id')
-            	->references('id')->on('reports');
+//            $table->foreign('location_id')
+//            	->references('id')->on('locations');
+//            //	->onDelete('set null');
+//            $table->foreign('report_id')
+//            	->references('id')->on('reports');
             //	->onDelete('cascade');
             $table->softDeletes();
         });
