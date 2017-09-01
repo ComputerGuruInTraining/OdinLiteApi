@@ -17,8 +17,8 @@ class UpdateShiftsDurationCol extends Migration
         //use an integer duration with the number in minutes for ease of calculation
     		$table->integer('duration')->change();
     		$table->integer('company_id')->unsigned();
-    		$table->foreign('company_id')
-            		->references('id')->on('companies');
+//    		$table->foreign('company_id')
+//            		->references('id')->on('companies');
 	});
     }
 
@@ -32,7 +32,7 @@ class UpdateShiftsDurationCol extends Migration
         Schema::table('shifts', function (Blueprint $table) {
     		$table->double('duration')->change();
     		$table->dropColumn('company_id');
-    		$table->dropForeign('reports_company_id_foreign');
+//    		$table->dropForeign('reports_company_id_foreign');
 	});
     }
 }

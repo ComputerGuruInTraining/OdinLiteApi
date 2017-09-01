@@ -24,13 +24,13 @@ class CreateCurrentUserLocationsTable extends Migration
             $table->string('user_first_name');//mobile-user
             $table->string('user_last_name');//mobile-user
             $table->timestamps();
-            $table->foreign('location_id')
-            	->references('id')->on('locations');
-            $table->foreign('shift_id')
-            	->references('id')->on('shifts');
-            $table->foreign('mobile_user_id')
-            	->references('id')->on('users')
-            	->onUpdate('cascade');
+//            $table->foreign('location_id')
+//            	->references('id')->on('locations');
+//            $table->foreign('shift_id')
+//            	->references('id')->on('shifts');
+//            $table->foreign('mobile_user_id')
+//            	->references('id')->on('users')
+//            	->onUpdate('cascade');
             $table->softDeletes();
         });
     }

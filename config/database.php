@@ -54,11 +54,11 @@ return [
 
         'mysql' => [
             'driver' => 'mysql',
-            'host' => env('DB_HOST', '127.0.0.1'),
+            'host' => env('DB_HOST', 'us-cdbr-azure-southcentral-f.cloudapp.net'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'odinlitedb'),
-            'username' => env('DB_USERNAME', 'odinteam'),
-            'password' => env('DB_PASSWORD', 'odin%db%team'),
+            'database' => env('DB_DATABASE', 'odinliteapidb'),
+            'username' => env('DB_USERNAME', 'ba769339968019'),
+            'password' => env('DB_PASSWORD', '7db07385'),
             'charset' => 'utf8',
             'collation' => 'utf8_unicode_ci',
             'prefix' => '',

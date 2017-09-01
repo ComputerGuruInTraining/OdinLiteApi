@@ -20,11 +20,12 @@ class CreateCaseNotesTable extends Migration
             $table->string('description');
             $table->integer('mobile_user_id')->unsigned();//fk
             $table->integer('shift_id')->unsigned();//fk
+            $table->integer('curr_loc_id')->unsigned();//fk
             $table->timestamps();
-            $table->foreign('mobile_user_id')
-            	->references('id')->on('users');
-            $table->foreign('shift_id')
-            	->references('id')->on('shifts');
+//            $table->foreign('mobile_user_id')
+//            	->references('id')->on('users');
+//            $table->foreign('shift_id')
+//            	->references('id')->on('shifts');
             $table->softDeletes();
         });
     }

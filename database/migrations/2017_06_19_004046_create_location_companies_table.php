@@ -18,10 +18,10 @@ class CreateLocationCompaniesTable extends Migration
             $table->integer('location_id')->unsigned();
             $table->integer('company_id')->unsigned();
             $table->timestamps();
-            $table->foreign('location_id')
-            	->references('id')->on('locations');
-            $table->foreign('company_id')
-            	->references('id')->on('companies');            
+//            $table->foreign('location_id')
+//            	->references('id')->on('locations');
+//            $table->foreign('company_id')
+//            	->references('id')->on('companies');
             $table->softDeletes();
         });
     }

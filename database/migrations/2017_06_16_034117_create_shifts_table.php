@@ -22,10 +22,10 @@ class CreateShiftsTable extends Migration
             $table->timestamp('end_time')->nullable();
             $table->double('duration')->nullable();
             $table->timestamps();
-            $table->foreign('mobile_user_id')
-            	->references('id')->on('users');
-            $table->foreign('assigned_shift_id')
-            	->references('id')->on('assigned_shifts');            
+//            $table->foreign('mobile_user_id')
+//            	->references('id')->on('users');
+//            $table->foreign('assigned_shift_id')
+//            	->references('id')->on('assigned_shifts');
             $table->softDeletes();
 
         });

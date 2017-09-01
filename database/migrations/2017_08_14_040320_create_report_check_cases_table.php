@@ -17,10 +17,10 @@ class CreateReportCheckCasesTable extends Migration
             $table->increments('id');
             $table->integer('report_case_id')->unsigned();//fk
             $table->integer('shift_check_case_id')->unsigned();//fk
-            $table->foreign('report_case_id')
-            	->references('id')->on('report_cases');
-            $table->foreign('shift_check_case_id')
-            	->references('id')->on('shift_check_cases');
+//            $table->foreign('report_case_id')
+//            	->references('id')->on('report_cases');
+//            $table->foreign('shift_check_case_id')
+//            	->references('id')->on('shift_check_cases');
             $table->timestamps();
             $table->softDeletes();
         });

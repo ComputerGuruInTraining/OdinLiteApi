@@ -23,14 +23,14 @@ class CreateShiftChecksTable extends Migration
             $table->integer('user_loc_check_in_id')->unsigned()->nullable();
             $table->integer('user_loc_check_out_id')->unsigned()->nullable();
             $table->timestamps();
-            $table->foreign('user_loc_check_in_id')
-            	->references('id')->on('current_user_locations');
-            $table->foreign('user_loc_check_out_id')
-            	->references('id')->on('current_user_locations');
-            $table->foreign('location_id')
-            	->references('id')->on('locations');
-            $table->foreign('shift_id')
-            	->references('id')->on('shifts');
+//            $table->foreign('user_loc_check_in_id')
+//            	->references('id')->on('current_user_locations');
+//            $table->foreign('user_loc_check_out_id')
+//            	->references('id')->on('current_user_locations');
+//            $table->foreign('location_id')
+//            	->references('id')->on('locations');
+//            $table->foreign('shift_id')
+//            	->references('id')->on('shifts');
             $table->softDeletes();
         });
     }

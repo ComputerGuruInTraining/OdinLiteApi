@@ -14,8 +14,8 @@ class UpdateCaseNotesNullTable extends Migration
     public function up()
     {
         Schema::table('case_notes', function (Blueprint $table) {
-    		$table->integer('case_id')->unsigned()->nullable()->change();
-    		$table->string('description')->nullable()->change();
+    		$table->integer('case_id')->unsigned()->nullable()->change();//change to nullable
+    		$table->string('description')->nullable()->change();//change to nullable
 	});
     }
 

@@ -21,12 +21,12 @@ class CreateCaseFilesTable extends Migration
             $table->integer('user_id')->unsigned();//fk //if upload files via case rather than case note, gather user details, else copy from case_note
             $table->integer('case_note_id')->nullable()->unsigned();//fk //if file uploaded via a new case note, else null if uploaded directly via case itself
             $table->timestamps();
-            $table->foreign('user_id')
-            	->references('id')->on('users');
-            $table->foreign('case_id')
-            	->references('id')->on('cases');
-            $table->foreign('case_note_id')
-            	->references('id')->on('case_notes');
+//            $table->foreign('user_id')
+//            	->references('id')->on('users');
+//            $table->foreign('case_id')
+//            	->references('id')->on('cases');
+//            $table->foreign('case_note_id')
+//            	->references('id')->on('case_notes');
             $table->softDeletes();
         });
     }

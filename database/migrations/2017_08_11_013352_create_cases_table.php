@@ -19,10 +19,10 @@ class CreateCasesTable extends Migration
             $table->integer('location_id')->unsigned();//fk
             $table->integer('case_mgr_user_id')->unsigned();//fk //user that is overseeing the case and should be consulted regarding the case
             $table->timestamps();
-            $table->foreign('location_id')
-            	->references('id')->on('locations');
-            $table->foreign('case_mgr_user_id')
-            	->references('id')->on('users');
+//            $table->foreign('location_id')
+//            	->references('id')->on('locations');
+//            $table->foreign('case_mgr_user_id')
+//            	->references('id')->on('users');
             $table->softDeletes();
         });
     }

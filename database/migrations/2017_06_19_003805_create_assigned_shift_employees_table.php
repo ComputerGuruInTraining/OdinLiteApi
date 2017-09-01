@@ -18,11 +18,11 @@ class CreateAssignedShiftEmployeesTable extends Migration
             $table->integer('mobile_user_id')->unsigned();
             $table->integer('assigned_shift_id')->unsigned();
             $table->timestamps();
-            $table->foreign('mobile_user_id')
-            	->references('id')->on('users');
-            //	->onDelete('cascade');
-            $table->foreign('assigned_shift_id')
-            	->references('id')->on('assigned_shifts');
+//            $table->foreign('mobile_user_id')
+//            	->references('id')->on('users');
+//            //	->onDelete('cascade');
+//            $table->foreign('assigned_shift_id')
+//            	->references('id')->on('assigned_shifts');
             //	->onDelete('cascade');
             $table->softDeletes();
         });

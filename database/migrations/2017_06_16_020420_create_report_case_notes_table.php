@@ -18,11 +18,11 @@ class CreateReportCaseNotesTable extends Migration
             $table->integer('report_case_id')->unsigned();//fk
             $table->integer('case_note_id')->unsigned();//fk
             $table->timestamps();
-            $table->foreign('report_case_id')
-            	->references('id')->on('report_cases');
-            	//->onDelete('cascade');
-            $table->foreign('case_note_id')
-            	->references('id')->on('case_notes');
+//            $table->foreign('report_case_id')
+//            	->references('id')->on('report_cases');
+//            	//->onDelete('cascade');
+//            $table->foreign('case_note_id')
+//            	->references('id')->on('case_notes');
             	//->onDelete('cascade');
             $table->softDeletes();
         });
