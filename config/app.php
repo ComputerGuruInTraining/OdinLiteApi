@@ -38,7 +38,7 @@ return [
     |
     */
 
-    'debug' => env('APP_DEBUG', false),
+    'debug' => env('APP_DEBUG', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -51,7 +51,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => env('APP_URL', 'http://odinliteapi.azurewebsites.net'),
 
     /*
     |--------------------------------------------------------------------------
@@ -103,10 +103,9 @@ return [
     |
     */
 
-    'key' => env('APP_KEY'),
+    'key' => 'jieu583lcMTu6qpslyeoxu3ge75voyey',
 
     'cipher' => 'AES-256-CBC',
-
     /*
     |--------------------------------------------------------------------------
     | Logging Configuration
