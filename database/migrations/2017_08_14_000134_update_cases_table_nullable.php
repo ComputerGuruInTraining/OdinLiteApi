@@ -15,7 +15,7 @@ class UpdateCasesTableNullable extends Migration
     {
         Schema::table('cases', function (Blueprint $table) {
     		$table->integer('case_mgr_user_id')->unsigned()->nullable()->change();
-	});
+	    });
     }
 
     /**
@@ -27,6 +27,6 @@ class UpdateCasesTableNullable extends Migration
     {
         Schema::table('cases', function (Blueprint $table) {
     		$table->integer('case_mgr_user_id')->unsigned()->change();
-	});
+	    });
     }
 }
