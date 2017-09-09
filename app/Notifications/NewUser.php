@@ -19,7 +19,7 @@ class NewUser extends Notification
      */
     public function __construct($compName)
     {
-    $this->compName = $compName;
+        $this->compName = $compName;
     }
 
     /**
@@ -41,15 +41,15 @@ class NewUser extends Notification
      */
     public function toMail($notifiable)
     {
-       return (new MailMessage)
-       	    ->greeting('Welcome!')
+        return (new MailMessage)
+            ->greeting('Welcome!')
             ->line('You are receiving this email because you have been added as a new user for Odin Lite Management Console on behalf of '. $this->compName.'.')
             ->line('Please create a password to use with the account using our Password Reset Facility. This facility optimizes the security of our software suite by not 
               emailing passwords to users or sharing passwords with the person who registered the account.')
             ->line('It also enables you to change the password at your convenience. 
               Once you request a password reset, you will have 	
-            24 hours to change the password.')									
-            ->action('Reset Password', url('http://odinlite.com/public/password/reset'))
+            24 hours to change the password.')
+            ->action('Reset Password', url('https://odinliteapi.azurewebsites.net/password/reset'))
             ->line('If you do not believe the account should have been created for you, please consult with Management of '. $this->compName.'.');
     }
 
