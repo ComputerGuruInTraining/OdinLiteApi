@@ -49,7 +49,7 @@ class NewUser extends Notification
             ->line('It also enables you to change the password at your convenience. 
               Once you request a password reset, you will have 	
             24 hours to change the password.')
-            ->action('Reset Password', url('https://odinliteapi.azurewebsites.net/password/reset'))
+            ->action('Reset Password', url('password/reset'))
             ->line('If you do not believe the account should have been created for you, please consult with Management of '. $this->compName.'.');
     }
 

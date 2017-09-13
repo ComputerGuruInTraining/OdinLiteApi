@@ -8,3 +8,4 @@ Homestead.yaml
 custom-hosts
 /storage/debugbar
 /storage/logs
+/storage
