@@ -246,44 +246,46 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->where('user_id',$id)
             ->first();
 
-        $mobile = $employee->mobile;
-        $dob = $employee->dob;
-        $gender = $employee->gender;
+        //if request has edits to users table
+        if(($request->has('first_name'))||
+            ($request->has('last_name'))||
+            ($request->has('email'))){
+            if($request->has('first_name')) {
+                $user->first_name = $request->input('first_name');
+            }
 
-        if($request->has('first_name')) {
-            $user->first_name = $request->input('first_name');
-        }
+            if($request->has('last_name')) {
+                $user->last_name = $request->input('last_name');
+            }
 
-        if($request->has('last_name')) {
-            $user->last_name = $request->input('last_name');
-        }
-
-        if($request->has('email')) {
-            $user->email = $request->input('email');
+            if($request->has('email')) {
+                $user->email = $request->input('email');
+            }
+            $user->save();
         }
 
         /*if($request->has('password')) {
             $user->password = $request->input('password');
         }*/
 
-        if($request->has('dateOfBirth')){
-            $dob = $request->input('dateOfBirth');
+        //if request has edits to employees table
+        if(($request->has('dateOfBirth'))||
+            ($request->has('mobile'))||
+            ($request->has('sex'))){
+            if ($request->has('dateOfBirth')) {
+                $employee->dob = $request->input('dateOfBirth');
+            }
+
+            if ($request->has('mobile')) {
+                $employee->mobile = $request->input('mobile');
+            }
+            if ($request->has('sex')) {
+                $employee->gender = $request->input('sex');
+            }
+            $employee->save();
         }
 
-        if($request->has('mobile')){
-            $mobile = $request->input('mobile');
-        }
-        if($request->has('sex')){
-            $gender = $request->input('sex');
-        }
-
-        $user->save();
-
-        $emp =  DB::table('employees')
-            ->where('user_id', $id)
-            ->update(['dob' => $dob, 'mobile' => $mobile, 'gender' =>$gender]);
-
-        if($emp) {
+        if(($employee->save())||($user->save())){
             return response()->json([
                 'success' => true
             ]);
