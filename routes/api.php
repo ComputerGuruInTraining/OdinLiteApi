@@ -246,16 +246,32 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->where('user_id',$id)
             ->first();
 
+        //array of many records matching the user_id
+        $currents = DB::table('current_user_locations')
+            ->where('mobile_user_id', $id)
+            -get();
+
+        $fName = $request->input('first_name');
+        $lName = $request->input('last_name');
+
         //if request has edits to users table
         if(($request->has('first_name'))||
             ($request->has('last_name'))||
             ($request->has('email'))){
             if($request->has('first_name')) {
-                $user->first_name = $request->input('first_name');
+                $user->first_name = $fName;
+                //update all the values for the user's first_name in other tables that contain the modified value
+                foreach($currents as $current){
+                    $current->user_first_name = $fName;
+                }
             }
 
             if($request->has('last_name')) {
-                $user->last_name = $request->input('last_name');
+                $user->last_name = $lName;
+                //update all the values for the user's last_name in other tables that contain the modified value
+                foreach($currents as $current){
+                    $current->user_last_name = $lName;
+                }
             }
 
             if($request->has('email')) {
@@ -263,10 +279,6 @@ Route::group(['middleware' => 'auth:api'], function () {
             }
             $user->save();
         }
-
-        /*if($request->has('password')) {
-            $user->password = $request->input('password');
-        }*/
 
         //if request has edits to employees table
         if(($request->has('dateOfBirth'))||
