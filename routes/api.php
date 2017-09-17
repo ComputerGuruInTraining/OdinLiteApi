@@ -246,44 +246,58 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->where('user_id',$id)
             ->first();
 
-        $mobile = $employee->mobile;
-        $dob = $employee->dob;
-        $gender = $employee->gender;
+        //array of many records matching the user_id
+        $currents = DB::table('current_user_locations')
+            ->where('mobile_user_id', $id)
+            -get();
 
-        if($request->has('first_name')) {
-            $user->first_name = $request->input('first_name');
+        $fName = $request->input('first_name');
+        $lName = $request->input('last_name');
+
+        //if request has edits to users table
+        if(($request->has('first_name'))||
+            ($request->has('last_name'))||
+            ($request->has('email'))){
+            if($request->has('first_name')) {
+                $user->first_name = $fName;
+                //update all the values for the user's first_name in other tables that contain the modified value
+                foreach($currents as $current){
+                    $current->user_first_name = $fName;
+                }
+            }
+
+            if($request->has('last_name')) {
+                $user->last_name = $lName;
+                //update all the values for the user's last_name in other tables that contain the modified value
+                foreach($currents as $current){
+                    $current->user_last_name = $lName;
+                }
+            }
+
+            if($request->has('email')) {
+                $user->email = $request->input('email');
+            }
+            $user->save();
         }
 
-        if($request->has('last_name')) {
-            $user->last_name = $request->input('last_name');
+        //if request has edits to employees table
+        if(($request->has('dateOfBirth'))||
+            ($request->has('mobile'))||
+            ($request->has('sex'))){
+            if ($request->has('dateOfBirth')) {
+                $employee->dob = $request->input('dateOfBirth');
+            }
+
+            if ($request->has('mobile')) {
+                $employee->mobile = $request->input('mobile');
+            }
+            if ($request->has('sex')) {
+                $employee->gender = $request->input('sex');
+            }
+            $employee->save();
         }
 
-        if($request->has('email')) {
-            $user->email = $request->input('email');
-        }
-
-        /*if($request->has('password')) {
-            $user->password = $request->input('password');
-        }*/
-
-        if($request->has('dateOfBirth')){
-            $dob = $request->input('dateOfBirth');
-        }
-
-        if($request->has('mobile')){
-            $mobile = $request->input('mobile');
-        }
-        if($request->has('sex')){
-            $gender = $request->input('sex');
-        }
-
-        $user->save();
-
-        $emp =  DB::table('employees')
-            ->where('user_id', $id)
-            ->update(['dob' => $dob, 'mobile' => $mobile, 'gender' =>$gender]);
-
-        if($emp) {
+        if(($employee->save())||($user->save())){
             return response()->json([
                 'success' => true
             ]);
