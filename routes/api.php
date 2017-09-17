@@ -225,13 +225,6 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->join('employees','users.id','=','employees.user_id')
             ->where('users.id','=',$id)
             ->get();
-        //$user = User::where('id',$id)
-        //	->get();
-
-        //$employee = Employee::where ('user_id',$id)
-        //	->get();
-
-        // $result = $user->merge($employee);
 
         return response()->json($employees);
     });
@@ -243,7 +236,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         $user = App\User::find($id);
 
         $employee = DB::table('employees')
-            ->where('user_id',$id)
+            ->where('user_id', $id)
             ->first();
 
         //array of many records matching the user_id
@@ -251,26 +244,30 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->where('mobile_user_id', $id)
             -get();
 
-        $fName = $request->input('first_name');
-        $lName = $request->input('last_name');
-
         //if request has edits to users table
         if(($request->has('first_name'))||
             ($request->has('last_name'))||
             ($request->has('email'))){
             if($request->has('first_name')) {
+
+                $fName = $request->input('first_name');
+
                 $user->first_name = $fName;
                 //update all the values for the user's first_name in other tables that contain the modified value
                 foreach($currents as $current){
                     $current->user_first_name = $fName;
+                    $current->save();
                 }
             }
 
             if($request->has('last_name')) {
+                $lName = $request->input('last_name');
+
                 $user->last_name = $lName;
                 //update all the values for the user's last_name in other tables that contain the modified value
                 foreach($currents as $current){
                     $current->user_last_name = $lName;
+                    $current->save();
                 }
             }
 
@@ -297,16 +294,12 @@ Route::group(['middleware' => 'auth:api'], function () {
             $employee->save();
         }
 
-        if(($employee->save())||($user->save())){
             return response()->json([
-                'success' => true
+                'success' => true,
+                'employee' => $employee,
+                'user' => $user,
+                'currents' => $currents
             ]);
-        } else {
-
-            return response()->json([
-                'success' => false
-            ]);
-        }
 
     });
 
