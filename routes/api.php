@@ -341,14 +341,29 @@ Route::group(['middleware' => 'auth:api'], function () {
     /*select a.address, a.latitude, a.longitude, a.mobile_user_id, a.user_first_name, a.user_last_name, a.created_at from current_user_locations as a inner join employees as b on a.mobile_user_id = b.user_id inner join users as c on b.user_id = c.id where c.company_id = 2 group by a.mobile_user_id  ORDER BY  a.created_at  ;*/
     Route::get("/dashboard/{compId}/current-location", function($compId) {
 
+
+        $newest = DB::table('current_user_locations')
+            ->max('created_at')
+            ->groupBy('mobile_user_id');
+
+
         $currentLocations = DB::table('current_user_locations')
             ->join('employees','current_user_locations.mobile_user_id','=', 'employees.user_id')
             ->join('users','employees.user_id','=', 'users.id')
+            ->join('shifts', 'shifts.mobile_user_id', '=', 'current_user_locations.mobile_user_id')
             ->where('users.company_id','=', $compId)
             ->where('employees.deleted_at','=', null)
             ->where('users.deleted_at','=', null)
+            ->where('shifts.end_time', '=', NULL)
+            ->where('shifts.start_time', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 DAY)'))
+            ->union($newest)
+            ->groubBy('mobile_user_id')
             ->get();
-        return response()->json($currentLocations);
+
+        return response()->json([
+            'positions' => $currentLocations,
+            'newest' => $newest
+        ]);
 
     });
 
