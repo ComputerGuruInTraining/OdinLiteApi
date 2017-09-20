@@ -344,7 +344,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         $newest = DB::table('current_user_locations')
             ->max('created_at')
-            ->groupBy('mobile_user_id');
+            ->groupBy('mobile_user_id')
+            ->get();
 
 
         $currentLocations = DB::table('current_user_locations')
