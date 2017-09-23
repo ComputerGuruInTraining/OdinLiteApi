@@ -241,7 +241,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         //array of many records matching the user_id
         $currents = DB::table('current_user_locations')
-            ->where('mobile_user_id', $id)
+                ->where('mobile_user_id', $id)
             -get();
 
         //if request has edits to users table
@@ -294,12 +294,12 @@ Route::group(['middleware' => 'auth:api'], function () {
             $employee->save();
         }
 
-            return response()->json([
-                'success' => true,
-                'employee' => $employee,
-                'user' => $user,
-                'currents' => $currents
-            ]);
+        return response()->json([
+            'success' => true,
+            'employee' => $employee,
+            'user' => $user,
+            'currents' => $currents
+        ]);
 
     });
 
@@ -342,10 +342,11 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get("/dashboard/{compId}/current-location", function($compId) {
 
 
-        $newest = DB::table('current_user_locations')
-            ->max('created_at')
-            ->groupBy('mobile_user_id')
-            ->get();
+        //causing 500 internal server error
+        // $newest = DB::table('current_user_locations')
+        //     ->max('created_at')
+        //     ->groupBy('mobile_user_id')
+        //     ->get();
 
 
         $currentLocations = DB::table('current_user_locations')
@@ -355,16 +356,13 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->where('users.company_id','=', $compId)
             ->where('employees.deleted_at','=', null)
             ->where('users.deleted_at','=', null)
-            ->where('shifts.end_time', '=', NULL)
+            ->where('shifts.end_time', '=', null)
             ->where('shifts.start_time', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 DAY)'))
-            ->union($newest)
-            ->groubBy('mobile_user_id')
+            // ->union($newest)//causing 500 internal server error
+            // ->groupBy('current_user_locations.mobile_user_id')//causing 500 internal server error
             ->get();
 
-        return response()->json([
-            'positions' => $currentLocations,
-            'newest' => $newest
-        ]);
+        return response()->json($currentLocations);
 
     });
 
