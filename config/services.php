@@ -15,7 +15,7 @@ return [
     */
 
     'mailgun' => [
-        'domain' => 'sandbox4a615a8d7cf341dca9a4b96a9ff1e421.mailgun.org',
+        'domain' => 'odinlite.net',
         'secret' => 'key-523c91a9a95f4f039f270ee75a5bf9b6',
     ],
 
