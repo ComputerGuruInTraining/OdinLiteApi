@@ -90,12 +90,13 @@ return [
     | they have less time to be guessed. You may change this as needed.
     |
     */
-
+    //36 hours expiry as sometimes mail is not being delivered by MailGun immediately,
+    //so 36 hours allows users time to check their emails and process the reset
     'passwords' => [
         'users' => [
             'provider' => 'users',
             'table' => 'password_resets',
-            'expire' => 1440,
+            'expire' => 2160,
         ],
     ],
 

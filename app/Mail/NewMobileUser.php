@@ -8,6 +8,8 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
+
+//!important! not using mail, now using notification
 class NewMobileUser extends Mailable
 {
     use Queueable, SerializesModels;
