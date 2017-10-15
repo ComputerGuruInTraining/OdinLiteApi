@@ -12,4 +12,5 @@ custom-hosts
 
 #for security
 config/app.php
+config/database.php
 
