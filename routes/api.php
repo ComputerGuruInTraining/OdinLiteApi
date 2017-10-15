@@ -1047,6 +1047,19 @@ Route::group(['middleware' => 'auth:api'], function () {
         return response()->json($location);
     });
 
+    //get a location for a company  (used for centering map)
+    Route::get("location/{compId}", function($compId){
+        //get all location_ids for the company from Location_Companies table
+        //using model so only returns non-deleted records
+        $locationCos = LocationCo::where('company_id', '=', $compId)
+            ->pluck('location_id');
+
+        //get all locations where the id is equal to an array of location_ids
+        $location = Location::whereIn('id', $locationCos)->first();
+
+        return response()->json($location);
+    });
+
     //edit
     Route::get("/locations/{id}/edit", function($id){
         $location = App\Location::find($id);
