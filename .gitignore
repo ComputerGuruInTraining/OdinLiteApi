@@ -11,5 +11,5 @@ custom-hosts
 /storage
 
 #for security
-/config/database.php
-/config/app.php
+config/database.php
+config/app.php
