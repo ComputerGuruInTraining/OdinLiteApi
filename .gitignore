@@ -9,3 +9,7 @@ custom-hosts
 /storage/debugbar
 /storage/logs
 /storage
+
+#for security
+/config/database.php
+/config/app.php
