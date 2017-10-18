@@ -736,8 +736,24 @@ Route::group(['middleware' => 'auth:api'], function () {
     //mobile
     //route to get assigned shifts for a particular mobile_user/employee
     Route::get("/assignedshifts/{id}", function($id) {
+        $assignedNow = DB::table('assigned_shifts')
+            ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=',
+                'assigned_shifts.id')
+            ->join('shifts', 'assigned_shifts.id', '=', 'shifts.assigned_shift_id')
+            ->select('shifts.assigned_shift_id')
+            ->where('assigned_shift_employees.mobile_user_id', '=', $id)
+            ->where('shifts.end_time', '=', null)
+            ->where('assigned_shifts.end', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 3 DAY)'))
+            ->where('assigned_shifts.deleted_at', '=', null)
+            ->where('assigned_shift_employees.deleted_at', '=', null)
+            ->groupBy('shifts.assigned_shift_id')
+            ->get();
+
+        $assignedIds = $assignedNow->pluck('assigned_shift_id');
+
         $myAssigned = DB::table('assigned_shift_employees')
             ->join('assigned_shifts', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
+            ->whereIn('assigned_shifts.id', $assignedIds)
             ->where('mobile_user_id', '=', $id)
             ->where('assigned_shifts.deleted_at', '=', null)
             ->where('assigned_shift_employees.deleted_at', '=', null)
