@@ -41,6 +41,8 @@ class ChangePW extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
+            ->subject('Password Change Security Notification')
+
             ->greeting('Hello!')
 
             ->line('You are receiving this email because your password for OdinLite Mobile App for '.$this->compName.' has 
