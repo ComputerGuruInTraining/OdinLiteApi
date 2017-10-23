@@ -45,7 +45,7 @@ class RegisterCompany extends Notification
        return (new MailMessage)
        	    ->greeting('Welcome!')
             ->line('To complete the registration of your Odin Lite Management Console account, please activate the account.')
-            ->action('Activate', 'activate/'.$this->compId);
+            ->action('Activate', url('activate/'.$this->compId));
     }
 
     /**
