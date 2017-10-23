@@ -13,7 +13,7 @@
 
 use App\Notifications\RegisterCompany;
 use Illuminate\Http\Request;
-use Hash;
+use Illuminate\Support\Facades\Hash;
 
 Route::get('/', function () {
     return view('welcome');

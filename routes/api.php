@@ -3,7 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Hash;
+use Illuminate\Support\Facades\Hash;
 
 use App\Notifications\NewUser;
 use App\Notifications\NewMobileUser;
