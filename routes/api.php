@@ -46,7 +46,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         $user->first_name = $request->input('first_name');
         $user->last_name = $request->input('last_name');
         $user->email = $request->input('email');
-        $user->password = $request->input('password');
+        $password = $request->input('password');
+        $pwEnc = Hash::make($password);
+        $user->password = $pwEnc;
         $user->company_id = $request->input('company_id');
         $user->remember_token = str_random(10);
         //the default value of true for column make_change_pw will be set for new users
@@ -119,35 +121,48 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::put("/user/{id}/change-pw", function (Request $request, $id) {
         $user = App\User::find($id);
 
-        if ($request->has('password')) {
-            $password = $request->input('password');
-            $pwEnc = Hash::make($password);
-            $user->password = $pwEnc;
+        $oldPw = $request->input('old');
+
+        $hashedPassword = Auth::user()->password;  // Taking the value from database
+
+        //if the current password entered by user equals the password stored in the database
+        if(Hash::check($oldPw, $hashedPassword)) {
+
+            if ($request->has('password')) {
+                $password = $request->input('password');
+                $pwEnc = Hash::make($password);
+                $user->password = $pwEnc;
+            }
+
+            $amount = $user->save();
+
+            //gather info for email notification
+            $id = $user->id;
+            $userPw = User::find($id);
+            $compName = Company::where('id', '=', $userPw->company_id)->pluck('name')->first();
+
+            //notify user their password has been changed in the mobile app
+            if ($amount == 1) {
+                $userPw->notify(new ChangePW($compName));
+            }
+
+//        TODO: if email is successful
+            if ($amount == 1) {
+                return response()->json([
+                    'success' => true
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false
+                ]);
+            }
         }
-
-        $amount = $user->save();
-
-        //gather info for email notification
-        $id = $user->id;
-        $userPw = User::find($id);
-        $compName = Company::where('id', '=', $userPw->company_id)->pluck('name')->first();
-
-        //notify user their password has been changed in the mobile app
-        if($amount == 1) {
-            $userPw->notify(new ChangePW($compName));
-        }
-
-        //TODO: if email is successful
-        if($amount == 1){
+        else{
             return response()->json([
-                'success' => true
-            ]);
-        } else {
-            return response()->json([
-                'success' => false
+                'success' => false,
+                'pw' => $oldPw
             ]);
         }
-
     });
 
     //delete user

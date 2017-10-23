@@ -13,6 +13,7 @@
 
 use App\Notifications\RegisterCompany;
 use Illuminate\Http\Request;
+use Hash;
 
 Route::get('/', function () {
     return view('welcome');
@@ -60,7 +61,11 @@ Route::post('/company', function(Request $request){
     $user->first_name = $request->input('first_name');
     $user->last_name = $request->input('last_name');
     $user->email = $request->input('email_user');
-    $user->password = $request->input('pw');
+
+    $password = $request->input('pw');
+    $pwEnc = Hash::make($password);
+    $user->password = $pwEnc;
+
     $user->company_id = $compId;
     $user->remember_token = str_random(10);
     $user->save();
