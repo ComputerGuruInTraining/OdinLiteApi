@@ -3,9 +3,11 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Hash;
 
 use App\Notifications\NewUser;
 use App\Notifications\NewMobileUser;
+use App\Notifications\ChangePW;
 
 use App\User as User;
 use App\Location as Location;
@@ -37,7 +39,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //create User (console)
-    Route::post("/user", function(Request $request){
+    Route::post("/user", function (Request $request) {
 
         $user = new App\User;
 
@@ -62,13 +64,14 @@ Route::group(['middleware' => 'auth:api'], function () {
         $userRole->user_id = $id;
         $userRole->save();
 
-        if($userRole->save()) {
+        if ($userRole->save()) {
             //notify user they were added to the system
             //and send through a Create Password link
-            $newuser->notify(new NewUser($compName));
+            $email = $newuser->notify(new NewUser($compName));
 
             return response()->json([
-                'success' => true
+                'success' => true,
+                'email' => $email
             ]);
         } else {
             return response()->json([
@@ -79,28 +82,63 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 
     //edit
-    Route::get("/user/{id}/edit", function($id){
+    Route::get("/user/{id}/edit", function ($id) {
         $user = App\User::find($id);
         return response()->json($user);
     });
 
     //Update Console user
-    Route::put("/user/{id}/edit", function(Request $request, $id){
+    Route::put("/user/{id}/edit", function (Request $request, $id) {
         $user = App\User::find($id);
 
-        if($request->has('first_name')) {
+        if ($request->has('first_name')) {
             $user->first_name = $request->input('first_name');
         }
 
-        if($request->has('last_name')) {
+        if ($request->has('last_name')) {
             $user->last_name = $request->input('last_name');
         }
 
-        if($request->has('email')) {
+        if ($request->has('email')) {
             $user->email = $request->input('email');
         }
 
-        if($user->save()) {
+        if ($user->save()) {
+            return response()->json([
+                'success' => true
+            ]);
+        } else {
+            return response()->json([
+                'success' => false
+            ]);
+        }
+
+    });
+
+    //Update Mobile user password
+    Route::put("/user/{id}/change-pw", function (Request $request, $id) {
+        $user = App\User::find($id);
+
+        if ($request->has('password')) {
+            $password = $request->input('password');
+            $pwEnc = Hash::make($password);
+            $user->password = $pwEnc;
+        }
+
+        $amount = $user->save();
+
+        //gather info for email notification
+        $id = $user->id;
+        $userPw = User::find($id);
+        $compName = Company::where('id', '=', $userPw->company_id)->pluck('name')->first();
+
+        //notify user their password has been changed in the mobile app
+        if($amount == 1) {
+            $userPw->notify(new ChangePW($compName));
+        }
+
+        //TODO: if email is successful
+        if($amount == 1){
             return response()->json([
                 'success' => true
             ]);
@@ -127,7 +165,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
 //TODO: rewrite route to get users only (console user) the below route is incorrect and somehow happens to result in giving console user.
-    Route::get("/user/list/{compId}", function($compId) {
+    Route::get("/user/list/{compId}", function ($compId) {
         //all users in user_roles table are console users and therefore not employees using the mobile app
         $users = App\User::all();
 
@@ -137,7 +175,7 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->join('user_roles', 'user_roles.user_id', '=', 'users.id')
             ->where('users.id', '!=', 'user_roles.user_id')
             ->where('users.company_id', '=', $compId)
-            ->where('users.deleted_at','=',null)
+            ->where('users.deleted_at', '=', null)
             ->get();
 
         return response()->json($emps);
@@ -159,21 +197,21 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     /*---------------------Employees(Mobile Users)---------------*/
-    Route::get("/employees/list/{compId}", function($compId) {
+    Route::get("/employees/list/{compId}", function ($compId) {
         //all users in user_roles table are console users and therefore not employees using the mobile app
         //$users = App\Employee::all();
 
         $employees = DB::table('users')
-            ->join('employees','users.id','=', 'employees.user_id')
-            ->where('users.company_id','=', $compId)
-            ->where('employees.deleted_at','=', null)
-            ->where('users.deleted_at','=', null)
+            ->join('employees', 'users.id', '=', 'employees.user_id')
+            ->where('users.company_id', '=', $compId)
+            ->where('employees.deleted_at', '=', null)
+            ->where('users.deleted_at', '=', null)
             ->get();
         return response()->json($employees);
     });
 
     //adding employees(mobile users) through console
-    Route::post("/employees", function(Request $request){
+    Route::post("/employees", function (Request $request) {
         $employee = new Employee;
         $user = new User;
         $email = $request->input('email');
@@ -202,7 +240,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         $compName = Company::where('id', '=', $request->input('company_id'))->pluck('name')->first();
 
-        if($employee->save()) {
+        if ($employee->save()) {
             $newUser->notify(new NewMobileUser($compName));
 
             /* Mail::to($email)
@@ -219,87 +257,92 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //Edit Employees (mobile users)
-    Route::get("/employees/{id}/edit",function($id){
+    Route::get("/employees/{id}/edit", function ($id) {
         //not sure if it;s a good way to get a record. Might get multiple record in future but we only need one to show up in the Edit Page of employee
         $employees = DB::table('users')
-            ->join('employees','users.id','=','employees.user_id')
-            ->where('users.id','=',$id)
+            ->join('employees', 'users.id', '=', 'employees.user_id')
+            ->where('users.id', '=', $id)
             ->get();
 
         return response()->json($employees);
     });
 
-
     //update record of employees (mobile users)
-    //TODO:: Password update if left blank will change the hash! IMPORTANT: need to sort out soon
-    Route::put("/employees/{id}/edit",function(Request $request, $id){
-        $user = App\User::find($id);
+    Route::put("/employees/{id}/edit", function (Request $request, $id) {
+        try {
+            $user = App\User::find($id);
 
-        $employee = DB::table('employees')
-            ->where('user_id', $id)
-            ->first();
+            $employee = DB::table('employees')
+                ->where('user_id', $id)
+                ->first();
 
-        //array of many records matching the user_id
-        $currents = DB::table('current_user_locations')
-                ->where('mobile_user_id', $id)
-            -get();
+//        //array of many records matching the user_id
+//        $currents = DB::table('current_user_locations')
+//                ->where('mobile_user_id', $id)
+//            -get();
 
-        //if request has edits to users table
-        if(($request->has('first_name'))||
-            ($request->has('last_name'))||
-            ($request->has('email'))){
-            if($request->has('first_name')) {
+            //if request has edits to users table
+            if (($request->has('first_name')) ||
+                ($request->has('last_name')) ||
+                ($request->has('email'))
+            ) {
+                if ($request->has('first_name')) {
 
-                $fName = $request->input('first_name');
+                    $fName = $request->input('first_name');
 
-                $user->first_name = $fName;
-                //update all the values for the user's first_name in other tables that contain the modified value
-                foreach($currents as $current){
-                    $current->user_first_name = $fName;
-                    $current->save();
+                    $user->first_name = $fName;
+                    //update all the values for the user's first_name in other tables that contain the modified value
+//                foreach($currents as $current){
+//                    $current->user_first_name = $fName;
+//                    $current->save();
+//                }
                 }
-            }
 
-            if($request->has('last_name')) {
-                $lName = $request->input('last_name');
+                if ($request->has('last_name')) {
+                    $lName = $request->input('last_name');
 
-                $user->last_name = $lName;
-                //update all the values for the user's last_name in other tables that contain the modified value
-                foreach($currents as $current){
-                    $current->user_last_name = $lName;
-                    $current->save();
+                    $user->last_name = $lName;
+                    //update all the values for the user's last_name in other tables that contain the modified value
+//                foreach($currents as $current){
+//                    $current->user_last_name = $lName;
+//                    $current->save();
+//                }
                 }
+
+                if ($request->has('email')) {
+                    $user->email = $request->input('email');
+                }
+                $user->save();
             }
 
-            if($request->has('email')) {
-                $user->email = $request->input('email');
+            //if request has edits to employees table
+            if (($request->has('dateOfBirth')) ||
+                ($request->has('mobile')) ||
+                ($request->has('sex'))
+            ) {
+                if ($request->has('dateOfBirth')) {
+                    $employee->dob = $request->input('dateOfBirth');
+                }
+
+                if ($request->has('mobile')) {
+                    $employee->mobile = $request->input('mobile');
+                }
+                if ($request->has('sex')) {
+                    $employee->gender = $request->input('sex');
+                }
+                $employee->save();
             }
-            $user->save();
+
+            return response()->json([
+                'success' => true,
+                'employee' => $employee,
+                'user' => $user,
+//            'currents' => $currents
+            ]);
+        } catch (\ErrorException $e) {
+
+            return response()->json($e);
         }
-
-        //if request has edits to employees table
-        if(($request->has('dateOfBirth'))||
-            ($request->has('mobile'))||
-            ($request->has('sex'))){
-            if ($request->has('dateOfBirth')) {
-                $employee->dob = $request->input('dateOfBirth');
-            }
-
-            if ($request->has('mobile')) {
-                $employee->mobile = $request->input('mobile');
-            }
-            if ($request->has('sex')) {
-                $employee->gender = $request->input('sex');
-            }
-            $employee->save();
-        }
-
-        return response()->json([
-            'success' => true,
-            'employee' => $employee,
-            'user' => $user,
-            'currents' => $currents
-        ]);
 
     });
 
@@ -315,20 +358,18 @@ Route::group(['middleware' => 'auth:api'], function () {
         //also delete from assigned_shift_employees table
         AssignedEmp::where('mobile_user_id', $id)->delete();
 
-        if(($employee != null)&&($user != null)){
+        if (($employee != null) && ($user != null)) {
             return response()->json([
                 'success' => true
             ]);
-        }
-        //delete in one of the tables did not work properly
-        else if(($employee != null)||($user != null)){
+        } //delete in one of the tables did not work properly
+        else if (($employee != null) || ($user != null)) {
             return response()->json([
                 'success' => false,
                 'table' => 'one',
             ]);
-        }
-        //delete in both of the tables did not work properly
-        else{
+        } //delete in both of the tables did not work properly
+        else {
             return response()->json([
                 'success' => false
             ]);
@@ -336,9 +377,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     });
 
-
     /*-----------Dashboard-----------*/
-    Route::get("/dashboard/{compId}/current-location", function($compId) {
+    Route::get("/dashboard/{compId}/current-location", function ($compId) {
 
         $res = DB::table('current_user_locations')
             ->select('current_user_locations.mobile_user_id', 'current_user_locations.address',
@@ -346,18 +386,17 @@ Route::group(['middleware' => 'auth:api'], function () {
                 'current_user_locations.shift_id', 'current_user_locations.user_first_name',
                 'current_user_locations.user_last_name', 'current_user_locations.location_id',
                 'current_user_locations.created_at')
-            ->join('employees','current_user_locations.mobile_user_id','=', 'employees.user_id')
-            ->join('users','employees.user_id','=', 'users.id')
+            ->join('employees', 'current_user_locations.mobile_user_id', '=', 'employees.user_id')
+            ->join('users', 'employees.user_id', '=', 'users.id')
             ->join('shifts', 'shifts.mobile_user_id', '=', 'current_user_locations.mobile_user_id')
             ->join(DB::raw('(SELECT mobile_user_id, MAX(created_at) MaxDate 
-               FROM `current_user_locations` GROUP BY mobile_user_id) t2'), function($join)
-            {
+               FROM `current_user_locations` GROUP BY mobile_user_id) t2'), function ($join) {
                 $join->on('current_user_locations.mobile_user_id', '=', 't2.mobile_user_id');
                 $join->on('current_user_locations.created_at', '=', 't2.MaxDate');
             })
-            ->where('users.company_id','=', $compId)
-            ->where('employees.deleted_at','=', null)
-            ->where('users.deleted_at','=', null)
+            ->where('users.company_id', '=', $compId)
+            ->where('employees.deleted_at', '=', null)
+            ->where('users.deleted_at', '=', null)
             ->where('shifts.end_time', '=', null)
             ->where('shifts.start_time', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 DAY)'))
             ->distinct()
@@ -367,7 +406,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     });
 
-    Route::get("/dashboard/{compId}/company-detail", function($compId) {
+    Route::get("/dashboard/{compId}/company-detail", function ($compId) {
 
         $company = Company::find($compId);
 
@@ -376,7 +415,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     /*--------Company Info (Console Settings)-----*/
-    Route::get("/company/{compId}", function($compId) {
+    Route::get("/company/{compId}", function ($compId) {
 
         $company = Company::find($compId);
 
@@ -392,7 +431,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     /*---------------Case Notes----------------*/
 
     //mobile, insert a new case note
-    Route::post("/casenote", function(Request $request){
+    Route::post("/casenote", function (Request $request) {
 
         //save to cases table
         $cases = new Cases;
@@ -404,7 +443,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         $time = Carbon::now();
 
         $cases->location_id = $locId;
-        $cases->title = $locName.' '.$time;
+        $cases->title = $locName . ' ' . $time;
         $cases->save();
 
         $id = $cases->id;
@@ -425,7 +464,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         //save the case_note_id to shift_checks table to relate the data
         //if there is a shift_check (there won't be if only 1 location)
-        if($request->input('sftChkId') != 0) {
+        if ($request->input('sftChkId') != 0) {
 
             $sftChkId = $request->input('sftChkId');
             $sftChk = new App\ShiftCheckCases;
@@ -436,7 +475,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         }
 
         //ensure at least the case table and case note was successful
-        if($case->save()) {
+        if ($case->save()) {
             return response()->json([
                 'success' => true
             ]);
@@ -448,7 +487,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //console, edit a case note via report
-    Route::get("/casenote/{id}/edit", function($id){
+    Route::get("/casenote/{id}/edit", function ($id) {
         $caseNote = App\CaseNote::find($id);
 
         //retrieve employee details even if employee has been deleted since making the case note
@@ -467,17 +506,17 @@ Route::group(['middleware' => 'auth:api'], function () {
         ]);
     });
 
-    Route::put("/casenote/{id}/edit", function(Request $request, $id){
+    Route::put("/casenote/{id}/edit", function (Request $request, $id) {
         $casenote = CaseNote::find($id);
 
-        if($request->has('title')) {
+        if ($request->has('title')) {
             $casenote->title = $request->input('title');
         }
-        if($request->has('desc')) {
+        if ($request->has('desc')) {
             $casenote->description = $request->input('desc');
         }
 
-        if($casenote->save()) {
+        if ($casenote->save()) {
             return response()->json([
                 'success' => true
             ]);
@@ -503,7 +542,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         //TODO: ensure record destroyed before returning success true
 
-        if($deleted != null){
+        if ($deleted != null) {
             return response()->json([
                 'success' => true
             ]);
@@ -513,7 +552,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     /*---------------Reports----------------*/
 
     //retrieve a list of reports generated for a company
-    Route::get("/reports/list/{compId}", function($compId) {
+    Route::get("/reports/list/{compId}", function ($compId) {
         $reports = App\Report::where('company_id', $compId)
             ->orderBy('date_start', 'asc')
             ->get();
@@ -522,12 +561,12 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         //if type="CaseNotes" from report_cases table
         //  foreach($reports as $report){
-        foreach($reports as $i => $report){
+        foreach ($reports as $i => $report) {
             $reportCase = DB::table('report_cases')
                 ->join('locations', 'report_cases.location_id', '=', 'locations.id')
                 ->where('report_cases.deleted_at', '=', null)
                 ->where('report_id', '=', $reports[$i]->id)
-                ->first() ;
+                ->first();
             // ->get();
 
             $reports[$i]->location = $reportCase->name;
@@ -538,7 +577,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //get basic details about a report
-    Route::get("/report/{id}", function($id) {
+    Route::get("/report/{id}", function ($id) {
         $report = Report::find($id);
         return response()->json($report);
     });
@@ -551,13 +590,13 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     //soft delete a report and relevant tables by report_id
     Route::delete('/reports/{id}', function ($id) {
-        try{
+        try {
             //soft delete from reports table and report_cases and report_case_notes tables
 
             //find report item
             $report = Report::find($id);
 
-            if($report->type == "Case Notes"){
+            if ($report->type == "Case Notes") {
 
                 $reportCase = ReportCase::where('report_id', '=', $id)->first();//potentially more than 1???
 
@@ -576,9 +615,8 @@ Route::group(['middleware' => 'auth:api'], function () {
                 'severalTables' => true
             ]);
 
-        }
-            //catch for the case of no data in report_case table due to no shift being completed at the location for the period
-        catch(\ErrorException $e){
+        } //catch for the case of no data in report_case table due to no shift being completed at the location for the period
+        catch (\ErrorException $e) {
             //just soft delete from report table
             $report = Report::find($id);
 
@@ -593,9 +631,9 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     /*---------------Report Cases----------------*/
 //retrieve all case notes for a particular report_id where the case_note has not been deleted
-    Route::get("/reportcases/{id}", function($id) {
+    Route::get("/reportcases/{id}", function ($id) {
         //retrieve the report_case_id
-        try{
+        try {
             $reportCases = DB::table('report_cases')
                 ->where('report_id', '=', $id)
                 ->where('deleted_at', '=', null)
@@ -605,12 +643,12 @@ Route::group(['middleware' => 'auth:api'], function () {
 
             $reportCaseNotes = DB::table('report_case_notes')
                 //single value to join on
-                ->join('case_notes', function($join){
+                ->join('case_notes', function ($join) {
                     //single value in where clause variable, array of report_case_notes with variable value
                     $join->on('case_notes.id', '=', 'report_case_notes.case_note_id')
                         ->where('case_notes.deleted_at', '=', null);
                 })
-                ->join('report_cases', function($join) use($whereId){
+                ->join('report_cases', function ($join) use ($whereId) {
                     //single value in where clause variable, array of report_case_notes with variable value
                     $join->on('report_cases.id', '=', 'report_case_notes.report_case_id')
                         ->where('report_case_notes.report_case_id', '=', $whereId);
@@ -627,14 +665,14 @@ Route::group(['middleware' => 'auth:api'], function () {
             //has been deleted since taking the case note, so get withTrashed
             $employees = User::withTrashed()->whereIn('id', $caseUsers)->get();
 
-            if($employees != null){
-                foreach($reportCaseNotes as $i => $item){
+            if ($employees != null) {
+                foreach ($reportCaseNotes as $i => $item) {
 
-                    foreach($employees as $employee){
-                        if($reportCaseNotes[$i]->user_id == $employee->id){
+                    foreach ($employees as $employee) {
+                        if ($reportCaseNotes[$i]->user_id == $employee->id) {
 
                             //store location name in the object
-                            $reportCaseNotes[$i]->employee = $employee->first_name.' '.$employee->last_name;
+                            $reportCaseNotes[$i]->employee = $employee->first_name . ' ' . $employee->last_name;
                         }
                     }
 
@@ -655,9 +693,8 @@ Route::group(['middleware' => 'auth:api'], function () {
                 'location' => $location,
                 'success' => true
             ]);
-        }
-            //error thrown if no report_case record for a report_id ie when no shift falls within the date range for a location
-        catch(\ErrorException $e){
+        } //error thrown if no report_case record for a report_id ie when no shift falls within the date range for a location
+        catch (\ErrorException $e) {
             return response()->json([
                 'success' => false
             ]);
@@ -669,14 +706,14 @@ Route::group(['middleware' => 'auth:api'], function () {
       * Assigned Shifts
      */
     //retrieve an assigned shift
-    Route::get("/assignedshift/{id}", function($id) {
+    Route::get("/assignedshift/{id}", function ($id) {
         $assigned = App\AssignedShift::find($id);
         return response()->json($assigned);
     });
 
     //console
     //retrieve a list of assigned shifts for a particular company for roster page
-    Route::get("/assignedshifts/list/{compId}", function($compId) {
+    Route::get("/assignedshifts/list/{compId}", function ($compId) {
 
         $assigned = DB::table('assigned_shifts')
             ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
@@ -689,7 +726,7 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->orderBy('assigned_shift_locations.location_id')
             ->get();
 
-        foreach($assigned as $i => $item){
+        foreach ($assigned as $i => $item) {
 
             //find the location_id name if a location exists for that id in the locations table
             $location = App\Location::find($assigned[$i]->location_id);
@@ -701,26 +738,26 @@ Route::group(['middleware' => 'auth:api'], function () {
             $assigned[$i]->location = $name;
         }
 
-        foreach($assigned as $i => $details){
+        foreach ($assigned as $i => $details) {
             //get the employee's name from the employees table for all employees assigned a shift
             $emp = App\User::find($assigned[$i]->mobile_user_id);
             //ensure the assigned_shift_employee record exists in the users table else errors could occur
-            if($emp != null){
+            if ($emp != null) {
 
                 $first_name = $emp->first_name;
                 $last_name = $emp->last_name;
-                $name = $first_name.' '.$last_name;
+                $name = $first_name . ' ' . $last_name;
 
                 //store location name in the object
                 $assigned[$i]->employee = $name;
-            }else{
+            } else {
                 //$emp == null meaning it must have been deleted from the employees table
                 //Step: soft delete the record from assigned_shift_employees table for the employee's user_id
                 //to ensure there are no shifts assigned to a user that has been deleted
                 //first, find the array of records that have the mobile_user_id in question
                 $assignedEmps = App\AssignedShiftEmployee::where('mobile_user_id', '=', $assigned[$i]->mobile_user_id)->get();
                 //then loop through those records, soft deleting each model
-                foreach($assignedEmps as $assignedEmp){
+                foreach ($assignedEmps as $assignedEmp) {
                     $assignedEmp->delete();
                 }
                 //Step: having deleted it from the table, we now need to remove the object from the $assigned array
@@ -735,7 +772,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     //mobile
     //route to get assigned shifts for a particular mobile_user/employee
-    Route::get("/assignedshifts/{id}", function($id) {
+    Route::get("/assignedshifts/{id}", function ($id) {
         $assignedNow = DB::table('assigned_shifts')
             ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=',
                 'assigned_shifts.id')
@@ -759,7 +796,7 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->where('assigned_shift_employees.deleted_at', '=', null)
             ->get();
 
-        foreach($myAssigned as $i => $assigned){
+        foreach ($myAssigned as $i => $assigned) {
             //convert start and end from a datetime object to timestamps
             //and append to the end of all of the assigned objects
             $myAssigned[$i]->start_ts = strtotime($assigned->start);
@@ -771,7 +808,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     //mobile
     //route to get the locations for a particular assigned_shift
-    Route::get("/assignedshifts/locations/{asgnshftid}", function($asgnshftid) {
+    Route::get("/assignedshifts/locations/{asgnshftid}", function ($asgnshftid) {
 
         $assigned = DB::table('assigned_shift_locations')
             ->join('locations', 'locations.id', '=', 'assigned_shift_locations.location_id')
@@ -785,7 +822,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     //console
     //insert assigned shift into assigned_shifts, assigned_shift_locations and assigned_shift_employees tables
-    Route::post("/assignedshifts", function(Request $request){
+    Route::post("/assignedshifts", function (Request $request) {
 
         //table: assigned_shifts
         $start = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('start'), 'America/Chicago');
@@ -810,7 +847,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         $locationArray = $request->input('locations');
         //for each employee...
-        for($emp=0; $emp<sizeof($employeeArray); $emp++) {
+        for ($emp = 0; $emp < sizeof($employeeArray); $emp++) {
             $employee = new App\AssignedShiftEmployee;
             $employee->mobile_user_id = $employeeArray[$emp];
             $employee->assigned_shift_id = $id;
@@ -840,7 +877,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //edit
-    Route::get("/assignedshifts/{id}/edit", function($id) {
+    Route::get("/assignedshifts/{id}/edit", function ($id) {
         $assigned = DB::table('assigned_shifts')
             ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
             ->join('assigned_shift_locations', 'assigned_shift_locations.assigned_shift_id', '=', 'assigned_shifts.id')
@@ -851,17 +888,16 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->orderBy('assigned_shift_locations.location_id')
             ->get();
 
-        foreach($assigned as $i => $details){
+        foreach ($assigned as $i => $details) {
             $emp = User::find($assigned[$i]->mobile_user_id);
 
             //ensure the assigned_shift_employee record exists in the users table
-            if($emp != null){
+            if ($emp != null) {
                 $first_name = $emp->first_name;
                 $last_name = $emp->last_name;
-                $name = $first_name.' '.$last_name;
-            }
-            //mobile_user_id does not exist in locations table
-            else{
+                $name = $first_name . ' ' . $last_name;
+            } //mobile_user_id does not exist in locations table
+            else {
                 $name = "Employee not in database";
             }
             //store location name in the object
@@ -869,16 +905,15 @@ Route::group(['middleware' => 'auth:api'], function () {
         }
 
 
-        foreach($assigned as $i => $item){
+        foreach ($assigned as $i => $item) {
 
             //find the location_id name if a location exists for that id in the locations table
             $location = App\Location::find($assigned[$i]->location_id);
 
-            if($location != null){
+            if ($location != null) {
                 $name = $location->name;
-            }
-            //location_id does not exist in locations table
-            else{
+            } //location_id does not exist in locations table
+            else {
                 $name = "Location not in database";
                 $assigned[$i]->checks = 0;
             }
@@ -889,7 +924,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         return response()->json($assigned);
     });
 
-    Route::put("/assignedshifts/{id}/edit", function(Request $request, $id){
+    Route::put("/assignedshifts/{id}/edit", function (Request $request, $id) {
 
         //table: assigned_shifts
 
@@ -899,19 +934,19 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         $assigned = App\AssignedShift::find($id);
 
-        if($request->has('compid')) {
+        if ($request->has('compid')) {
             $assigned->company_id = $request->input('compId');
         }
 
-        if($request->has('title')) {
+        if ($request->has('title')) {
             $assigned->shift_title = $request->input('title');
         }
 
-        if($request->has('desc')) {
+        if ($request->has('desc')) {
             $assigned->shift_description = $request->input('desc');
         }
 
-        if($request->has('roster_id')) {
+        if ($request->has('roster_id')) {
             $assigned->roster_id = $request->input('roster_id');
         }
 
@@ -942,7 +977,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         //create new records for those new employees updated in the view that aren't already in the assigned_shift_employees table
         $addEmps = $newEmp->diff($oldEmps);
 
-        foreach($addEmps as $addEmp) {
+        foreach ($addEmps as $addEmp) {
             $employee = new App\AssignedShiftEmployee;
             $employee->mobile_user_id = $addEmp;
             $employee->assigned_shift_id = $id;
@@ -952,7 +987,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         //delete those records that are currently in the assigned_shift_employees table but were not included in the edit
         $deleteEmps = $oldEmps->diff($newEmp);
 
-        foreach($deleteEmps as $deleteEmp){
+        foreach ($deleteEmps as $deleteEmp) {
             $assignedEmp = AssignedEmp::where('mobile_user_id', '=', $deleteEmp)
                 ->where('assigned_shift_id', '=', $id)
                 ->delete();
@@ -974,7 +1009,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         //create new records for those new locations updated in the view that aren't already in the assigned_shift_locations table
         $addLocs = $newLoc->diff($oldLocs);
 
-        foreach($addLocs as $addLoc) {
+        foreach ($addLocs as $addLoc) {
             $location = new App\AssignedShiftLocation;
             $location->location_id = $addLoc;
             $location->assigned_shift_id = $id;
@@ -986,7 +1021,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         $deleteLocs = $oldLocs->diff($newLoc);
 
         //soft delete on model
-        foreach($deleteLocs as $deleteLoc) {
+        foreach ($deleteLocs as $deleteLoc) {
             $assignedLoc = AssignedLoc::where('location_id', '=', $deleteLoc)
                 ->where('assigned_shift_id', '=', $id)
                 ->delete();
@@ -995,7 +1030,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         //update those records that have the same location_id and assigned_shift_id, but a different amount of checks
         $sameLocs = $oldLocs->intersect($newLoc);
 
-        foreach($sameLocs as $sameLoc){
+        foreach ($sameLocs as $sameLoc) {
             $toUpdateId = DB::table('assigned_shift_locations')
                 ->where('location_id', '=', $sameLoc)
                 ->where('assigned_shift_id', '=', $id)
@@ -1003,18 +1038,17 @@ Route::group(['middleware' => 'auth:api'], function () {
                 ->pluck('id');
 
             $location = App\AssignedShiftLocation::find($toUpdateId);
-            if($location->checks != $request->input('checks')){
+            if ($location->checks != $request->input('checks')) {
                 $location->checks = $request->input('checks');
                 $location->save();
             }
         }
 
-        if($assigned->save()){
+        if ($assigned->save()) {
             return response()->json(
                 ['success' => true]
             );
-        }
-        else{
+        } else {
             return response()->json(
                 ['success' => false]
             );
@@ -1044,7 +1078,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 //     * Location
 //     */
 
-    Route::get("/locations/list/{compId}", function($compId) {
+    Route::get("/locations/list/{compId}", function ($compId) {
 
         //get all location_ids for the company from Location_Companies table
         //using model so only returns non-deleted records
@@ -1058,13 +1092,13 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //show
-    Route::get("/location/{id}", function($id){
+    Route::get("/location/{id}", function ($id) {
         $location = App\Location::find($id);
         return response()->json($location);
     });
 
     //get a location for a company  (used for centering map)
-    Route::get("location/{compId}", function($compId){
+    Route::get("location/{compId}", function ($compId) {
         //get all location_ids for the company from Location_Companies table
         //using model so only returns non-deleted records
         $locationCos = LocationCo::where('company_id', '=', $compId)
@@ -1077,31 +1111,31 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //edit
-    Route::get("/locations/{id}/edit", function($id){
+    Route::get("/locations/{id}/edit", function ($id) {
         $location = App\Location::find($id);
         return response()->json($location);
     });
 
-    Route::put("/locations/{id}/edit", function(Request $request, $id){
+    Route::put("/locations/{id}/edit", function (Request $request, $id) {
         $location = App\Location::find($id);
 
-        if($request->has('name')) {
+        if ($request->has('name')) {
             $location->name = $request->input('name');
         }
-        if(($request->has('address'))||($request->input('address') == '')) {
+        if (($request->has('address')) || ($request->input('address') == '')) {
 
-            if($request->input('address') != ''){
+            if ($request->input('address') != '') {
                 $location->address = $request->input('address');
                 $location->latitude = $request->input('latitude');
                 $location->longitude = $request->input('longitude');
             }
         }
-        if(($request->has('notes'))||($request->input('notes') == '')) {
+        if (($request->has('notes')) || ($request->input('notes') == '')) {
             $location->notes = $request->input('notes');
         }
 
 
-        if($location->save()) {
+        if ($location->save()) {
             return response()->json([
                 'success' => true
             ]);
@@ -1114,7 +1148,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //insert to locations and location_companies table
-    Route::post("/locations", function(Request $request){
+    Route::post("/locations", function (Request $request) {
 
         $location = new App\Location;
 
@@ -1139,12 +1173,11 @@ Route::group(['middleware' => 'auth:api'], function () {
         $locationCo->company_id = $request->input('compId');
         //$locationCo->save();
 
-        if($locationCo->save()) {
+        if ($locationCo->save()) {
             return response()->json([
                 'success' => true
             ]);
-        }
-        else {
+        } else {
             return response()->json([
                 'success' => false
             ]);
@@ -1170,7 +1203,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         //for current_user_locations, if a location is deleted, make the location_id 0 for the deleted location
         $positions = Position::where('location_id', $id)->get();
 
-        foreach($positions as $position){
+        foreach ($positions as $position) {
             $position->location_id = 0;
             $position->save();
         }
@@ -1178,7 +1211,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         //for report_cases, if a location is deleted, make the location_id 0 for the deleted location
         $reportCases = ReportCase::where('location_id', $id)->get();
 
-        foreach($reportCases as $reportCase){
+        foreach ($reportCases as $reportCase) {
             $reportCase->location_id = 0;
             $reportCase->save();
 
@@ -1195,7 +1228,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     */
 
     //mobile
-    Route::post('/currentlocation', function(Request $request){
+    Route::post('/currentlocation', function (Request $request) {
 
         //determine address//
 
@@ -1203,7 +1236,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         $longitude = $request->input('long');
 
         //use latitude and longitude to determine address
-        $converted = file_get_contents('https://maps.googleapis.com/maps/api/geocode/json?latlng='.$latitude.','.$longitude.'&key=AIzaSyAwMSIuq6URGvS9Sb-asJ4izgNNaQkWnEQ');
+        $converted = file_get_contents('https://maps.googleapis.com/maps/api/geocode/json?latlng=' . $latitude . ',' . $longitude . '&key=AIzaSyAwMSIuq6URGvS9Sb-asJ4izgNNaQkWnEQ');
         $output = json_decode($converted);
         $address = $output->results[0]->formatted_address;
 
@@ -1224,22 +1257,24 @@ Route::group(['middleware' => 'auth:api'], function () {
         $position->mobile_user_id = $userId;
         $position->user_first_name = $user->first_name;
         $position->user_last_name = $user->last_name;
-        if($request->input('locId')!= 0) {
+        if ($request->input('locId') != 0) {
             $position->location_id = $request->input('locId');
         }
         $position->save();
         $id = $position->id;
 
-        if($position->save()) {
+        if ($position->save()) {
             return response()->json([
                 'success' => true,
                 'id' => $id
             ]);
-        } else {return response()->json([
-            'success' => false
-        ]);
+        } else {
+            return response()->json([
+                'success' => false
+            ]);
 
-        }    });
+        }
+    });
 
 
     /* --------------- Shift --------------- */
@@ -1289,7 +1324,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         $shift->end_time = $end;
         // $shift->save();
 
-        if($shift->save()) {
+        if ($shift->save()) {
             return response()->json([
                 'success' => true,
                 'shift' => $shift->duration
@@ -1340,7 +1375,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         $check->user_loc_check_out_id = $request->input('posId');
         $check->check_outs = $checkOut;
 
-        if($check->save()) {
+        if ($check->save()) {
             return response()->json([
                 'success' => true
             ]);
