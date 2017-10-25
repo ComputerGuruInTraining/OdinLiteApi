@@ -149,18 +149,20 @@ Route::group(['middleware' => 'auth:api'], function () {
 //        TODO: if email is successful
             if ($amount == 1) {
                 return response()->json([
-                    'success' => true
+                    'success' => true,
+                    'pw' => true
                 ]);
             } else {
                 return response()->json([
-                    'success' => false
+                    'success' => false,
+                    'pw' => true
                 ]);
             }
         }
         else{
             return response()->json([
                 'success' => false,
-                'pw' => $oldPw
+                'pw' => false
             ]);
         }
     });
