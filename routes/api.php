@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Notifications\NewUser;
 use App\Notifications\NewMobileUser;
 use App\Notifications\ChangePW;
+use App\Notifications\ChangeEmailNew;
 
 use App\User as User;
 use App\Location as Location;
@@ -273,7 +274,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     });
 
-    //Edit Employees (mobile users)
+    //Edit Employees (ie mobile users)
     Route::get("/employees/{id}/edit", function ($id) {
         //not sure if it;s a good way to get a record. Might get multiple record in future but we only need one to show up in the Edit Page of employee
         $employees = DB::table('users')
@@ -285,83 +286,78 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //update record of employees (mobile users)
-    Route::put("/employees/{id}/edit", function (Request $request, $id) {
+    Route::put("/employees/{id}/update", function (Request $request, $id) {
         try {
+            //update employee
+            $employee = App\Employee::where('user_id', $id)->first();
+
+            $employee->mobile = $request->input('mobile');
+
+            $employee->dob = $request->input('dateOfBirth');
+
+            $employee->gender = $request->input('sex');
+
+            $employee->save();
+
+            //update user
             $user = App\User::find($id);
 
-            $employee = DB::table('employees')
-                ->where('user_id', $id)
-                ->first();
+            $user->first_name = $request->input('first_name');
 
-//        //array of many records matching the user_id
-//        $currents = DB::table('current_user_locations')
-//                ->where('mobile_user_id', $id)
-//            -get();
+            $user->last_name = $request->input('last_name');
 
-            //if request has edits to users table
-            if (($request->has('first_name')) ||
-                ($request->has('last_name')) ||
-                ($request->has('email'))
-            ) {
-                if ($request->has('first_name')) {
+            $emailNew = $request->input('email');
+            //before changing the email, check the email has changed,
+            //if so, email the employee/mobile user's new email address,
+            //IF it emails successfully, change the email,
+            //ELSE don't and make the changes besides the email address
+            //and advise console user the email address was not changed because email not valid (ie real)
+            $emailOld = $user->email;
+            $msg = '';
+            $response = '';
 
-                    $fName = $request->input('first_name');
+            if($emailNew != $emailOld){
+                //email the new email address and old email address and advise the employee changed
+                // $newUser = User::find($user_id);
 
-                    $user->first_name = $fName;
-                    //update all the values for the user's first_name in other tables that contain the modified value
-//                foreach($currents as $current){
-//                    $current->user_first_name = $fName;
-//                    $current->save();
-//                }
-                }
+                $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
+                //TODO: create email on localhost and upload changes.
+                 $response = $user->notify(new ChangeEmailNew($compName));
 
-                if ($request->has('last_name')) {
-                    $lName = $request->input('last_name');
+                //check to ensure the email was successful
+                // if($response){
 
-                    $user->last_name = $lName;
-                    //update all the values for the user's last_name in other tables that contain the modified value
-//                foreach($currents as $current){
-//                    $current->user_last_name = $lName;
-//                    $current->save();
-//                }
-                }
+                $user->email = $emailNew;
 
-                if ($request->has('email')) {
-                    $user->email = $request->input('email');
-                }
+                $user->save();
+                // }
+                // else{
+                // don't change the email because the email is invalid (email sending unsuccessfuly)
+                // $user->save();
+                // $msg = "email invalid";
+                // }
+
+            }
+            else{
+                //don't change the email because it hasn't changed
+                $msg = "email unchanged";
                 $user->save();
             }
-
-            //if request has edits to employees table
-            if (($request->has('dateOfBirth')) ||
-                ($request->has('mobile')) ||
-                ($request->has('sex'))
-            ) {
-                if ($request->has('dateOfBirth')) {
-                    $employee->dob = $request->input('dateOfBirth');
-                }
-
-                if ($request->has('mobile')) {
-                    $employee->mobile = $request->input('mobile');
-                }
-                if ($request->has('sex')) {
-                    $employee->gender = $request->input('sex');
-                }
-                $employee->save();
-            }
-
             return response()->json([
                 'success' => true,
-                'employee' => $employee,
-                'user' => $user,
-//            'currents' => $currents
+                'msg' => $msg,
+                'response' => $response
             ]);
+
         } catch (\ErrorException $e) {
 
-            return response()->json($e);
+            return response()->json([
+                'error' => $e
+            ]);
         }
-
     });
+
+
 
 
     //Employees(mobile users) Soft Delete From Console
