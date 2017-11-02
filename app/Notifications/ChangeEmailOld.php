@@ -54,7 +54,7 @@ class ChangeEmailOld extends Notification
 
             ->line('If you are not happy about this change, or you do not believe this should have occurred,
             you can continue using this email address if either yourself or an authenticated user 
-            makes the change in the Management Console');
+            makes the change in the Management Console.');
 
     }
 

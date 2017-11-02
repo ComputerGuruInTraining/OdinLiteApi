@@ -106,32 +106,30 @@ Route::group(['middleware' => 'auth:api'], function () {
             $user->last_name = $request->input('last_name');
         }
 
-        if ($request->has('email')) {
-            $emailNew = $request->input('email');
-            //before changing the email, check the email has changed,
-            //if so, email the employee/mobile user's new email address,
-            $emailOld = $user->email;
+        $emailNew = $request->input('email');
+        //before changing the email, check the email has changed,
+        //if so, email the employee/mobile user's new email address,
+        $emailOld = $user->email;
 
-            if($emailNew != $emailOld){
-                //email the new email address and old email address and advise the employee changed
-                $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
+        if($emailNew != $emailOld){
+            //email the new email address and old email address and advise the employee changed
+            $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
 
-                //new email address notification mail
-                $recipientNew = new DynamicRecipient($emailNew);
-                $recipientNew->notify(new ChangeEmailNew($compName));
+            //new email address notification mail
+            $recipientNew = new DynamicRecipient($emailNew);
+            $recipientNew->notify(new ChangeEmailNew($compName));
 
-                //old email address notification mail
-                $recipientOld = new DynamicRecipient($emailOld);
-                $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
+            //old email address notification mail
+            $recipientOld = new DynamicRecipient($emailOld);
+            $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
 
-                $user->email = $emailNew;
+            $user->email = $emailNew;
 
-                $user->save();
-            }
-            else{
-                //don't change the email because it hasn't changed
-                $user->save();
-            }
+            $user->save();
+        }
+        else{
+            //don't change the email because it hasn't changed
+            $user->save();
         }
 
         if ($user->save()) {
