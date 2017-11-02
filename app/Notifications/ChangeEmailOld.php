@@ -49,11 +49,13 @@ class ChangeEmailOld extends Notification
             ->greeting('Hello!')
 
             ->line('Just a courtesy notification to advise you that this email address is no longer your login email for
-            OdinLite Mobile App for '.$this->compName. '. This is due to your email address 
+            OdinLite Application used by '.$this->compName. '. This is due to your email address 
             recently being updated in the Management Console to '.$this->emailNew.'.')
 
-            ->line('If you are not happy about this change or you do not believe this should have occurred, 
-            please see a user of the management console to continue using this email address.');
+            ->line('If you are not happy about this change, or you do not believe this should have occurred,
+            you can continue using this email address if either yourself or an authenticated user 
+            makes the change in the Management Console');
+
     }
 
     /**
