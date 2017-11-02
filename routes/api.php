@@ -9,6 +9,8 @@ use App\Notifications\NewUser;
 use App\Notifications\NewMobileUser;
 use App\Notifications\ChangePW;
 use App\Notifications\ChangeEmailNew;
+use App\Notifications\ChangeEmailOld;
+
 
 use App\User as User;
 use App\Location as Location;
@@ -30,6 +32,8 @@ use App\CaseFile as CaseFile;
 use App\ShiftCheck as ShiftCheck;
 use App\ShiftCheckCases as CheckCases;
 use App\Employee as Employee;
+use App\Recipient;
+use App\DynamicRecipient;
 
 /*---------------User----------------*/
 
@@ -318,14 +322,24 @@ Route::group(['middleware' => 'auth:api'], function () {
 
             if($emailNew != $emailOld){
                 //email the new email address and old email address and advise the employee changed
-                // $newUser = User::find($user_id);
-
                 $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
-                //TODO: create email on localhost and upload changes.
-                 $response = $user->notify(new ChangeEmailNew($compName));
+
+                //FIXME: atm there is no check for if email delivered successfully.
+                //$reponse has a value of null either way.
+
+                //new email address notification mail
+                $recipientNew = new DynamicRecipient($emailNew);
+                $response = $recipientNew->notify(new ChangeEmailNew($compName));
+
+                //old email address notification mail
+                $recipientOld = new DynamicRecipient($emailOld);
+                $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
+
+
+//                $response = $user->notify(new ChangeEmailNew($compName));//worked on user
 
                 //check to ensure the email was successful
-                // if($response){
+                //if notification event etc...
 
                 $user->email = $emailNew;
 
@@ -345,8 +359,7 @@ Route::group(['middleware' => 'auth:api'], function () {
             }
             return response()->json([
                 'success' => true,
-                'msg' => $msg,
-                'response' => $response
+                'msg' => $msg
             ]);
 
         } catch (\ErrorException $e) {

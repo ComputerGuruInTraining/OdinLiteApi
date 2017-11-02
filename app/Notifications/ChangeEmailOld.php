@@ -6,19 +6,22 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class ChangeEmailNew extends Notification
+class ChangeEmailOld extends Notification
 {
     use Queueable;
     public $compName;
+    public $emailNew;
 
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct($compName)
+    public function __construct($compName, $emailNew)
     {
         $this->compName = $compName;
+
+        $this->emailNew = $emailNew;
     }
 
     /**
@@ -45,12 +48,12 @@ class ChangeEmailNew extends Notification
 
             ->greeting('Hello!')
 
-            ->line('Just a courtesy notification to advise you that this email address is now your login email for
+            ->line('Just a courtesy notification to advise you that this email address is no longer your login email for
             OdinLite Mobile App for '.$this->compName. '. This is due to your email address 
-            recently being updated in the Management Console.')
+            recently being updated in the Management Console to '.$this->emailNew.'.')
 
-            ->line('If you are not happy about this change, please see a user of the management console to 
-            revert back to your previous email address.');
+            ->line('If you are not happy about this change or you do not believe this should have occurred, 
+            please see a user of the management console to continue using this email address.');
     }
 
     /**
