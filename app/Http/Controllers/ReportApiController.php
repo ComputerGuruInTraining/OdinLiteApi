@@ -323,7 +323,7 @@ class ReportApiController extends Controller
         try {
 
             //$reportCaseId will hold just one value
-            $reportCaseId = $this->getTable2Id('report_cases', $id, 'report_id');
+            $reportCaseId = getTable2Id('report_cases', $id, 'report_id');
 
             $reportChecks = DB::table('report_check_cases')
                 //single value to join on
@@ -342,32 +342,48 @@ class ReportApiController extends Controller
 //                ->orderBy('case_notes.created_at')
                 ->get();
 
-                //get employee's name
-//            $caseUsers = $reportCaseNotes->pluck('user_id');
-                
-            //need to display the employee first name and last name even if the employee
-            //has been deleted since taking the case note, so get withTrashed
-//            $employees = User::withTrashed()->whereIn('id', $caseUsers)->get();
-//
-//            if ($employees != null) {
-//                foreach ($reportCaseNotes as $i => $item) {
-//
-//                    foreach ($employees as $employee) {
-//                        if ($reportCaseNotes[$i]->user_id == $employee->id) {
-//
-//                            //store location name in the object
-//                            $reportCaseNotes[$i]->employee = $employee->first_name . ' ' . $employee->last_name;
-//                        }
-//                    }
-//
-//                }
-//            }
+            //get shift_check data using the shift_check_cases.shift_check_id (array of different ids)
+//            and case_note data using the shift_check_cases.case_note_id (array of different ids)
 
-            // retrieve location name using location_id from reportCases using table so as to still retrieve data if the location has been deleted.
-//            $location = DB::table('locations')
-//                ->where('id', '=', $reportCases->location_id)
-//                ->get()
-//                ->first();
+            $shiftCheckIds = $reportChecks->pluck('shift_check_id');
+
+            $caseNoteIds = $reportChecks->pluck('case_note_id');
+
+            $shiftChecks = DB::table('shift_check_cases')
+                ->join('shift_checks', function ($join) use ($shiftCheckIds) {
+                    //single value in where clause variable, array of report_case_notes with variable value
+                    $join->on('shift_checks.id', '=', 'shift_check_cases.shift_check_id')
+                        ->whereIn('shift_checks.id', $shiftCheckIds);
+                })
+                ->join('case_notes', function ($join) use ($caseNoteIds) {
+                    //single value in where clause variable, array of report_case_notes with variable value
+                    $join->on('case_notes.id', '=', 'shift_check_cases.case_note_id')
+                        ->whereIn('case_notes.id', $caseNoteIds);
+                })
+                ->select('shift_checks.*', 'case_notes.case_id','case_notes.title', 'case_notes.user_id')
+//                ->orderBy('case_notes.created_at')
+                ->get();
+
+            //get employee's name using user_id from case_notes table
+            $checkUserIds = $shiftChecks->pluck('user_id');
+
+            $usersNames = userFirstLastName($checkUserIds);
+//
+            if ($usersNames != null) {
+                foreach ($shiftChecks as $i => $item) {
+
+                    foreach ($usersNames as $user) {
+                        if ($shiftChecks[$i]->user_id == $user->id) {
+
+                            //store name in the object
+                            $shiftChecks[$i]->guard = $user->first_name . ' ' . $user->last_name;
+                        }
+                    }
+                }
+            }
+
+//             retrieve location using location_id from shiftChecks using table so as to still retrieve data if the location has been deleted.
+            $location = locationAddressDetails($shiftChecks->location_id);
 
             return response()->json([
                 'reportChecks' => $reportChecks,
@@ -382,20 +398,6 @@ class ReportApiController extends Controller
                 'success' => false
             ]);
         }
-
-    }
-
-    //generic get id from table using id from another table
-    public function getTable2Id($table2, $table1id, $column)
-    {
-        $records = DB::table($table2)
-            ->where($column, '=', $table1id)
-            ->where('deleted_at', '=', null)
-            ->first();
-
-        $table2Id = $records->id;
-
-        return $table2Id;
 
     }
     
