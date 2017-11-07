@@ -677,9 +677,14 @@ Route::group(['middleware' => 'auth:api'], function () {
         }
     });
 
+    /*---------------Report Type = Location Checks----------------*/
 
-    /*---------------Report Cases----------------*/
+    Route::get("/reportchecks/{id}", 'ReportApiController@getCasesAndChecks');
+
+
+    /*---------------Report Type = Case Notes----------------*/
 //retrieve all case notes for a particular report_id where the case_note has not been deleted
+    //parameter is report_id
     Route::get("/reportcases/{id}", function ($id) {
         //retrieve the report_case_id
         try {
