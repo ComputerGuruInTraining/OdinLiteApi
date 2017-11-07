@@ -18,33 +18,33 @@ class MainController extends Controller
     }
 
     /**
-     * 
+     *
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
     }
-    
+
     public function activate($compId)
     {
-   	$numUpdated = DB::table('companies')
-	   	->where('id', '=', $compId)
-	   	->update(['status' => 'active']);
+        $numUpdated = DB::table('companies')
+            ->where('id', '=', $compId)
+            ->update(['status' => 'active']);
 
-	if($numUpdated == 1){	
-		$title = 'Confirmation of Success';
-		$msg = 'The registration process is complete and you may now log into Odin Lite Management Console.';	
-   	}
-   	else
-   	{
-   		$title = 'Notification of Failure';
-	   	$msg = 'The activation did not complete successfully. Possibly the activation has already been completed. 
+        if ($numUpdated == 1) {
+            $title = 'Confirmation of Success';
+            $msg = 'The registration process is complete and you may now log into Odin Lite Management Console.';
+        } else {
+            $title = 'Notification of Failure';
+            $msg = 'The activation did not complete successfully. Possibly the activation has already been completed. 
 	   	Please try logging into the account.';
-   	}
-   	
-   	return view('activated')->with(array('msg' => $msg, 'title' => $title));
-    	
+        }
+
+        return view('activated')->with(array('msg' => $msg, 'title' => $title));
+
     }
-   
+
+
+
 }
