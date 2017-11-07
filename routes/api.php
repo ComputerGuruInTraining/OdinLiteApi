@@ -106,36 +106,36 @@ Route::group(['middleware' => 'auth:api'], function () {
             $user->last_name = $request->input('last_name');
         }
 
-        if ($request->has('email')){
+        if ($request->has('email')) {
             $user->email = $request->input('email');
         }
-/*
-        $emailNew = $request->input('email');
-        //before changing the email, check the email has changed,
-        //if so, email the employee/mobile user's new email address,
-        $emailOld = $user->email;
+        /*
+                $emailNew = $request->input('email');
+                //before changing the email, check the email has changed,
+                //if so, email the employee/mobile user's new email address,
+                $emailOld = $user->email;
 
-        if($emailNew != $emailOld){
-            //email the new email address and old email address and advise the employee changed
-            $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
+                if($emailNew != $emailOld){
+                    //email the new email address and old email address and advise the employee changed
+                    $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
 
-            //new email address notification mail
-            $recipientNew = new DynamicRecipient($emailNew);
-            $recipientNew->notify(new ChangeEmailNew($compName));
+                    //new email address notification mail
+                    $recipientNew = new DynamicRecipient($emailNew);
+                    $recipientNew->notify(new ChangeEmailNew($compName));
 
-            //old email address notification mail
-            $recipientOld = new DynamicRecipient($emailOld);
-            $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
+                    //old email address notification mail
+                    $recipientOld = new DynamicRecipient($emailOld);
+                    $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
 
-            $user->email = $emailNew;
+                    $user->email = $emailNew;
 
-            $user->save();
-        }
-        else{
-            //don't change the email because it hasn't changed
-            $user->save();
-        }
-*/
+                    $user->save();
+                }
+                else{
+                    //don't change the email because it hasn't changed
+                    $user->save();
+                }
+        */
 
 
         if ($user->save()) {
@@ -158,7 +158,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         $hashedPassword = Auth::user()->password;  // Taking the value from database
 
         //if the current password entered by user equals the password stored in the database
-        if(Hash::check($oldPw, $hashedPassword)) {
+        if (Hash::check($oldPw, $hashedPassword)) {
 
             if ($request->has('password')) {
                 $password = $request->input('password');
@@ -190,8 +190,7 @@ Route::group(['middleware' => 'auth:api'], function () {
                     'pw' => true
                 ]);
             }
-        }
-        else{
+        } else {
             return response()->json([
                 'success' => false,
                 'pw' => false
@@ -347,7 +346,7 @@ Route::group(['middleware' => 'auth:api'], function () {
             $msg = '';
             $response = '';
 
-            if($emailNew != $emailOld){
+            if ($emailNew != $emailOld) {
                 //email the new email address and old email address and advise the employee changed
                 $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
 
@@ -378,8 +377,7 @@ Route::group(['middleware' => 'auth:api'], function () {
                 // $msg = "email invalid";
                 // }
 
-            }
-            else{
+            } else {
                 //don't change the email because it hasn't changed
                 $msg = "email unchanged";
                 $user->save();
@@ -396,8 +394,6 @@ Route::group(['middleware' => 'auth:api'], function () {
             ]);
         }
     });
-
-
 
 
     //Employees(mobile users) Soft Delete From Console
@@ -681,9 +677,14 @@ Route::group(['middleware' => 'auth:api'], function () {
         }
     });
 
+    /*---------------Report Type = Location Checks----------------*/
 
-    /*---------------Report Cases----------------*/
+    Route::get("/reportchecks/{id}", 'ReportApiController@getCasesAndChecks');
+
+
+    /*---------------Report Type = Case Notes----------------*/
 //retrieve all case notes for a particular report_id where the case_note has not been deleted
+    //parameter is report_id
     Route::get("/reportcases/{id}", function ($id) {
         //retrieve the report_case_id
         try {
@@ -825,25 +826,56 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     //mobile
     //route to get assigned shifts for a particular mobile_user/employee
+    //that occur within the specified INTERVAL X DAY
+    //and for which the shift has not ended
     Route::get("/assignedshifts/{id}", function ($id) {
-        $assignedNow = DB::table('assigned_shifts')
+        //the logic is:
+        //step 1: all assignedShifts for the period. (array1)
+        //step 2: all assignedShifts that have been started.(array2)
+        //step 3: array1 items that don't appear in array2 have not been started, therefore include in results.(array4)
+        //step 4: all assignedShifts that have been started, check if they have ended (array3)
+        //step 5: array2 items that are not in array3 have been started but not completed, therefore include in results.(array5)
+        //step 6: add (array1-2) to (array2-3) to get the complete set of results (= array6)
+
+        //step 1: all assigned shifts
+        $array1 = DB::table('assigned_shifts')
             ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=',
                 'assigned_shifts.id')
-            ->join('shifts', 'assigned_shifts.id', '=', 'shifts.assigned_shift_id')
-            ->select('shifts.assigned_shift_id')
+            ->select('assigned_shifts.id')
             ->where('assigned_shift_employees.mobile_user_id', '=', $id)
-            ->where('shifts.end_time', '=', null)
-            ->where('assigned_shifts.end', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 3 DAY)'))
+            ->where('assigned_shifts.end', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 2 DAY)'))
             ->where('assigned_shifts.deleted_at', '=', null)
             ->where('assigned_shift_employees.deleted_at', '=', null)
-            ->groupBy('shifts.assigned_shift_id')
             ->get();
 
-        $assignedIds = $assignedNow->pluck('assigned_shift_id');
+        //all assigned shifts for the period specified
+        $array1ids = $array1->pluck('id');
+
+        //step2 :all shifts that have been started
+        $array2ids = DB::table('shifts')
+            ->whereIn('assigned_shift_id', $array1ids)
+            ->pluck('assigned_shift_id');
+
+        //step 3: array1 items that don't appear in array2 have not been started, therefore include in results.(array1-2)
+        //1st set of data
+        $array4 = $array1ids->diff($array2ids);
+
+        //step4: all shifts out of the shifts that have been started and have been completed
+        $array3ids = DB::table('shifts')
+            //array of ids
+            ->whereIn('assigned_shift_id', $array2ids)
+            ->where('end_time', '!=', null)
+            ->pluck('assigned_shift_id');
+
+        //step 5: array2 items that are not in array3 have been started but not completed, therefore include in results.(array5)
+        $array5 = $array2ids->diff($array3ids);
+
+        //step 6: add (array1-2) to (array2-3) to get the complete set of results (= array6)
+        $array6ids = $array4->merge($array5);
 
         $myAssigned = DB::table('assigned_shift_employees')
             ->join('assigned_shifts', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
-            ->whereIn('assigned_shifts.id', $assignedIds)
+            ->whereIn('assigned_shifts.id', $array6ids)
             ->where('mobile_user_id', '=', $id)
             ->where('assigned_shifts.deleted_at', '=', null)
             ->where('assigned_shift_employees.deleted_at', '=', null)
@@ -887,7 +919,6 @@ Route::group(['middleware' => 'auth:api'], function () {
         $assigned->shift_title = $request->input('title');
         $assigned->shift_description = $request->input('desc');
         $assigned->roster_id = $request->input('roster_id');
-
 
         $assigned->start = $start;
         $assigned->end = $end;
