@@ -479,6 +479,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     /*---------------Case Notes----------------*/
 
+    Route::get("/casenotes/list/{compId}",  'CaseNoteApiController@getCaseNotes');
+
     //mobile, insert a new case note
     Route::post("/casenote", function (Request $request) {
 
