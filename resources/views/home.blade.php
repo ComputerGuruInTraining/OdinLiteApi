@@ -10,6 +10,8 @@
                 <div class="panel-body">
                     You are logged in!
                 </div>
+
+                <a href="/download-photo/1502850591833">Test</a>
             </div>
         </div>
     </div>
