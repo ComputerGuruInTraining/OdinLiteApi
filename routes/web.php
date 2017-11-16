@@ -154,14 +154,14 @@ Route::get('/download-photo/{filename}', function ($filename) {
     $file = $filename . '.jpeg';
 
     $pathToFile = 'images/' . $file;
-    $storagePathToFile = base_path('storage/app/images/'. $file);//works on localhost
-//    $storagePathToFile =  storage_path('app/file.txt');
+//    $storagePathToFile = base_path('storage/app/images/'. $file);//works on localhost
+    $storagePathToFile =  storage_path('app/images/'. $file);
 
     //check if file exists
     $fileExists = Storage::exists($pathToFile);
+
     if ($fileExists) {
          return response()->download($storagePathToFile);
-//        return response()->json($fileExists);
 
     } else {
         return response()->json($fileExists);//false
@@ -170,6 +170,13 @@ Route::get('/download-photo/{filename}', function ($filename) {
 
 });
 
+Route::get('/storage/app/public/{file}', function ($file) {
+
+    $url = asset('storage/app/public/'.$file);
+
+    return response()->download($url);
+
+});
 
 //TODO: 
 //check to see if access token, assigned via oauth2, exists and is not expired

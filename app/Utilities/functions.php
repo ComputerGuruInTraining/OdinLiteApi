@@ -58,7 +58,7 @@ if (!function_exists('getTable2Id')) {
 
 if (!function_exists('getGeoData')) {
 
-    function getGeoData($userLocId, $objectLat, $objectLong, $objectGeoId)
+    function getGeoData($userLocId)
     {
         //returns an object
         if(($userLocId != 0)&&($userLocId != null)){
@@ -86,7 +86,13 @@ if (!function_exists('getGeoData')) {
             //for testing purposes
             $objectGeoId = '';
         }
-//        return array($objectLat, $objectLong, $objectGeoId);
+
+        $collection = collect([
+            'lat' => $objectLat,
+            'long' => $objectLong,
+            'geoId' => $objectGeoId]);
+
+        return $collection;
     }
 }
 //if (!function_exists('download')) {
