@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Response;
 
 
 class MainController extends Controller
@@ -44,7 +45,17 @@ class MainController extends Controller
         return view('activated')->with(array('msg' => $msg, 'title' => $title));
 
     }
+    public function download($filename)
+    {
+        $file = $filename.'.jpeg';
 
+        $pathToFile = 'images\/'.$file;
 
+        //check if file exists
+//        Storage::exists($file);
 
+//        $pathToFile
+        return response()->download($pathToFile);
+
+    }
 }

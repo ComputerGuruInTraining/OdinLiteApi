@@ -109,7 +109,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         if ($request->has('email')) {
             $user->email = $request->input('email');
         }
-        /*
+
                 $emailNew = $request->input('email');
                 //before changing the email, check the email has changed,
                 //if so, email the employee/mobile user's new email address,
@@ -135,8 +135,6 @@ Route::group(['middleware' => 'auth:api'], function () {
                     //don't change the email because it hasn't changed
                     $user->save();
                 }
-        */
-
 
         if ($user->save()) {
             return response()->json([

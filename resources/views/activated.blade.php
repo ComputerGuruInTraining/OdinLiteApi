@@ -13,7 +13,12 @@
 	                        <div>
 	                            <p>{{$msg}}</p>
 	                        </div>
-	                </div>
+                        <a href="https://odinlitemgmt.azurewebsites.net/" class="btn" style="
+                                        color: white;
+                                background-color:#663974;
+                                font-size: large; margin: 20px;">Login</a>
+
+                    </div>
 	        </div>
             </div>
         </div>
