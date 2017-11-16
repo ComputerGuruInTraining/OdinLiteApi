@@ -110,31 +110,30 @@ Route::group(['middleware' => 'auth:api'], function () {
             $user->email = $request->input('email');
         }
 
-                $emailNew = $request->input('email');
-                //before changing the email, check the email has changed,
-                //if so, email the employee/mobile user's new email address,
-                $emailOld = $user->email;
+        $emailNew = $request->input('email');
+        //before changing the email, check the email has changed,
+        //if so, email the employee/mobile user's new email address,
+        $emailOld = $user->email;
 
-                if($emailNew != $emailOld){
-                    //email the new email address and old email address and advise the employee changed
-                    $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
+        if ($emailNew != $emailOld) {
+            //email the new email address and old email address and advise the employee changed
+            $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
 
-                    //new email address notification mail
-                    $recipientNew = new DynamicRecipient($emailNew);
-                    $recipientNew->notify(new ChangeEmailNew($compName));
+            //new email address notification mail
+            $recipientNew = new DynamicRecipient($emailNew);
+            $recipientNew->notify(new ChangeEmailNew($compName));
 
-                    //old email address notification mail
-                    $recipientOld = new DynamicRecipient($emailOld);
-                    $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
+            //old email address notification mail
+            $recipientOld = new DynamicRecipient($emailOld);
+            $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
 
-                    $user->email = $emailNew;
+            $user->email = $emailNew;
 
-                    $user->save();
-                }
-                else{
-                    //don't change the email because it hasn't changed
-                    $user->save();
-                }
+            $user->save();
+        } else {
+            //don't change the email because it hasn't changed
+            $user->save();
+        }
 
         if ($user->save()) {
             return response()->json([
@@ -265,7 +264,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         $user->first_name = $request->input('first_name');
         $user->last_name = $request->input('last_name');
         $user->email = $request->input('email');
-        $user->password = $request->input('password');
+        $password = str_random(8);
+        $pwEnc = Hash::make($password);
+        $user->password = $pwEnc;
         $user->company_id = $request->input('company_id');
         $user->remember_token = str_random(10);
         //the default value of true for column make_change_pw will be set for new employees
@@ -477,7 +478,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     /*---------------Case Notes----------------*/
 
-    Route::get("/casenotes/list/{compId}",  'CaseNoteApiController@getCaseNotes');
+    Route::get("/casenotes/list/{compId}", 'CaseNoteApiController@getCaseNotes');
 
     //mobile, insert a new case note
     Route::post("/casenote", function (Request $request) {
