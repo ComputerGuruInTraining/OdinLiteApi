@@ -7,8 +7,8 @@
 <div class="container">
     <div class="row">
         <div class="col-md-8 col-md-offset-2" style="padding-top: 50px;">
-            <div class="panel panel-default"  style="border-color: #663974; margin-top: 100px;">
-                <div class="panel-heading" style="color: white; background-color: #663974">Confirmation of Success</div>
+            <div class="panel panel-default"  style="border-color: #4d2970; margin-top: 100px;">
+                <div class="panel-heading" style="color: white; background-color: #4d2970">Confirmation of Success</div>
 
                 <div class="panel-body">
                     You have successfully created or updated your password.
