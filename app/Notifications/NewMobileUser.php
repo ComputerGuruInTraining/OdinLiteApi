@@ -25,7 +25,7 @@ class NewMobileUser extends Notification
     /**
      * Get the notification's delivery channels.
      *
-     * @param  mixed  $notifiable
+     * @param  mixed $notifiable
      * @return array
      */
     public function via($notifiable)
@@ -36,28 +36,31 @@ class NewMobileUser extends Notification
     /**
      * Get the mail representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param  mixed $notifiable
      * @return \Illuminate\Notifications\Messages\MailMessage
      */
     public function toMail($notifiable)
-    {		
+    {
         return (new MailMessage)
-       	    ->greeting('Welcome!')
-            ->line('You are receiving this email because you have been registered to use OdinLite Mobile App on behalf of '. $this->comp.'.')
-            ->line('OdinLite is available for download via the App Store and the Play Store.')
+            ->greeting('Welcome!')
+            ->line('You are receiving this email because you have been registered to use OdinLite Mobile App on behalf of ' . $this->comp . '.')
+            ->line('OdinLite is available for download:')
+            ->line("<a href='https://play.google.com/store/apps/details?id=com.odinliteapp&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'>
+                <img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png'/>
+                </a>")
             ->line('Please create a password to use with the account using our Password Reset Facility. This facility optimizes the security of our software suite by not 
               emailing passwords to users or sharing passwords with the person who registered the account.')
             ->line('It also enables you to change the password at your convenience. 
               Once you request a password reset, you will have 	
             24 hours to change the password.')
             ->action('Create Password', url('password/reset'));
-    
+
     }
 
     /**
      * Get the array representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param  mixed $notifiable
      * @return array
      */
     public function toArray($notifiable)
