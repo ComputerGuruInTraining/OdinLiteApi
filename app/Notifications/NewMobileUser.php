@@ -48,7 +48,7 @@ class NewMobileUser extends Notification
             ->line("<a href='https://play.google.com/store/apps/details?id=com.odinliteapp&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'>
                 <img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png' 
                 style='height: auto; width: 240px;'/></a>")
-            ->line("<img src='{{ asset(/"/images/Download_on_the_App_Store_Badge_US-UK_RGB_blk_092917.svg/") }}' alt='App Store Badge'/>")
+            ->line("<img src='{{ asset(\"/images/Download_on_the_App_Store_Badge_US-UK_RGB_blk_092917.svg\") }}' alt='App Store Badge'/>")
             ->line('Please create a password to use with the account using our Password Reset Facility. This facility optimizes the security of our software suite by not 
               emailing passwords to users or sharing passwords with the person who registered the account.')
             ->line('It also enables you to change the password at your convenience. 
