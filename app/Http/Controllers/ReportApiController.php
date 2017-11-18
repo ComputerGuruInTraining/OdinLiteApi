@@ -53,18 +53,6 @@ class ReportApiController extends Controller
         //if there is data for the report, post to the report tables
         if (count($shifts) > 0) {
 
-//            //insert into the Reports table
-//            $report = new Report;
-//
-//            $report->date_start = $dateStart;
-//            $report->date_end = $dateEnd;
-//            $report->company_id = $compId;
-//            $report->type = $type;
-//
-//            $report->save();
-//
-//            $id = $report->id;
-
             $result = $this->storeReport($dateStart, $dateEnd, $compId, $type);
 
             if ($result->get('error') == null) {
@@ -83,37 +71,74 @@ class ReportApiController extends Controller
                 $numGuards = $shifts->groupBy('mobile_user_id')->count();
 
                 //add to report_cases table
+                $resultCase = $this->storeReportCase($id, $shifts, $locId);
 
-                $reportCase = new ReportCase;
-                $reportCase->report_id = $id;
-                $reportCase->location_id = $locId;
-//        $reportCase->total_hours = $totalHours;
-                $reportCase->total_guards = $numGuards;
-                $reportCase->save();
-                $reportCaseId = $reportCase->id;
+                if ($resultCase->get('error') == null) {
 
-                $shiftIds = $shifts->pluck('id');
+                    //variables needed to retrieve case_notes for the period and store in report_case_notes table
+                    $reportCaseId = $resultCase->get('reportCaseId');
 
-                //retrieve the case_notes for the date range at the location
-                //don't get the deleted case_notes
-                $cases = CaseNote::whereIn('case_notes.shift_id', $shiftIds)->get();
+//                    $reportCase = new ReportCase;
+//                    $reportCase->report_id = $id;
+//                    $reportCase->location_id = $locId;
+////        $reportCase->total_hours = $totalHours;
+//                    $reportCase->total_guards = $numGuards;
+//                    $reportCase->save();
+//                    $reportCaseId = $reportCase->id;
 
-                $caseIds = $cases->pluck('id');
+                    $shiftIds = $shifts->pluck('id');
 
-                //add to  report_case_notes table
+                    //retrieve the case_notes for the date range at the location
+                    //don't get the deleted case_notes
+                    $cases = CaseNote::whereIn('case_notes.shift_id', $shiftIds)->get();
+
+                    $caseIds = $cases->pluck('id');
+
+                    $resultNote = $this->storeReportCaseNote($reportCaseId, $caseIds);
+
+                    if ($resultNote->get('error') == null) {
+
+                        //add to  report_case_notes table
 //todo: check $cases has a value before trying insert or will it work ok anyhow???
-                foreach ($caseIds as $caseId) {
-                    $reportNotes = new ReportCaseNote;
-                    $reportNotes->report_case_id = $reportCaseId;
-                    $reportNotes->case_note_id = $caseId;
-                    $reportNotes->save();
+//                    foreach ($caseIds as $caseId) {
+//                        $reportNotes = new ReportCaseNote;
+//                        $reportNotes->report_case_id = $reportCaseId;
+//                        $reportNotes->case_note_id = $caseId;
+//                        $reportNotes->save();
+//                    }
+
+                        return response()->json([
+                            'success' => true
+                        ]);
+                    } else {
+                        //error storing report_case notes
+                        return response()->json([
+                            'success' => false
+                        ]);
+                    }
+                    return response()->json([
+                        'success' => true
+                    ]);
+                } else {
+                    //error storing report_case
+                    return response()->json([
+                        'success' => false
+                    ]);
                 }
 
+                //shift data > 0 but error storing report
                 return response()->json([
-                    'success' => true
+                    'success' => false
+                ]);
+            }else{
+            //error storing report
+                return response()->json([
+                    'success' => false
                 ]);
             }
-        } else {
+        }
+        else{
+            //no shift data
             return response()->json([
                 'success' => false
             ]);
