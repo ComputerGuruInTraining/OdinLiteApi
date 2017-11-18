@@ -610,17 +610,20 @@ Route::group(['middleware' => 'auth:api'], function () {
         /********get location*******/
 
         //if type="CaseNotes" from report_cases table
-        //  foreach($reports as $report){
-        foreach ($reports as $i => $report) {
-            $reportCase = DB::table('report_cases')
-                ->join('locations', 'report_cases.location_id', '=', 'locations.id')
-                ->where('report_cases.deleted_at', '=', null)
-                ->where('report_id', '=', $reports[$i]->id)
-                ->first();
-            // ->get();
+        if(count($reports) > 0) {
+            foreach ($reports as $i => $report) {
+                $reportCase = DB::table('report_cases')
+                    ->join('locations', 'report_cases.location_id', '=', 'locations.id')
+                    ->where('report_cases.deleted_at', '=', null)
+                    ->where('report_id', '=', $reports[$i]->id)
+                    ->first();
+                // ->get();
 
-            if($reportCase != null) {
-                $reports[$i]->location = $reportCase->name;
+                if ($reportCase != null) {
+                    $reports[$i]->location = $reportCase->name;
+                } else {
+                    $reports[$i]->location = "";
+                }
             }
         }
 
