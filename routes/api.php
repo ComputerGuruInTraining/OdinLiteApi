@@ -619,7 +619,9 @@ Route::group(['middleware' => 'auth:api'], function () {
                 ->first();
             // ->get();
 
-            $reports[$i]->location = $reportCase->name;
+            if($reportCase != null) {
+                $reports[$i]->location = $reportCase->name;
+            }
         }
 
         return response()->json($reports);
@@ -781,46 +783,49 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->orderBy('assigned_shift_locations.location_id')
             ->get();
 
-        foreach ($assigned as $i => $item) {
+            foreach ($assigned as $i => $item) {
 
-            //find the location_id name if a location exists for that id in the locations table
-            $location = App\Location::find($assigned[$i]->location_id);
+                //find the location_id name if a location exists for that id in the locations table
+                $location = App\Location::find($assigned[$i]->location_id);
 
+                if ($location != null) {
 
-            $name = $location->name;
+                    $name = $location->name;
 
-            //store location name in the object
-            $assigned[$i]->location = $name;
-        }
-
-        foreach ($assigned as $i => $details) {
-            //get the employee's name from the employees table for all employees assigned a shift
-            $emp = App\User::find($assigned[$i]->mobile_user_id);
-            //ensure the assigned_shift_employee record exists in the users table else errors could occur
-            if ($emp != null) {
-
-                $first_name = $emp->first_name;
-                $last_name = $emp->last_name;
-                $name = $first_name . ' ' . $last_name;
-
-                //store location name in the object
-                $assigned[$i]->employee = $name;
-            } else {
-                //$emp == null meaning it must have been deleted from the employees table
-                //Step: soft delete the record from assigned_shift_employees table for the employee's user_id
-                //to ensure there are no shifts assigned to a user that has been deleted
-                //first, find the array of records that have the mobile_user_id in question
-                $assignedEmps = App\AssignedShiftEmployee::where('mobile_user_id', '=', $assigned[$i]->mobile_user_id)->get();
-                //then loop through those records, soft deleting each model
-                foreach ($assignedEmps as $assignedEmp) {
-                    $assignedEmp->delete();
+                    //store location name in the object
+                    $assigned[$i]->location = $name;
                 }
-                //Step: having deleted it from the table, we now need to remove the object from the $assigned array
-                $assigned->pull($i);
             }
-        }
-        //Step: reset the keys on the collection, else datatype is std::class
-        $assigned = $assigned->values();
+
+
+            foreach ($assigned as $i => $details) {
+                //get the employee's name from the employees table for all employees assigned a shift
+                $emp = App\User::find($assigned[$i]->mobile_user_id);
+                //ensure the assigned_shift_employee record exists in the users table else errors could occur
+                if ($emp != null) {
+
+                    $first_name = $emp->first_name;
+                    $last_name = $emp->last_name;
+                    $name = $first_name . ' ' . $last_name;
+
+                    //store location name in the object
+                    $assigned[$i]->employee = $name;
+                } else {
+                    //$emp == null meaning it must have been deleted from the employees table
+                    //Step: soft delete the record from assigned_shift_employees table for the employee's user_id
+                    //to ensure there are no shifts assigned to a user that has been deleted
+                    //first, find the array of records that have the mobile_user_id in question
+                    $assignedEmps = App\AssignedShiftEmployee::where('mobile_user_id', '=', $assigned[$i]->mobile_user_id)->get();
+                    //then loop through those records, soft deleting each model
+                    foreach ($assignedEmps as $assignedEmp) {
+                        $assignedEmp->delete();
+                    }
+                    //Step: having deleted it from the table, we now need to remove the object from the $assigned array
+                    $assigned->pull($i);
+                }
+            }
+            //Step: reset the keys on the collection, else datatype is std::class
+            $assigned = $assigned->values();
 
         return response()->json($assigned);
     });
