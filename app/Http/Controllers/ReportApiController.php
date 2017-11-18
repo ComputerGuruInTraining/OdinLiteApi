@@ -46,76 +46,74 @@ class ReportApiController extends Controller
         //Retrieve the data for the location and date range needed to calculate totalHours and numGuards
         //NB: only retrieving shifts using shift_start_date, as ordinarily the shift_end_date would be the same or next day
         //get from table so that includes deletes from assigned_shifts so that the data can be provided in the report
-        $shifts = DB::table('assigned_shift_locations')
-            ->join('shifts', 'shifts.assigned_shift_id', '=', 'assigned_shift_locations.assigned_shift_id')
-            ->where('assigned_shift_locations.location_id', '=', $locId)
-            ->whereBetween('shifts.start_time', [$dateStart, $dateEnd])
-            ->get();
+//
+
+        $shifts = $this->queryReport($dateStart, $dateEnd, $locId);
 
         //if there is data for the report, post to the report tables
-        if(count($shifts) > 0) {
+        if (count($shifts) > 0) {
 
-            //insert into the Reports table
-            $report = new Report;
+//            //insert into the Reports table
+//            $report = new Report;
+//
+//            $report->date_start = $dateStart;
+//            $report->date_end = $dateEnd;
+//            $report->company_id = $compId;
+//            $report->type = $type;
+//
+//            $report->save();
+//
+//            $id = $report->id;
 
-            $report->date_start = $dateStart;
-            $report->date_end = $dateEnd;
-            $report->company_id = $compId;
-            $report->type = $type;
+            $result = $this->storeReport($dateStart, $dateEnd, $compId, $type);
 
-            $report->save();
+            if ($result->get('error') == null) {
 
-            $id = $report->id;
+                $id = $result->get('id');
 
-
-            //calculate the total hours///FIXME: incorrect hours at a location when considering a guard could visit several locations
+                //calculate the total hours///FIXME: incorrect hours at a location when considering a guard could visit several locations
 //        $totalMins = $shifts->sum('duration');//duration is in minutes
 //        $hours = $totalMins / 60;
 //        $totalHours = floor($hours * 100) / 100;//hours to 2 decimal places
 
-            //calculate the number of guards
-            //FIXME, potentially wrong if start the shift twice because
-            //perhaps the phone switches off.
-            //count distinct.
-            $numGuards = $shifts->groupBy('mobile_user_id')->count();
+                //calculate the number of guards
+                //FIXME, potentially wrong if start the shift twice because
+                //perhaps the phone switches off.
+                //count distinct.
+                $numGuards = $shifts->groupBy('mobile_user_id')->count();
 
-            //add to report_cases table
+                //add to report_cases table
 
-            $reportCase = new ReportCase;
-            $reportCase->report_id = $id;
-            $reportCase->location_id = $locId;
+                $reportCase = new ReportCase;
+                $reportCase->report_id = $id;
+                $reportCase->location_id = $locId;
 //        $reportCase->total_hours = $totalHours;
-            $reportCase->total_guards = $numGuards;
-            $reportCase->save();
-            $reportCaseId = $reportCase->id;
+                $reportCase->total_guards = $numGuards;
+                $reportCase->save();
+                $reportCaseId = $reportCase->id;
 
-            $shiftIds = $shifts->pluck('id');
+                $shiftIds = $shifts->pluck('id');
 
-            //retrieve the case_notes for the date range at the location
-            //don't get the deleted case_notes
-            $cases = CaseNote::whereIn('case_notes.shift_id', $shiftIds)->get();
+                //retrieve the case_notes for the date range at the location
+                //don't get the deleted case_notes
+                $cases = CaseNote::whereIn('case_notes.shift_id', $shiftIds)->get();
 
-            $caseIds = $cases->pluck('id');
+                $caseIds = $cases->pluck('id');
 
-            //add to  report_case_notes table
+                //add to  report_case_notes table
 //todo: check $cases has a value before trying insert or will it work ok anyhow???
-            foreach ($caseIds as $caseId) {
-                $reportNotes = new ReportCaseNote;
-                $reportNotes->report_case_id = $reportCaseId;
-                $reportNotes->case_note_id = $caseId;
-                $reportNotes->save();
-            }
+                foreach ($caseIds as $caseId) {
+                    $reportNotes = new ReportCaseNote;
+                    $reportNotes->report_case_id = $reportCaseId;
+                    $reportNotes->case_note_id = $caseId;
+                    $reportNotes->save();
+                }
 
-            //just check to ensure reports table insert worked correctly
-            //check to ensure a report was added
-            //report_case_notes won't be added if no case_notes (very rare considering the structure, only ever at
-            // beginning when a shift started)
-            if ($id != null) {
                 return response()->json([
                     'success' => true
                 ]);
             }
-        }else {
+        } else {
             return response()->json([
                 'success' => false
             ]);
@@ -140,14 +138,14 @@ class ReportApiController extends Controller
         //otherwise will not create a report
         $shifts = $this->queryReport($dateStart, $dateEnd, $locId);
 
-        //shift_ids
-        $shiftIds = $shifts->pluck('id');
+        //if there is data for the report, post to the report tables
+        if (count($shifts) > 0) {
 
-        //check to see if there are case notes for a report
-        //otherwise will not create a report
-        $caseNoteIds = $this->queryCaseNotes($locId, $shiftIds);
+            //shift_ids
+            $shiftIds = $shifts->pluck('id');
 
-        if (($shifts != null) && ($caseNoteIds != null)) {
+            //check to see if there are case notes for a report
+            $caseNoteIds = $this->queryCaseNotes($locId, $shiftIds);
 
             //insert into Reports table via function
             $result = $this->storeReport($dateStart, $dateEnd, $compId, $type);
@@ -202,7 +200,6 @@ class ReportApiController extends Controller
                         'success' => false
                     ]);
                 }
-
 
             } else {
                 //error storing report
