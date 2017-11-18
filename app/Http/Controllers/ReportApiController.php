@@ -43,21 +43,6 @@ class ReportApiController extends Controller
         $dateEnd = Carbon::createFromFormat('Y-m-d H:i:s', $dateTo);
         //$ts = $dateStart->timestamp();
 
-        //insert into the Reports table
-        $report = new Report;
-
-        $report->date_start = $dateStart;
-        $report->date_end = $dateEnd;
-        $report->company_id = $compId;
-        $report->type = $type;
-
-        $report->save();
-
-        $id = $report->id;
-
-        //if($type == 'Case Notes'){
-        //TODO: move to  a file yet to be created - functions.php
-
         //Retrieve the data for the location and date range needed to calculate totalHours and numGuards
         //NB: only retrieving shifts using shift_start_date, as ordinarily the shift_end_date would be the same or next day
         //get from table so that includes deletes from assigned_shifts so that the data can be provided in the report
@@ -67,56 +52,75 @@ class ReportApiController extends Controller
             ->whereBetween('shifts.start_time', [$dateStart, $dateEnd])
             ->get();
 
-        //calculate the total hours///FIXME: incorrect hours at a location when considering a guard could visit several locations
+        //if there is data for the report, post to the report tables
+        if(count($shifts) > 0) {
+
+            //insert into the Reports table
+            $report = new Report;
+
+            $report->date_start = $dateStart;
+            $report->date_end = $dateEnd;
+            $report->company_id = $compId;
+            $report->type = $type;
+
+            $report->save();
+
+            $id = $report->id;
+
+
+            //calculate the total hours///FIXME: incorrect hours at a location when considering a guard could visit several locations
 //        $totalMins = $shifts->sum('duration');//duration is in minutes
 //        $hours = $totalMins / 60;
 //        $totalHours = floor($hours * 100) / 100;//hours to 2 decimal places
 
-        //calculate the number of guards
-        //FIXME, potentially wrong if start the shift twice because
-        //perhaps the phone switches off.
-        //count distinct.
-        $numGuards = $shifts->groupBy('mobile_user_id')->count();
+            //calculate the number of guards
+            //FIXME, potentially wrong if start the shift twice because
+            //perhaps the phone switches off.
+            //count distinct.
+            $numGuards = $shifts->groupBy('mobile_user_id')->count();
 
-        //add to report_cases table
+            //add to report_cases table
 
-        $reportCase = new ReportCase;
-        $reportCase->report_id = $id;
-        $reportCase->location_id = $locId;
+            $reportCase = new ReportCase;
+            $reportCase->report_id = $id;
+            $reportCase->location_id = $locId;
 //        $reportCase->total_hours = $totalHours;
-        $reportCase->total_guards = $numGuards;
-        $reportCase->save();
-        $reportCaseId = $reportCase->id;
+            $reportCase->total_guards = $numGuards;
+            $reportCase->save();
+            $reportCaseId = $reportCase->id;
 
-        $shiftIds = $shifts->pluck('id');
+            $shiftIds = $shifts->pluck('id');
 
-        //retrieve the case_notes for the date range at the location
-        //don't get the deleted case_notes
-        $cases = CaseNote::whereIn('case_notes.shift_id', $shiftIds)->get();
+            //retrieve the case_notes for the date range at the location
+            //don't get the deleted case_notes
+            $cases = CaseNote::whereIn('case_notes.shift_id', $shiftIds)->get();
 
-        $caseIds = $cases->pluck('id');
+            $caseIds = $cases->pluck('id');
 
-        //add to  report_case_notes table
+            //add to  report_case_notes table
+//todo: check $cases has a value before trying insert or will it work ok anyhow???
+            foreach ($caseIds as $caseId) {
+                $reportNotes = new ReportCaseNote;
+                $reportNotes->report_case_id = $reportCaseId;
+                $reportNotes->case_note_id = $caseId;
+                $reportNotes->save();
+            }
 
-        foreach ($caseIds as $caseId) {
-            $reportNotes = new ReportCaseNote;
-            $reportNotes->report_case_id = $reportCaseId;
-            $reportNotes->case_note_id = $caseId;
-            $reportNotes->save();
-        }
-
-
-        //check to ensure a report was added which is certain (for type = Case Notes, report_case and report_case_note will only be added
-        //if shifts and notes respectively exist between the date range)
-        if ($id != null) {
-            return response()->json([
-                'success' => true
-            ]);
-        } else {
+            //just check to ensure reports table insert worked correctly
+            //check to ensure a report was added
+            //report_case_notes won't be added if no case_notes (very rare considering the structure, only ever at
+            // beginning when a shift started)
+            if ($id != null) {
+                return response()->json([
+                    'success' => true
+                ]);
+            }
+        }else {
             return response()->json([
                 'success' => false
             ]);
         }
+
     }
 
     public function postCasesAndChecks(Request $request)
