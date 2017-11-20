@@ -218,8 +218,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         // which means table join
         $emps = DB::table('users')
             ->join('user_roles', 'user_roles.user_id', '=', 'users.id')
-            ->where('users.id', '!=', 'user_roles.user_id')
             ->where('users.company_id', '=', $compId)
+            ->where('user_roles.deleted_at', '=', null)
             ->where('users.deleted_at', '=', null)
             ->get();
 
