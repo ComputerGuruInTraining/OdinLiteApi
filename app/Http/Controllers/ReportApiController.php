@@ -53,30 +53,37 @@ class ReportApiController extends Controller
         //if there is data for the report, post to the report tables
         if (count($shifts) > 0) {
 
-            $result = $this->storeReport($dateStart, $dateEnd, $compId, $type);
+            $shiftIds = $shifts->pluck('id');
 
-            if ($result->get('error') == null) {
+            //get the case notes for a report
+            $caseNoteIds = $this->queryCaseNotes($locId, $shiftIds);
 
-                $id = $result->get('id');
+            if (count($caseNoteIds) > 0) {
 
-                //calculate the total hours///FIXME: incorrect hours at a location when considering a guard could visit several locations
+                $result = $this->storeReport($dateStart, $dateEnd, $compId, $type);
+
+                if ($result->get('error') == null) {
+
+                    $id = $result->get('id');
+
+                    //calculate the total hours///FIXME: incorrect hours at a location when considering a guard could visit several locations
 //        $totalMins = $shifts->sum('duration');//duration is in minutes
 //        $hours = $totalMins / 60;
 //        $totalHours = floor($hours * 100) / 100;//hours to 2 decimal places
 
-                //calculate the number of guards
-                //FIXME, potentially wrong if start the shift twice because
-                //perhaps the phone switches off.
-                //count distinct.
-                $numGuards = $shifts->groupBy('mobile_user_id')->count();
+                    //calculate the number of guards
+                    //FIXME, potentially wrong if start the shift twice because
+                    //perhaps the phone switches off.
+                    //count distinct.
+                    $numGuards = $shifts->groupBy('mobile_user_id')->count();
 
-                //add to report_cases table
-                $resultCase = $this->storeReportCase($id, $shifts, $locId);
+                    //add to report_cases table
+                    $resultCase = $this->storeReportCase($id, $shifts, $locId);
 
-                if ($resultCase->get('error') == null) {
+                    if ($resultCase->get('error') == null) {
 
-                    //variables needed to retrieve case_notes for the period and store in report_case_notes table
-                    $reportCaseId = $resultCase->get('reportCaseId');
+                        //variables needed to retrieve case_notes for the period and store in report_case_notes table
+                        $reportCaseId = $resultCase->get('reportCaseId');
 
 //                    $reportCase = new ReportCase;
 //                    $reportCase->report_id = $id;
@@ -86,19 +93,18 @@ class ReportApiController extends Controller
 //                    $reportCase->save();
 //                    $reportCaseId = $reportCase->id;
 
-                    $shiftIds = $shifts->pluck('id');
+//
+//                    //retrieve the case_notes for the date range at the location
+//                    //don't get the deleted case_notes
+//                    $cases = CaseNote::whereIn('case_notes.shift_id', $shiftIds)->get();
+//
+//                    $caseIds = $cases->pluck('id');
 
-                    //retrieve the case_notes for the date range at the location
-                    //don't get the deleted case_notes
-                    $cases = CaseNote::whereIn('case_notes.shift_id', $shiftIds)->get();
+                        $resultNote = $this->storeReportCaseNote($reportCaseId, $caseNoteIds);
 
-                    $caseIds = $cases->pluck('id');
+                        if ($resultNote->get('error') == null) {
 
-                    $resultNote = $this->storeReportCaseNote($reportCaseId, $caseIds);
-
-                    if ($resultNote->get('error') == null) {
-
-                        //add to  report_case_notes table
+                            //add to  report_case_notes table
 //todo: check $cases has a value before trying insert or will it work ok anyhow???
 //                    foreach ($caseIds as $caseId) {
 //                        $reportNotes = new ReportCaseNote;
@@ -107,38 +113,45 @@ class ReportApiController extends Controller
 //                        $reportNotes->save();
 //                    }
 
+                            return response()->json([
+                                'success' => true
+                            ]);
+                        } else {
+                            //error storing report_case notes
+                            return response()->json([
+                                'success' => false
+                            ]);
+                        }
+                        //stored report and report case but not report case note
                         return response()->json([
-                            'success' => true
+                            'success' => false
                         ]);
                     } else {
-                        //error storing report_case notes
+                        //error storing report_case
                         return response()->json([
                             'success' => false
                         ]);
                     }
+
+                    //shift data > 0 but error storing report
                     return response()->json([
-                        'success' => true
+                        'success' => false
                     ]);
                 } else {
-                    //error storing report_case
+                    //error storing report
                     return response()->json([
                         'success' => false
                     ]);
                 }
-
-                //shift data > 0 but error storing report
-                return response()->json([
-                    'success' => false
-                ]);
-            }else{
-            //error storing report
+            } else {
+                //no case notes, therefore don't generate report
                 return response()->json([
                     'success' => false
                 ]);
             }
-        }
-        else{
-            //no shift data
+
+        } else {
+            //no shift data , count($shifts) == 0
             return response()->json([
                 'success' => false
             ]);
@@ -169,7 +182,7 @@ class ReportApiController extends Controller
             //shift_ids
             $shiftIds = $shifts->pluck('id');
 
-            //check to see if there are case notes for a report
+            //get the case notes for a report
             $caseNoteIds = $this->queryCaseNotes($locId, $shiftIds);
 
             //insert into Reports table via function
