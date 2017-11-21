@@ -185,62 +185,86 @@ class ReportApiController extends Controller
             //get the case notes for a report
             $caseNoteIds = $this->queryCaseNotes($locId, $shiftIds);
 
-            //insert into Reports table via function
-            $result = $this->storeReport($dateStart, $dateEnd, $compId, $type);
+            //if there are no case notes, we will not generate a report
+            //as the app structure requires case notes and therefore very rare for this not to be the case
+            //and presume not enough data
 
-            //report saved and id returned in $result
-            if ($result->get('error') == null) {
+            if (count($caseNoteIds) > 0) {
 
-                $reportId = $result->get('id');
+                $caseCheckIds = $this->queryShiftCheckCases($caseNoteIds);
 
-                $resultCase = $this->storeReportCase($reportId, $shifts, $locId);
+                if (count($caseCheckIds) > 0) {
 
-                if ($resultCase->get('error') == null) {
 
-                    //variables needed to retrieve case_notes for the period and store in report_case_notes table
-                    $reportCaseId = $resultCase->get('reportCaseId');
+                    //insert into Reports table via function
+                    $result = $this->storeReport($dateStart, $dateEnd, $compId, $type);
 
-                    $resultNote = $this->storeReportCaseNote($reportCaseId, $caseNoteIds);
+                    //report saved and id returned in $result
+                    if ($result->get('error') == null) {
 
-                    if ($resultNote->get('error') == null) {
+                        $reportId = $result->get('id');
 
-                        //$noteIds = $resultNote;
-                        $resultCheck = $this->storeReportCheckCase($reportCaseId, $caseNoteIds);
+                        $resultCase = $this->storeReportCase($reportId, $shifts, $locId);
 
-                        if ($resultCheck != 'no shift check') {
+                        if ($resultCase->get('error') == null) {
 
+                            //variables needed to retrieve case_notes for the period and store in report_case_notes table
+                            $reportCaseId = $resultCase->get('reportCaseId');
+
+                            $resultNote = $this->storeReportCaseNote($reportCaseId, $caseNoteIds);
+
+                            if ($resultNote->get('error') == null) {
+
+                                //$noteIds = $resultNote;
+                                $resultCheck = $this->storeReportCheckCase($reportCaseId, $caseCheckIds);
+
+                                if ($resultCheck->get('error') == null) {
+
+                                    return response()->json([
+                                        //all inserts occurred successfully
+                                        'success' => true
+//                                    'shiftChecks' => $resultCheck
+                                    ]);
+                                } else {
+                                    //no shift checks at the location
+                                    //ie in the case of a single location that does not have check in and check out
+                                    return response()->json([
+                                        'success' => false
+//                                    'shiftChecks' => $resultCheck//should equal 'no shift check'
+                                    ]);
+                                }
+
+                            } else {
+                                //error storing report case notes
+                                return response()->json([
+                                    'success' => false
+                                ]);
+                            }
                             return response()->json([
-                                'success' => true,
-                                'shiftChecks' => $resultCheck
+                                'success' => false
                             ]);
+
                         } else {
-                            //no shift checks at the location
-                            //ie in the case of a single location that does not have check in and check out
+                            //error storing report case
                             return response()->json([
-                                'success' => true,
-                                'shiftChecks' => $resultCheck//should equal 'no shift check'
+                                'success' => false
                             ]);
                         }
 
                     } else {
-                        //error storing report case notes
+                        //error storing report
                         return response()->json([
                             'success' => false
                         ]);
                     }
-                    return response()->json([
-                        'success' => $resultNote
-                    ]);
-
                 } else {
-                    //error storing report case
+                    //no shift checks, therefore presumably a single location with no location check data
                     return response()->json([
                         'success' => false
                     ]);
                 }
-
             } else {
-                //error storing report
+                //no case notes
                 return response()->json([
                     'success' => false
                 ]);
@@ -254,32 +278,31 @@ class ReportApiController extends Controller
         }
     }
 
-    public function storeReportCheckCase($reportCaseId, $noteIds)
+    public function storeReportCheckCase($reportCaseId, $caseCheckIds)
     {
-        //retrieve from ShiftCheckCases the records for those shift_checks
-        //ie all checks and the case notes created during the checks for the shifts
-        $caseChecks = ShiftCheckCase::whereIn('case_note_id', $noteIds)->get();
+
 
         //ensure there are shift_checks. Single Location Shifts will not have entries in the shift_checks or shift_check_cases tables
-        if ($caseChecks->isNotEmpty()) {
-            //shift_check_case_ids
-            $caseChecksId = $caseChecks->pluck('id');
+//        if ($caseChecks->isNotEmpty()) {
+        //shift_check_case_ids
 
-            //add to shift_check_cases table
-            foreach ($caseChecksId as $caseCheckId) {
-                $reportChecks = new ReportCheckCase;
-                $reportChecks->report_case_id = $reportCaseId;
-                $reportChecks->shift_check_case_id = $caseCheckId;
-                $reportChecks->save();
-            }
-            //FIXME: causing an error in no shift checks
-            if ($reportChecks->save()) {
-                return $caseChecksId;
-            }
-        } else {
-            $msg = 'no shift check';
-            return $msg;
+
+        //add to shift_check_cases table
+        foreach ($caseCheckIds as $caseCheckId) {
+            $reportChecks = new ReportCheckCase;
+            $reportChecks->report_case_id = $reportCaseId;
+            $reportChecks->shift_check_case_id = $caseCheckId;
+            $reportChecks->save();
         }
+
+        $error = array('error' => 'error');
+
+        if ($reportChecks->save()) {
+            return $caseCheckIds;
+        } else {
+            return $error;
+        }
+
     }
 
     public function storeReportCaseNote($reportCaseId, $caseNoteIds)
@@ -520,6 +543,18 @@ class ReportApiController extends Controller
         $caseNoteIds = $caseNotes->pluck('id');
 
         return $caseNoteIds;
+    }
+
+    public function queryShiftCheckCases($noteIds)
+    {
+
+        //retrieve from ShiftCheckCases the records for those shift_checks
+        //ie all checks and the case notes created during the checks for the shifts
+        $caseChecks = ShiftCheckCase::whereIn('case_note_id', $noteIds)->get();
+
+        $caseCheckIds = $caseChecks->pluck('id');
+
+        return $caseCheckIds;
     }
 
 }
