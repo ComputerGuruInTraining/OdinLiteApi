@@ -96,6 +96,9 @@ class ForgotPasswordController extends Controller
         );
 
         if ($response === Password::RESET_LINK_SENT) {
+            //intended to log the user out as if multiple requests over a short period, api somehow has the user logged in
+            //and the reset password page cannot be viewed.
+            Auth::logout();
             // return back()->with('status', trans($response));
             return response()->json(['success' => true]);
         }
