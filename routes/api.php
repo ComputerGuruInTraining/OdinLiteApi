@@ -840,7 +840,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get("/assignedshifts/{id}", function ($id) {
         //the logic is:
         //step 1: all assignedShifts for the period. (array1)
-        //step 2: all assignedShifts that have been started.(array2)
+        //step 2: all assignedShifts that have been started by the mobile user (array2)
+        // (!Important! > 1 mobile user can be assigned to shift)
         //step 3: array1 items that don't appear in array2 have not been started, therefore include in results.(array4)
         //step 4: all assignedShifts that have been started, check if they have ended (array3)
         //step 5: array2 items that are not in array3 have been started but not completed, therefore include in results.(array5)
@@ -860,9 +861,10 @@ Route::group(['middleware' => 'auth:api'], function () {
         //all assigned shifts for the period specified
         $array1ids = $array1->pluck('id');
 
-        //step2 :all shifts that have been started
+        //step2 :all shifts that have been started by this mobile_user
         $array2ids = DB::table('shifts')
             ->whereIn('assigned_shift_id', $array1ids)
+            ->where('mobile_user_id', '=', $id)
             ->pluck('assigned_shift_id');
 
         //step 3: array1 items that don't appear in array2 have not been started, therefore include in results.(array1-2)
