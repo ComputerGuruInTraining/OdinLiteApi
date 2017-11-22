@@ -15,6 +15,9 @@ use App\Notifications\RegisterCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
+use App\Notifications\NewMobileUser;
+
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -37,6 +40,7 @@ Route::post('/user/new/pw', 'Auth\ForgotPasswordController@sendResetLinkEmailCli
 
 /*Tailored confirm page following a completed password reset*/
 Route::get('/password/confirm', function () {
+//    Auth::logout();TODO: try this fix for forgot passwords
     return view('auth/passwords/confirm_reset');
 });
 
@@ -175,6 +179,21 @@ Route::get('/storage/app/public/{file}', function ($file) {
     $url = asset('storage/app/public/'.$file);
 
     return response()->download($url);
+
+});
+
+//Work in progress
+Route::get('/testing/nofitication/fail', function () {
+
+//    $newUser = App\User::find(974);//dds a bit of info
+    $newUser = App\User::find(974);//if user doesn't exist, fatal error
+
+    $newUser->notify(new NewMobileUser('test notification'));
+
+//    dd($response);
+    return response()->json([
+        'success' => true
+    ]);
 
 });
 
