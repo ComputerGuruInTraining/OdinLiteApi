@@ -27,7 +27,8 @@ class LogNotification
     public function handle(NotificationSent $event)
     {
         $channel = $event->channel;
-        $notifible =  $event->notifiable;
+        $notifiable =  $event->notifiable;
         $notification = $event->notification;
+        dd($channel, $notifiable, $notification);
     }
 }
