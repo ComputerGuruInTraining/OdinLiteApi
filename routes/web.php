@@ -53,6 +53,15 @@ Route::post('/company', function (Request $request) {
     //$checkEmail will be a single string
     $checkEmail = App\User::where('email', '=', $emailRegister)->select('email')->first();
 
+    $emailCheck =  App\User::where('email', '=', $emailRegister)->select('email')->get();
+
+    $firstEmail = $emailCheck[0];
+
+    $emailRecord =  App\User::where('email', '=', $emailRegister)->first();
+
+    $pluckedEmail = $emailRecord->pluck('email');
+
+
     if ($checkEmail != $emailRegister) {
 
         $company = new App\Company;
@@ -104,7 +113,10 @@ Route::post('/company', function (Request $request) {
             $newuser->notify(new RegisterCompany($compId));
 
             return response()->json([
-                'success' => $newuser
+                'success' => $newuser,
+                'checkEmail' => $checkEmail,
+                'firstEmail' => $firstEmail,
+                'pluckedEmail' => $pluckedEmail
             ]);
         }
     } else {
