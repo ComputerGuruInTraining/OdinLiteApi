@@ -53,15 +53,7 @@ Route::post('/company', function (Request $request) {
     //$checkEmail will be a single string
     $checkEmail = App\User::where('email', '=', $emailRegister)->select('email')->first();
 
-    $nonUnique = '';
-
-    if($checkEmail == $emailRegister){
-        //email exists, don't create the company
-        //and save a value in the $nonUnique variable to be checked in the console and if the variable holds this value,
-        //return a relevant msg to the individual attempting to register
-        $nonUnique = "Not Unique";
-
-    }else if($checkEmail != $emailRegister) {
+    if ($checkEmail != $emailRegister) {
 
         $company = new App\Company;
 
@@ -108,15 +100,19 @@ Route::post('/company', function (Request $request) {
         $newuser = App\User::find($id);
         //$newcomp = App\Company::find($compId);
 
-    }
+        if ($userRole->save()) {
+            $newuser->notify(new RegisterCompany($compId));
 
-    if ($userRole->save()) {
-        $newuser->notify(new RegisterCompany($compId));
-
-        return response()->json([
-            'success' => $newuser
-        ]);
+            return response()->json([
+                'success' => $newuser
+            ]);
+        }
     } else {
+        //email exists, don't create the company
+        //and save a value in the $nonUnique variable to be checked in the console and if the variable holds this value,
+        //return a relevant msg to the individual attempting to register
+        $nonUnique = "Not Unique";
+
         return response()->json([
             'success' => false,
             'nonUnique' => $nonUnique
