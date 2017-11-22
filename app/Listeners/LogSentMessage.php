@@ -27,6 +27,6 @@ class LogSentMessage
     public function handle(MessageSent $event)
     {
         //
-        echo "<script>console.log( 'Message Event fired');</script>";
+        dd('email sent');
     }
 }
