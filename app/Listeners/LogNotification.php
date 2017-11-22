@@ -26,8 +26,7 @@ class LogNotification
      */
     public function handle(NotificationSent $event)
     {
-        //
-        echo "<script>console.log( 'Message Event fired');</script>";
 
+        dd('notification sent');
     }
 }
