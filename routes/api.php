@@ -921,8 +921,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post("/assignedshifts", function (Request $request) {
 
         //table: assigned_shifts
-        $start = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('start'), 'America/Chicago');
-        $end = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('end'), 'America/Chicago');
+        $start = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('start'));
+        $end = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('end'));
 
         $assigned = new App\AssignedShift;
 
@@ -1024,8 +1024,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         //table: assigned_shifts
 
         //TODO: variable datetimes
-        $start = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('start'), 'America/Chicago');
-        $end = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('end'), 'America/Chicago');
+        $start = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('start'));
+        $end = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('end'));
 
         $assigned = App\AssignedShift::find($id);
 
