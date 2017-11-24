@@ -53,73 +53,75 @@ Route::post('/company', function (Request $request) {
     //$checkEmail will be a single string
     $checkEmail = App\User::where('email', '=', $emailRegister)->select('email')->first();
 
-//    if ($checkEmail->email != $emailRegister) {
-//
-//        $company = new App\Company;
-//
-//        $company->name = $request->input('company');
-//        $company->owner = $request->input('owner');
-//        $company->primary_contact = 0;//awaiting creation of user
-//        $company->status = 'incomplete';
-//
-//        $company->save();
-//
-//        //retrieve id of last insert
-//        $compId = $company->id;
-//
-//        $user = new App\User;
-//
-//        $user->first_name = $request->input('first_name');
-//        $user->last_name = $request->input('last_name');
-//        $user->email = $emailRegister;
-//
-//        $password = $request->input('pw');
-//        $pwEnc = Hash::make($password);
-//        $user->password = $pwEnc;
-//
-//        $user->company_id = $compId;
-//        $user->remember_token = str_random(10);
-//        $user->save();
-//
-//        //retrieve id of last insert
-//        $id = $user->id;
-//
-//        //add the user_id to the company as the primary contact for emails
-//        $comp = App\Company::find($compId);
-//        $comp->primary_contact = $id;
-//        $comp->save();
-//
-//        //save User role
-//        $userRole = new App\UserRole;
-//        //the first user registered during registration process is assigned top level access ie Manager
-//        $userRole->role = 'Manager';
-//        $userRole->user_id = $id;
-//        $userRole->save();
-//
-//        //retrieve saved user for notification
-//        $newuser = App\User::find($id);
-//        //$newcomp = App\Company::find($compId);
-//
+    if($checkEmail != null){
+        //email exists, don't create the company
+        //and save a value in the $nonUnique variable to be checked in the console and if the variable holds this value,
+        //return a relevant msg to the individual attempting to register
+        $nonUnique = "Not Unique";
+
+        return response()->json([
+            'success' => false,
+            'nonUnique' => $nonUnique
+        ]);
+
+
+    }else {
+
+        $company = new App\Company;
+
+        $company->name = $request->input('company');
+        $company->owner = $request->input('owner');
+        $company->primary_contact = 0;//awaiting creation of user
+        $company->status = 'incomplete';
+
+        $company->save();
+
+        //retrieve id of last insert
+        $compId = $company->id;
+
+        $user = new App\User;
+
+        $user->first_name = $request->input('first_name');
+        $user->last_name = $request->input('last_name');
+        $user->email = $emailRegister;
+
+        $password = $request->input('pw');
+        $pwEnc = Hash::make($password);
+        $user->password = $pwEnc;
+
+        $user->company_id = $compId;
+        $user->remember_token = str_random(10);
+        $user->save();
+
+        //retrieve id of last insert
+        $id = $user->id;
+
+        //add the user_id to the company as the primary contact for emails
+        $comp = App\Company::find($compId);
+        $comp->primary_contact = $id;
+        $comp->save();
+
+        //save User role
+        $userRole = new App\UserRole;
+        //the first user registered during registration process is assigned top level access ie Manager
+        $userRole->role = 'Manager';
+        $userRole->user_id = $id;
+        $userRole->save();
+
+        //retrieve saved user for notification
+        $newuser = App\User::find($id);
+        //$newcomp = App\Company::find($compId);
+
 //        if ($userRole->save()) {
-//            $newuser->notify(new RegisterCompany($compId));
+            $newuser->notify(new RegisterCompany($compId));
 
             return response()->json([
-//                'success' => $newuser,
+                'success' => $newuser,
                 'checkEmail' => $checkEmail,
 
             ]);
 //        }
-//    } else{
-//        //email exists, don't create the company
-//        //and save a value in the $nonUnique variable to be checked in the console and if the variable holds this value,
-//        //return a relevant msg to the individual attempting to register
-//        $nonUnique = "Not Unique";
-//
-//        return response()->json([
-//            'success' => false,
-//            'nonUnique' => $nonUnique
-//        ]);
-//    }
+    }
 });
 
 Route::get('/activate/{compId}', 'MainController@activate');
