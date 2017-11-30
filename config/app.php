@@ -51,7 +51,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://odinliteapi.azurewebsites.net'),
+    'url' => env('APP_URL', 'https://odinliteapi.azurewebsites.net'),
 
     /*
     |--------------------------------------------------------------------------
@@ -103,7 +103,7 @@ return [
     |
     */
     /*replace in azure with correct key*/
-    'key' => 'jieu583lcMTu6qpslyeoxu3ge75voyey',
+    'key' => '',
 
     'cipher' => 'AES-256-CBC',
     /*
