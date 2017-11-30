@@ -10,3 +10,5 @@ custom-hosts
 /storage/logs
 /storage
 /config
+/config/app.php
+/config/database.php
