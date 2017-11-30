@@ -102,7 +102,7 @@ return [
     | will not be safe. Please do this before deploying an application!
     |
     */
-    /*replace in azure with correct key*/
+
     'key' => 'jieu583lcMTu6qpslyeoxu3ge75voyey',
 
     'cipher' => 'AES-256-CBC',
