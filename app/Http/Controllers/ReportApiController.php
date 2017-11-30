@@ -71,11 +71,6 @@ class ReportApiController extends Controller
 //        $hours = $totalMins / 60;
 //        $totalHours = floor($hours * 100) / 100;//hours to 2 decimal places
 
-                    //calculate the number of guards
-                    //FIXME, potentially wrong if start the shift twice because
-                    //perhaps the phone switches off.
-                    //count distinct.
-                    $numGuards = $shifts->groupBy('mobile_user_id')->count();
 
                     //add to report_cases table
                     $resultCase = $this->storeReportCase($id, $shifts, $locId);
@@ -85,33 +80,9 @@ class ReportApiController extends Controller
                         //variables needed to retrieve case_notes for the period and store in report_case_notes table
                         $reportCaseId = $resultCase->get('reportCaseId');
 
-//                    $reportCase = new ReportCase;
-//                    $reportCase->report_id = $id;
-//                    $reportCase->location_id = $locId;
-////        $reportCase->total_hours = $totalHours;
-//                    $reportCase->total_guards = $numGuards;
-//                    $reportCase->save();
-//                    $reportCaseId = $reportCase->id;
-
-//
-//                    //retrieve the case_notes for the date range at the location
-//                    //don't get the deleted case_notes
-//                    $cases = CaseNote::whereIn('case_notes.shift_id', $shiftIds)->get();
-//
-//                    $caseIds = $cases->pluck('id');
-
                         $resultNote = $this->storeReportCaseNote($reportCaseId, $caseNoteIds);
 
                         if ($resultNote->get('error') == null) {
-
-                            //add to  report_case_notes table
-//todo: check $cases has a value before trying insert or will it work ok anyhow???
-//                    foreach ($caseIds as $caseId) {
-//                        $reportNotes = new ReportCaseNote;
-//                        $reportNotes->report_case_id = $reportCaseId;
-//                        $reportNotes->case_note_id = $caseId;
-//                        $reportNotes->save();
-//                    }
 
                             return response()->json([
                                 'success' => true
@@ -215,7 +186,6 @@ class ReportApiController extends Controller
 
                             if ($resultNote->get('error') == null) {
 
-                                //$noteIds = $resultNote;
                                 $resultCheck = $this->storeReportCheckCase($reportCaseId, $caseCheckIds);
 
                                 if ($resultCheck->get('error') == null) {
@@ -223,14 +193,12 @@ class ReportApiController extends Controller
                                     return response()->json([
                                         //all inserts occurred successfully
                                         'success' => true
-//                                    'shiftChecks' => $resultCheck
                                     ]);
                                 } else {
                                     //no shift checks at the location
                                     //ie in the case of a single location that does not have check in and check out
                                     return response()->json([
                                         'success' => false
-//                                    'shiftChecks' => $resultCheck//should equal 'no shift check'
                                     ]);
                                 }
 
@@ -280,13 +248,6 @@ class ReportApiController extends Controller
 
     public function storeReportCheckCase($reportCaseId, $caseCheckIds)
     {
-
-
-        //ensure there are shift_checks. Single Location Shifts will not have entries in the shift_checks or shift_check_cases tables
-//        if ($caseChecks->isNotEmpty()) {
-        //shift_check_case_ids
-
-
         //add to shift_check_cases table
         foreach ($caseCheckIds as $caseCheckId) {
             $reportChecks = new ReportCheckCase;
@@ -302,7 +263,6 @@ class ReportApiController extends Controller
         } else {
             return $error;
         }
-
     }
 
     public function storeReportCaseNote($reportCaseId, $caseNoteIds)
@@ -315,7 +275,6 @@ class ReportApiController extends Controller
             $reportNotes->save();
         }
 
-
         $error = array('error' => 'error');
 
         if ($reportNotes->save()) {
@@ -323,12 +282,10 @@ class ReportApiController extends Controller
         } else {
             return $error;
         }
-
     }
 
     public function storeReport($dateStart, $dateEnd, $compId, $type)
     {
-
         //insert into the Reports table
         $report = new Report;
 
@@ -353,7 +310,6 @@ class ReportApiController extends Controller
 
     public function storeReportCase($reportId, $shifts, $locId)
     {
-        $shiftIds = $shifts->pluck('id');
 
         //calculate the total hours
         $totalMins = $shifts->sum('duration');//duration is in minutes
@@ -361,7 +317,9 @@ class ReportApiController extends Controller
         $totalHours = floor($hours * 100) / 100;//hours to 2 decimal places
 
         //calculate the number of guards
-        $numGuards = $shifts->count('mobile_user_id');
+//        $numGuards = $shifts->count('mobile_user_id');
+        $numGuards = $shifts->groupBy('mobile_user_id')->count();
+
 
         //add to report_cases table
 
