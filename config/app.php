@@ -103,7 +103,7 @@ return [
     |
     */
     /*replace in azure with correct key*/
-    'key' => '',
+    'key' => 'jieu583lcMTu6qpslyeoxu3ge75voyey',
 
     'cipher' => 'AES-256-CBC',
     /*

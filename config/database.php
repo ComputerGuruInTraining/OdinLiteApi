@@ -58,7 +58,7 @@ return [
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE', 'odinliteapidb'),
             'username' => env('DB_USERNAME', 'ba769339968019'),
-            'password' => env('DB_PASSWORD', ''),
+            'password' => env('DB_PASSWORD', '7db07385'),
             'charset' => 'utf8',
             'collation' => 'utf8_unicode_ci',
             'prefix' => '',
