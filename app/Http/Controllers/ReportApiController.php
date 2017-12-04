@@ -85,7 +85,8 @@ class ReportApiController extends Controller
                         if ($resultNote->get('error') == null) {
 
                             return response()->json([
-                                'success' => true
+                                'success' => true,
+                                'reportId' => $id
                             ]);
                         } else {
                             //error storing report_case notes
@@ -94,9 +95,9 @@ class ReportApiController extends Controller
                             ]);
                         }
                         //stored report and report case but not report case note
-                        return response()->json([
-                            'success' => false
-                        ]);
+//                        return response()->json([
+//                            'success' => false
+//                        ]);
                     } else {
                         //error storing report_case
                         return response()->json([
@@ -105,9 +106,9 @@ class ReportApiController extends Controller
                     }
 
                     //shift data > 0 but error storing report
-                    return response()->json([
-                        'success' => false
-                    ]);
+//                    return response()->json([
+//                        'success' => false
+//                    ]);
                 } else {
                     //error storing report
                     return response()->json([
@@ -166,7 +167,6 @@ class ReportApiController extends Controller
 
                 if (count($caseCheckIds) > 0) {
 
-
                     //insert into Reports table via function
                     $result = $this->storeReport($dateStart, $dateEnd, $compId, $type);
 
@@ -192,7 +192,8 @@ class ReportApiController extends Controller
 
                                     return response()->json([
                                         //all inserts occurred successfully
-                                        'success' => true
+                                        'success' => true,
+                                        'reportId' => $reportId
                                     ]);
                                 } else {
                                     //no shift checks at the location
@@ -208,9 +209,9 @@ class ReportApiController extends Controller
                                     'success' => false
                                 ]);
                             }
-                            return response()->json([
-                                'success' => false
-                            ]);
+//                            return response()->json([
+//                                'success' => false
+//                            ]);
 
                         } else {
                             //error storing report case
