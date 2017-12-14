@@ -39,8 +39,15 @@ use App\DynamicRecipient;
 
 Route::group(['middleware' => 'auth:api'], function () {
 
+    //get currently authorized user
     Route::get('/user', function () {
         return Auth::user();
+    });
+
+    //get a user by id
+    Route::get("/user/{id}", function ($id) {
+        $user = App\User::find($id);
+        return response()->json($user);
     });
 
     //create User (console)
