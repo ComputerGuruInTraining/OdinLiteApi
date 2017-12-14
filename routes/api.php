@@ -39,8 +39,15 @@ use App\DynamicRecipient;
 
 Route::group(['middleware' => 'auth:api'], function () {
 
+    //get currently authorized user
     Route::get('/user', function () {
         return Auth::user();
+    });
+
+    //get a user by id
+    Route::get("/user/{id}", function ($id) {
+        $user = App\User::find($id);
+        return response()->json($user);
     });
 
     //create User (console)
@@ -209,21 +216,18 @@ Route::group(['middleware' => 'auth:api'], function () {
         ]);
     });
 
-//TODO: rewrite route to get users only (console user) the below route is incorrect and somehow happens to result in giving console user.
     Route::get("/user/list/{compId}", function ($compId) {
-        //all users in user_roles table are console users and therefore not employees using the mobile app
-        $users = App\User::all();
 
         //check the user_roles table and if a user_id is in there, don't retrieve
         // which means table join
-        $emps = DB::table('users')
+        $users = DB::table('users')
             ->join('user_roles', 'user_roles.user_id', '=', 'users.id')
             ->where('users.company_id', '=', $compId)
             ->where('user_roles.deleted_at', '=', null)
             ->where('users.deleted_at', '=', null)
             ->get();
 
-        return response()->json($emps);
+        return response()->json($users);//previously variable named $emps just in case error occurs
     });
 
     /*---------------User Roles----------------*/
