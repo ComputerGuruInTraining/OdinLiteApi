@@ -242,28 +242,28 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->get();
 
         //make an array of userIds for checking the employees table
-//        $userIds = $userIds->pluck('userId');
+        $userIdsArray = $userIds->pluck('userId');
 
         //check the employees table to see if the user exists as an employee
-//        $empUserIds = DB::table('employees')
-//            ->select('user_id')
-//            ->whereIn('user_id', $userIds)
-//            ->get();
+        $empUserIds = DB::table('employees')
+            ->select('user_id')
+            ->whereIn('user_id', $userIdsArray)
+            ->get();
 //
 //        //TODO: check result in $emps should be an array of user_ids, else use the pluck
-//        $empIds = $empUserIds->pluck('user_id');
+        $empIds = $empUserIds->pluck('user_id');
 //
 //        //check the userIds against the empIds and make a new array
 //        //which is made up of the ids that don't appear in empIds,
 //        //ie the userIds that are not already employees with empIds
-//        $nonEmpIds = $userIds->diff($empIds);
+        $nonEmpIds = $userIdsArray->diff($empIds);
 //
 //        //retrieve user details for nonEmpIds ie users that are not employees
-//        $users = DB::table('users')
-//            ->whereIn('user_id', $nonEmpIds)
-//            ->get();
+        $users = DB::table('users')
+            ->whereIn('id', $nonEmpIds)
+            ->get();
 
-        return response()->json($userIds);//previously variable named $emps just in case error occurs
+        return response()->json($users);//previously variable named $emps just in case error occurs
     });
 
     /*---------------User Roles----------------*/
