@@ -10,7 +10,7 @@ use App\Notifications\NewMobileUser;
 use App\Notifications\ChangePW;
 use App\Notifications\ChangeEmailNew;
 use App\Notifications\ChangeEmailOld;
-
+use App\Notifications\NewMobileUserExistingUser;
 
 use App\User as User;
 use App\Location as Location;
@@ -242,28 +242,28 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->get();
 
         //make an array of userIds for checking the employees table
-        $userIds = $userIds->pluck('userId');
+//        $userIds = $userIds->pluck('userId');
 
         //check the employees table to see if the user exists as an employee
-        $empUserIds = DB::table('employees')
-            ->select('user_id')
-            ->whereIn('user_id', $userIds)
-            ->get();
+//        $empUserIds = DB::table('employees')
+//            ->select('user_id')
+//            ->whereIn('user_id', $userIds)
+//            ->get();
+//
+//        //TODO: check result in $emps should be an array of user_ids, else use the pluck
+//        $empIds = $empUserIds->pluck('user_id');
+//
+//        //check the userIds against the empIds and make a new array
+//        //which is made up of the ids that don't appear in empIds,
+//        //ie the userIds that are not already employees with empIds
+//        $nonEmpIds = $userIds->diff($empIds);
+//
+//        //retrieve user details for nonEmpIds ie users that are not employees
+//        $users = DB::table('users')
+//            ->whereIn('user_id', $nonEmpIds)
+//            ->get();
 
-        //TODO: check result in $emps should be an array of user_ids, else use the pluck
-        $empIds = $empUserIds->pluck('user_id');
-
-        //check the userIds against the empIds and make a new array
-        //which is made up of the ids that don't appear in empIds,
-        //ie the userIds that are not already employees with empIds
-        $nonEmpIds = $userIds->diff($empIds);
-
-        //retrieve user details for nonEmpIds ie users that are not employees
-        $users = DB::table('users')
-            ->whereIn('user_id', $nonEmpIds)
-            ->get();
-
-        return response()->json($users);//previously variable named $emps just in case error occurs
+        return response()->json($userIds);//previously variable named $emps just in case error occurs
     });
 
     /*---------------User Roles----------------*/
@@ -357,7 +357,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         $compName = Company::where('id', '=', $newEmp->company_id)->pluck('name')->first();
 
         if ($employee->save()) {
-            $newEmp->notify(new NewMobileUser($compName));
+            $newEmp->notify(new NewMobileUserExistingUser($compName));
 
             return response()->json([
                 'success' => true
