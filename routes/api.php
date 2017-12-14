@@ -260,6 +260,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 //
 //        //retrieve user details for nonEmpIds ie users that are not employees
         $users = DB::table('users')
+            ->select('id', 'first_name', 'last_name')
             ->whereIn('id', $nonEmpIds)
             ->get();
 
