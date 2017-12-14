@@ -44,7 +44,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         return Auth::user();
     });
 
-    //get a user by id
+    //get a user by id //todo: except pw
     Route::get("/user/{id}", function ($id) {
         $user = App\User::find($id);
         return response()->json($user);
@@ -219,12 +219,48 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get("/user/list/{compId}", function ($compId) {
 
         //check the user_roles table and if a user_id is in there, don't retrieve
-        // which means table join
         $users = DB::table('users')
             ->join('user_roles', 'user_roles.user_id', '=', 'users.id')
             ->where('users.company_id', '=', $compId)
             ->where('user_roles.deleted_at', '=', null)
             ->where('users.deleted_at', '=', null)
+            ->get();
+
+        return response()->json($users);//previously variable named $emps just in case error occurs
+    });
+
+    //get a list of users that are not already added as employees
+    Route::get("/user/add-emp/{compId}", function ($compId) {
+
+        //check the user_roles table and if a user_id is in there, don't retrieve
+        $userIds = DB::table('users')
+            ->select('users.id as userId')
+            ->join('user_roles', 'user_roles.user_id', '=', 'users.id')
+            ->where('users.company_id', '=', $compId)
+            ->where('user_roles.deleted_at', '=', null)
+            ->where('users.deleted_at', '=', null)
+            ->get();
+
+        //make an array of userIds for checking the employees table
+        $userIds = $userIds->pluck('userId');
+
+        //check the employees table to see if the user exists as an employee
+        $empUserIds = DB::table('employees')
+            ->select('user_id')
+            ->whereIn('user_id', $userIds)
+            ->get();
+
+        //TODO: check result in $emps should be an array of user_ids, else use the pluck
+        $empIds = $empUserIds->pluck('user_id');
+
+        //check the userIds against the empIds and make a new array
+        //which is made up of the ids that don't appear in empIds,
+        //ie the userIds that are not already employees with empIds
+        $nonEmpIds = $userIds->diff($empIds);
+
+        //retrieve user details for nonEmpIds ie users that are not employees
+        $users = DB::table('users')
+            ->whereIn('user_id', $nonEmpIds)
             ->get();
 
         return response()->json($users);//previously variable named $emps just in case error occurs
@@ -247,8 +283,6 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     /*---------------------Employees(Mobile Users)---------------*/
     Route::get("/employees/list/{compId}", function ($compId) {
-        //all users in user_roles table are console users and therefore not employees using the mobile app
-        //$users = App\Employee::all();
 
         $employees = DB::table('users')
             ->join('employees', 'users.id', '=', 'employees.user_id')
@@ -259,7 +293,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         return response()->json($employees);
     });
 
-    //adding employees(mobile users) through console
+    //adding new employees(mobile users) through console (not already a user of console)
     Route::post("/employees", function (Request $request) {
         $employee = new Employee;
         $user = new User;
@@ -294,8 +328,6 @@ Route::group(['middleware' => 'auth:api'], function () {
         if ($employee->save()) {
             $newUser->notify(new NewMobileUser($compName));
 
-            /* Mail::to($email)
-                 ->send(new NewMobileUser($newUser));*/
             return response()->json([
                 'success' => true
             ]);
@@ -305,6 +337,36 @@ Route::group(['middleware' => 'auth:api'], function () {
             ]);
         }
 
+    });
+
+    //adding existing users as employees(mobile users) through console (already a console user)
+    Route::post("/employees/{userId}", function (Request $request, $userId) {
+
+        $employee = new Employee;
+
+        $employee->dob = $request->input('dateOfBirth');
+        $employee->mobile = $request->input('mobile');
+        $employee->gender = $request->input('sex');
+        //user_id of the existing user, sent through in url
+        $employee->user_id = $userId;
+        $employee->save();
+
+        //for emailing, grab the user from the db
+        $newEmp = User::find($userId);
+
+        $compName = Company::where('id', '=', $newEmp->company_id)->pluck('name')->first();
+
+        if ($employee->save()) {
+            $newEmp->notify(new NewMobileUser($compName));
+
+            return response()->json([
+                'success' => true
+            ]);
+        } else {
+            return response()->json([
+                'success' => false
+            ]);
+        }
     });
 
     //Edit Employees (ie mobile users)
