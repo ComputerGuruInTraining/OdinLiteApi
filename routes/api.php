@@ -645,7 +645,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //delete case note via console
-    //need to soft delete from:
+    //TODO?? need to soft delete from:
     //case_notes table
     //report_case_notes table
 

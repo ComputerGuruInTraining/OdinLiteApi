@@ -24,9 +24,9 @@
     <div id="app">
 
         @yield('content')
-        <div style="position: absolute; bottom:50px; right:15px;">
+        {{--<div style="position: absolute; bottom:50px; right:15px;">--}}
         	@include('footer')
-        </div>
+        {{--</div>--}}
     </div>
 
     <!-- Scripts -->
