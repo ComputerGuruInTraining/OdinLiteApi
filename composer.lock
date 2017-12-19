@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "768bf866653845de480113476b66b858",
+    "content-hash": "5be79a2c8b436a8fce51605104fe1071",
     "packages": [
         {
             "name": "barryvdh/laravel-cors",
@@ -1539,16 +1539,16 @@
         },
         {
             "name": "league/oauth2-server",
-            "version": "5.1.6",
+            "version": "5.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/oauth2-server.git",
-                "reference": "a1a6cb7b4c7e61b5d2b40384c520b72f192d07c4"
+                "reference": "8e5df6d6286d0010861a708b70f00345d074bce9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/oauth2-server/zipball/a1a6cb7b4c7e61b5d2b40384c520b72f192d07c4",
-                "reference": "a1a6cb7b4c7e61b5d2b40384c520b72f192d07c4",
+                "url": "https://api.github.com/repos/thephpleague/oauth2-server/zipball/8e5df6d6286d0010861a708b70f00345d074bce9",
+                "reference": "8e5df6d6286d0010861a708b70f00345d074bce9",
                 "shasum": ""
             },
             "require": {
@@ -1612,7 +1612,7 @@
                 "secure",
                 "server"
             ],
-            "time": "2017-11-29T21:47:00+00:00"
+            "time": "2017-07-11T06:31:36+00:00"
         },
         {
             "name": "matthewbdaly/laravel-azure-storage",
