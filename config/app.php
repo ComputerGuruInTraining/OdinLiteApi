@@ -182,6 +182,9 @@ return [
         /* Passport */
         Laravel\Passport\PassportServiceProvider::class,
 
+        /*Azure Storage*/
+        Matthewbdaly\LaravelAzureStorage\AzureStorageServiceProvider::class,
+
     ],
 
     /*

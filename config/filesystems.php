@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => 'local',
+    'default' => 'azure',
 
     /*
     |--------------------------------------------------------------------------
@@ -26,7 +26,7 @@ return [
     |
     */
 
-    'cloud' => 's3',
+    'cloud' => 'azure',
 
     /*
     |--------------------------------------------------------------------------
@@ -60,6 +60,12 @@ return [
             'secret' => 'your-secret',
             'region' => 'your-region',
             'bucket' => 'your-bucket',
+        ],
+        'azure' => [
+            'driver'    => 'azure',
+            'name'      => 'odinlitestorage',
+            'key'       => 'hPL5J+cWfa98ousjU/24eZaCxjpCIFxQlnAIQU9KvbHDWapwMeEUXJ9u5ePBXTebEj8NeW227SXQgk64woPJog==',
+            'container' => 'images',
         ],
 
     ],

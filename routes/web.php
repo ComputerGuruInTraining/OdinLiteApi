@@ -14,7 +14,6 @@
 use App\Notifications\RegisterCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-
 use App\Notifications\NewMobileUser;
 
 
@@ -133,7 +132,7 @@ Route::post('/upload', function (Request $request) {
     if ($request->hasFile('file')) {
 
         //store the file in the /images directory inside storage/app
-        $path = $request->file('file')->storeAs('images', $request->input('fileName'));
+        $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
     } else {
         $path = "";
     }
