@@ -141,6 +141,7 @@ Route::post('/upload', function (Request $request) {
     return response()->json($path);
 });
 
+//called from update markers() see route in api.php
 Route::get("/dashboard/{compId}/current-positions", function ($compId) {
 
     $res = DB::table('current_user_locations')
