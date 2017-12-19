@@ -493,6 +493,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     /*-----------Dashboard-----------*/
+    //called upon dashboard intial load see route in web.php
     Route::get("/dashboard/{compId}/current-location", function ($compId) {
 
         $res = DB::table('current_user_locations')
@@ -516,6 +517,8 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->where('shifts.start_time', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 DAY)'))
             ->distinct()
             ->get();
+
+//        $res = $res->groupBy('mobile_user_id');
 
         return response()->json($res);
 
