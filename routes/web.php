@@ -173,20 +173,25 @@ Route::get('/download-photo/{filename}', function ($filename) {
 
     $file = $filename . '.jpeg';
 
-    $pathToFile = 'images/' . $file;
-//    $storagePathToFile = base_path('storage/app/images/'. $file);//works on localhost
-    $storagePathToFile =  storage_path('app/images/'. $file);
+    $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
+        config('filesystems.disks.azure.container') . '/casenotes/' . $file;
 
-    //check if file exists
-    $fileExists = Storage::exists($pathToFile);
+    return response()->json($url);//false
 
-    if ($fileExists) {
-         return response()->download($storagePathToFile);
-
-    } else {
-        return response()->json($fileExists);//false
-
-    }
+//    $pathToFile = 'images/' . $file;
+////    $storagePathToFile = base_path('storage/app/images/'. $file);//works on localhost
+//    $storagePathToFile =  storage_path('app/images/'. $file);
+//
+//    //check if file exists
+//    $fileExists = Storage::exists($pathToFile);
+//
+//    if ($fileExists) {
+//         return response()->download($storagePathToFile);
+//
+//    } else {
+//        return response()->json($fileExists);//false
+//
+//    }
 
 });
 
