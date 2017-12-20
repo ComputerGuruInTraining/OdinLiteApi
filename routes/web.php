@@ -16,6 +16,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Notifications\NewMobileUser;
 
+use MicrosoftAzure\Storage\Common\ServicesBuilder;
+//use MicrosoftAzure\Storage\Common\ServiceException;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -132,16 +135,16 @@ Route::post('/upload', function (Request $request) {
     if ($request->hasFile('file')) {
 
         //store the file in the /images directory inside storage/app
-//        $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
+        $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
 
         //filename in the format timestamp.jpeg
-        $filename = $request->input('fileName');
-        $filepath = 'casenotes';
+//        $filename = $request->input('fileName');
+//        $filepath = 'casenotes';
 
         //override the content type and store on disk
-        changeContentType($filepath, $filename);
-
-        $path = $filename;
+//        changeContentType($filepath, $filename);
+//
+//        $path = $filename;
 
 //        $file_handle = fopen($filepath, 'r');
 
@@ -198,9 +201,17 @@ Route::get('/download-photo/{foldername}/{filename}', function ($foldername, $fi
 //    $file = $filename . '.jpeg';
 
     $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
-        config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
+        config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename.'?comp=metadata';
 
-    return response()->json($url);//false
+
+
+//    $connectionString = "DefaultEndpointsProtocol=https;AccountName=<config('filesystems.disks.azure.name')>;
+//        AccountKey=<config('filesystems.disks.azure.key')>";
+//
+//// Create blob REST proxy.
+//    $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($connectionString);
+
+    return response()->json($url);
 
 //    $pathToFile = 'images/' . $file;
 ////    $storagePathToFile = base_path('storage/app/images/'. $file);//works on localhost
