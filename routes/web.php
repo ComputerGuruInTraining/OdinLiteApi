@@ -203,7 +203,7 @@ Route::get('/download-photo/{foldername}/{filename}', function ($foldername, $fi
 
 //    $file = $filename . '.jpeg';
 
-    $exists = Storage::disk('azure')->exists($filename);
+    $exists = Storage::disk('azure')->exists('images/'.$foldername.'/'.$filename);
 
     $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
         config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
