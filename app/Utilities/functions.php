@@ -99,17 +99,18 @@ if (!function_exists('getGeoData')) {
 //$url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
 //    config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
 if (!function_exists('changeContentType')) {
+
     function changeContentType($filepath, $filename)
     {
 
     // Return MIME type ala mimetype extension
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+//        $finfo = finfo_open(FILEINFO_MIME_TYPE);
 
     // Get the MIME type of the file
-        $file_mime = finfo_file($finfo, $filepath.'/'.$filename);
-        finfo_close($finfo);
+//        $file_mime = finfo_file($finfo, $filepath.'/'.$filename);
+//        finfo_close($finfo);
 
-        $file_handle = fopen($filepath.'/'.$filename, 'rwx');
+        $file_handle = fopen('/'.$filepath.'/'.$filename, 'r');
 
     // Here is the magic. getDriver() allows us to over-ride the default request config
         Storage::disk('azure')
@@ -118,7 +119,7 @@ if (!function_exists('changeContentType')) {
                 $file_handle,
                 [
                     'visibility' => 'public',
-                    'ContentType' => $file_mime
+                    'ContentType' => 'image/jpeg'
                 ]
             );
     }

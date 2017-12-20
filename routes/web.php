@@ -141,7 +141,7 @@ Route::post('/upload', function (Request $request) {
         //override the content type and store on disk
         changeContentType($filepath, $filename);
 
-        $path = $filepath;
+        $path = $filename;
 
 //        $file_handle = fopen($filepath, 'r');
 
