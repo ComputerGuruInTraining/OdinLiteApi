@@ -15,6 +15,7 @@ use App\Notifications\RegisterCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Notifications\NewMobileUser;
+use Illuminate\Support\Facades\Storage;
 
 use MicrosoftAzure\Storage\Common\ServicesBuilder;
 //use MicrosoftAzure\Storage\Common\ServiceException;
@@ -137,6 +138,8 @@ Route::post('/upload', function (Request $request) {
         //store the file in the /images directory inside storage/app
         $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
 
+
+
         //filename in the format timestamp.jpeg
 //        $filename = $request->input('fileName');
 //        $filepath = 'casenotes';
@@ -200,8 +203,10 @@ Route::get('/download-photo/{foldername}/{filename}', function ($foldername, $fi
 
 //    $file = $filename . '.jpeg';
 
+    $exists = Storage::disk('azure')->exists($filename);
+
     $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
-        config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename.'?comp=metadata';
+        config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
 
 
 
@@ -211,7 +216,7 @@ Route::get('/download-photo/{foldername}/{filename}', function ($foldername, $fi
 //// Create blob REST proxy.
 //    $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($connectionString);
 
-    return response()->json($url);
+    return response()->json($exists);
 
 //    $pathToFile = 'images/' . $file;
 ////    $storagePathToFile = base_path('storage/app/images/'. $file);//works on localhost
