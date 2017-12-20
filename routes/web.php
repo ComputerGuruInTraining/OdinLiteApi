@@ -134,8 +134,9 @@ Route::post('/upload', function (Request $request) {
         //store the file in the /images directory inside storage/app
 //        $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
 
+        //filename in the format timestamp.jpeg
         $filename = $request->input('fileName');
-        $filepath = 'casenotes/'.$filename;
+        $filepath = 'casenotes';
 
         //override the content type and store on disk
         changeContentType($filepath, $filename);
