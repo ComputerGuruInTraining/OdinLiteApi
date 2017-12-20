@@ -203,11 +203,10 @@ Route::get('/download-photo/{foldername}/{filename}', function ($foldername, $fi
 
 //    $file = $filename . '.jpeg';
 
-    $exists = Storage::disk('azure')->exists('images/'.$foldername.'/'.$filename);
+//    $exists = Storage::disk('azure')->exists('images/'.$foldername.'/'.$filename);
 
     $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
         config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
-
 
 
 //    $connectionString = "DefaultEndpointsProtocol=https;AccountName=<config('filesystems.disks.azure.name')>;
@@ -216,7 +215,7 @@ Route::get('/download-photo/{foldername}/{filename}', function ($foldername, $fi
 //// Create blob REST proxy.
 //    $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($connectionString);
 
-    return response()->json($exists);
+    return response()->json($url);
 
 //    $pathToFile = 'images/' . $file;
 ////    $storagePathToFile = base_path('storage/app/images/'. $file);//works on localhost
