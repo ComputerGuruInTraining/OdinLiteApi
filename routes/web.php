@@ -132,7 +132,29 @@ Route::post('/upload', function (Request $request) {
     if ($request->hasFile('file')) {
 
         //store the file in the /images directory inside storage/app
-        $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
+//        $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
+
+        $filename = $request->input('fileName');
+        $filepath = 'casenotes/'.$filename;
+
+        //override the content type and store on disk
+        changeContentType($filepath, $filename);
+
+        $path = $filepath;
+
+//        $file_handle = fopen($filepath, 'r');
+
+//        Storage::disk('azure')
+//            ->getDriver()
+//            ->put( $filepath,
+//                $file_handle,
+//                [
+//                    'visibility' => 'public',
+//                    'ContentType' => 'image/jpeg'
+//                ]
+//            );
+
+
     } else {
         $path = "";
     }
