@@ -169,12 +169,13 @@ Route::get("/dashboard/{compId}/current-positions", function ($compId) {
 
 });
 
-Route::get('/download-photo/{filename}', function ($filename) {
+//route to provide a url to an image stored in azure storage container
+Route::get('/download-photo/{foldername}/{filename}', function ($foldername, $filename) {
 
-    $file = $filename . '.jpeg';
+//    $file = $filename . '.jpeg';
 
     $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
-        config('filesystems.disks.azure.container') . '/casenotes/' . $file;
+        config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
 
     return response()->json($url);//false
 
