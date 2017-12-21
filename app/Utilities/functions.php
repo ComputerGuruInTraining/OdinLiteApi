@@ -132,8 +132,8 @@ if (!function_exists('azureContentType')) {
 
             $endpoint = sprintf(
                 'DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s',
-                $config['name'],
-                $config['key']
+                'odinlitestorage',
+                'hPL5J+cWfa98ousjU/24eZaCxjpCIFxQlnAIQU9KvbHDWapwMeEUXJ9u5ePBXTebEj8NeW227SXQgk64woPJog=='
             );
 
             $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($endpoint);
@@ -150,7 +150,7 @@ if (!function_exists('azureContentType')) {
 
             try {
                 //Upload blob
-                $blobRestProxy->createBlockBlob("/".config('filesystems.disks.azure.container'),
+                $blobRestProxy->createBlockBlob('images',
                     $blob_name,
                     $content,
                     $options);
