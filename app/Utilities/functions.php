@@ -146,7 +146,7 @@ if (!function_exists('azureContentType')) {
 
         try {
             //Upload blob
-            $blobRestProxy->createBlockBlob(config('filesystems.disks.azure.container'), $blob_name, $content, $options);
+            $blobRestProxy->createBlockBlob("/".config('filesystems.disks.azure.container'), $blob_name, $content, $options);
             $success = 'true';
             return $success;
         } catch (ServiceException $e) {
