@@ -128,41 +128,48 @@ if (!function_exists('getGeoData')) {
 if (!function_exists('azureContentType')) {
     function azureContentType()
     {
-        Storage::extend('azure', function ($app, $config) {
+        try {
+                Storage::extend('azure', function ($app, $config) {
 
 
-//        $connectionString = "DefaultEndpointsProtocol=https;AccountName=<odinlitestorage>;AccountKey=<hPL5J+cWfa98ousjU/24eZaCxjpCIFxQlnAIQU9KvbHDWapwMeEUXJ9u5ePBXTebEj8NeW227SXQgk64woPJog==>";
+        //        $connectionString = "DefaultEndpointsProtocol=https;AccountName=<odinlitestorage>;AccountKey=<hPL5J+cWfa98ousjU/24eZaCxjpCIFxQlnAIQU9KvbHDWapwMeEUXJ9u5ePBXTebEj8NeW227SXQgk64woPJog==>";
 
-        $endpoint = sprintf(
-                'DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s',
-                'odinlitestorage',
-                'hPL5J+cWfa98ousjU/24eZaCxjpCIFxQlnAIQU9KvbHDWapwMeEUXJ9u5ePBXTebEj8NeW227SXQgk64woPJog=='
-            );
+                    $endpoint = sprintf(
+                        'DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s',
+                        'odinlitestorage',
+                        'hPL5J+cWfa98ousjU/24eZaCxjpCIFxQlnAIQU9KvbHDWapwMeEUXJ9u5ePBXTebEj8NeW227SXQgk64woPJog=='
+                    );
 
-            $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($endpoint);
+                    $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($endpoint);
 
-            //access file
-//            $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
-//                config('filesystems.disks.azure.container') . '/image1.jpeg';
-//            $content = fopen($url, "r");
-//
-//            //blob details
-//            $blob_name = "image2.jpeg";
-//            $options = new CreateBlobOptions();
-//            $options->setBlobContentType("image/jpeg");
+                    //access file
+        //            $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
+        //                config('filesystems.disks.azure.container') . '/image1.jpeg';
+        //            $content = fopen($url, "r");
+        //
+        //            //blob details
+        //            $blob_name = "image2.jpeg";
+        //            $options = new CreateBlobOptions();
+        //            $options->setBlobContentType("image/jpeg");
 
-            try {
-                $blob = $blobRestProxy->getBlob("images", "image1.jpeg");
-                $blob->setContentType('image/jpeg');
 
-                //Upload blob
-//                $blobRestProxy->createBlockBlob('images',
-//                    $blob_name,
-//                    $content,
-//                    $options);
-                $success = 'true';
-                return $success;
+                        $blob = $blobRestProxy->getBlob("images", "image1.jpeg");
 
+
+                        $name = $blob->getName();
+        //                $blob->setContentType('image/jpeg');
+                        $success = 'true';
+        //                return $success;
+
+                        return $name;
+
+                        //Upload blob
+        //                $blobRestProxy->createBlockBlob('images',
+        //                    $blob_name,
+        //                    $content,
+        //                    $options);
+        //
+                    });
             } catch (ServiceException $e) {
                 $code = $e->getCode();
                 $error_message = $e->getMessage();
@@ -170,7 +177,7 @@ if (!function_exists('azureContentType')) {
                 return $error;
 
             }
-        });
+
 
     }
 }
