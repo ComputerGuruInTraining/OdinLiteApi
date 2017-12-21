@@ -132,25 +132,26 @@ Route::get('/activate/{compId}', 'MainController@activate');
 //mobile: upload an image during a new case note
 //CSRF_Token excluded route
 Route::post('/upload', function (Request $request) {
+    try {
 
-    if ($request->hasFile('file')) {
+        if ($request->hasFile('file')) {
 
 
-        //store the file in the /images directory inside storage/app
+            //store the file in the /images directory inside storage/app
 //        $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
-        $path = $request->file('file')->storeAs('/', 'image1.jpeg');
+            $path = $request->file('file')->storeAs('/', 'image1.jpeg');
 
-        $success = azureContentType();
+            $success = azureContentType();
 
-        if($success == 'true'){
-            $success = $request->input('fileName');
-        }
+            if ($success == 'true') {
+                $success = $request->input('fileName');
+            }
 
-        //filename in the format timestamp.jpeg
+            //filename in the format timestamp.jpeg
 
 //        $filepath = 'casenotes';
 
-        //override the content type and store on disk
+            //override the content type and store on disk
 //        changeContentType($filepath, $filename);
 //
 //        $path = $filename;
@@ -168,12 +169,22 @@ Route::post('/upload', function (Request $request) {
 //            );
 
 
-    } else {
-        $success = "nofile";
+        } else {
+            $success = "nofile";
 //        $path = "";
-    }
+        }
 
-    return response()->json($success);
+        return response()->json($success);
+    }catch(Exception $e){
+
+        return response()->json('failed to set options');
+
+
+    }catch(ErrorException $err){
+        return response()->json('options not set');
+
+
+    }
 });
 
 //called from update markers() see route in api.php
