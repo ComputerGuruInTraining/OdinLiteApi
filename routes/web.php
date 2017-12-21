@@ -142,6 +142,10 @@ Route::post('/upload', function (Request $request) {
 
         $success = azureContentType();
 
+        if($success == 'true'){
+            $success = $request->input('fileName');
+        }
+
         //filename in the format timestamp.jpeg
 
 //        $filepath = 'casenotes';
