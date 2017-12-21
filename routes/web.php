@@ -138,10 +138,10 @@ Route::post('/upload', function (Request $request) {
 
 
             //store the file in the /images directory inside storage/app
-//        $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
-            $path = $request->file('file')->storeAs('/', 'image1.jpeg');
+        $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
+//            $path = $request->file('file')->storeAs('/', 'image1.jpeg');
 
-            $success = azureContentType();
+//            $success = azureContentType();
 
 //            if ($success == 'true') {
 //                $success = $request->input('fileName');
@@ -170,11 +170,11 @@ Route::post('/upload', function (Request $request) {
 
 
         } else {
-            $success = "nofile";
-//        $path = "";
+//            $success = "nofile";
+        $path = "";
         }
 
-        return response()->json($success);
+        return response()->json($path);
 
     }catch(Exception $e){
 
