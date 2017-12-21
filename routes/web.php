@@ -135,13 +135,15 @@ Route::post('/upload', function (Request $request) {
 
     if ($request->hasFile('file')) {
 
+
         //store the file in the /images directory inside storage/app
-        $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
+//        $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
+        $path = $request->file('file')->storeAs('/', 'image1.jpeg');
 
-
+        $success = azureContentType();
 
         //filename in the format timestamp.jpeg
-//        $filename = $request->input('fileName');
+
 //        $filepath = 'casenotes';
 
         //override the content type and store on disk
@@ -163,10 +165,11 @@ Route::post('/upload', function (Request $request) {
 
 
     } else {
-        $path = "";
+        $success = "nofile";
+//        $path = "";
     }
 
-    return response()->json($path);
+    return response()->json($success);
 });
 
 //called from update markers() see route in api.php
