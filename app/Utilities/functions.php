@@ -128,33 +128,39 @@ if (!function_exists('getGeoData')) {
 if (!function_exists('azureContentType')) {
     function azureContentType()
     {
+        Storage::extend('azure', function ($app, $config) {
 
-        $connectionString = sprintf(
-            'DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s',
-            config('filesystems.disks.azure.name'),
-            config('filesystems.disks.azure.key')
-        );
+            $connectionString = sprintf(
+                'DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s',
+                config('filesystems.disks.azure.name'),
+                config('filesystems.disks.azure.key')
+            );
 
-        $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($connectionString);
+            $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($connectionString);
 
-        //upload
-        $blob_name = "image1.jpeg";
-        $content = fopen("image1.jpeg", "r");
+            //upload
+            $blob_name = "image2.jpeg";
+            $content = fopen("image1.jpeg", "r");
 
-        $options = new CreateBlobOptions();
-        $options->setBlobContentType("image/jpeg");
+            $options = new CreateBlobOptions();
+            $options->setBlobContentType("image/jpeg");
 
-        try {
-            //Upload blob
-            $blobRestProxy->createBlockBlob("/".config('filesystems.disks.azure.container'), $blob_name, $content, $options);
-            $success = 'true';
-            return $success;
-        } catch (ServiceException $e) {
-            $code = $e->getCode();
-            $error_message = $e->getMessage();
-            $error = $code . ": " . $error_message . "<br />";
-            return $error;
+            try {
+                //Upload blob
+                $blobRestProxy->createBlockBlob("/".config('filesystems.disks.azure.container'),
+                    $blob_name,
+                    $content,
+                    $options);
+                $success = 'true';
+                return $success;
+            } catch (ServiceException $e) {
+                $code = $e->getCode();
+                $error_message = $e->getMessage();
+                $error = $code . ": " . $error_message . "<br />";
+                return $error;
 
-        }
+            }
+        });
+
     }
 }
