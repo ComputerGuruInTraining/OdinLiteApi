@@ -130,18 +130,21 @@ if (!function_exists('azureContentType')) {
     {
         Storage::extend('azure', function ($app, $config) {
 
-            $connectionString = sprintf(
+            $endpoint = sprintf(
                 'DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s',
-                config('filesystems.disks.azure.name'),
-                config('filesystems.disks.azure.key')
+                $config['name'],
+                $config['key']
             );
 
-            $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($connectionString);
+            $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($endpoint);
 
-            //upload
+            //access file
+            $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
+                config('filesystems.disks.azure.container') . '/image1.jpeg';
+            $content = fopen($url, "r");
+
+            //blob details
             $blob_name = "image2.jpeg";
-            $content = fopen("image1.jpeg", "r");
-
             $options = new CreateBlobOptions();
             $options->setBlobContentType("image/jpeg");
 
@@ -153,6 +156,7 @@ if (!function_exists('azureContentType')) {
                     $options);
                 $success = 'true';
                 return $success;
+
             } catch (ServiceException $e) {
                 $code = $e->getCode();
                 $error_message = $e->getMessage();
