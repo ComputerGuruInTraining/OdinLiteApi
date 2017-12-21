@@ -128,15 +128,18 @@ if (!function_exists('getGeoData')) {
 if (!function_exists('azureContentType')) {
     function azureContentType()
     {
-        Storage::extend('azure', function ($app, $config) {
+//        Storage::extend('azure', function ($app, $config) {
 
-            $endpoint = sprintf(
-                'DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s',
-                'odinlitestorage',
-                'hPL5J+cWfa98ousjU/24eZaCxjpCIFxQlnAIQU9KvbHDWapwMeEUXJ9u5ePBXTebEj8NeW227SXQgk64woPJog=='
-            );
 
-            $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($endpoint);
+        $connectionString = "DefaultEndpointsProtocol=https;AccountName=<odinlitestorage>;AccountKey=<hPL5J+cWfa98ousjU/24eZaCxjpCIFxQlnAIQU9KvbHDWapwMeEUXJ9u5ePBXTebEj8NeW227SXQgk64woPJog==>";
+
+//        $endpoint = sprintf(
+//                'DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s',
+//                'odinlitestorage',
+//                'hPL5J+cWfa98ousjU/24eZaCxjpCIFxQlnAIQU9KvbHDWapwMeEUXJ9u5ePBXTebEj8NeW227SXQgk64woPJog=='
+//            );
+
+            $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($connectionString);
 
             //access file
             $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
@@ -155,7 +158,7 @@ if (!function_exists('azureContentType')) {
                     $content,
                     $options);
                 $success = 'true';
-                return $success;
+                return $blobRestProxy;
 
             } catch (ServiceException $e) {
                 $code = $e->getCode();
@@ -164,7 +167,7 @@ if (!function_exists('azureContentType')) {
                 return $error;
 
             }
-        });
+//        });
 
     }
 }

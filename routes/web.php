@@ -143,9 +143,9 @@ Route::post('/upload', function (Request $request) {
 
             $success = azureContentType();
 
-            if ($success == 'true') {
-                $success = $request->input('fileName');
-            }
+//            if ($success == 'true') {
+//                $success = $request->input('fileName');
+//            }
 
             //filename in the format timestamp.jpeg
 
@@ -175,6 +175,7 @@ Route::post('/upload', function (Request $request) {
         }
 
         return response()->json($success);
+
     }catch(Exception $e){
 
         return response()->json('failed to set options');
