@@ -49,10 +49,10 @@ class NewMobileUser extends Notification
             ->line("<a href='https://play.google.com/store/apps/details?id=com.odinliteapp&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'>
                 <img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png' 
                 style='height: auto; width: 240px;'/></a>")
-            ->line("<a href=\"https://itunes.apple.com/us/app/odinlite/id1290654035?mt=8\" 
-                style=\"display:inline-block;overflow:hidden;
-                background:url(https://linkmaker.itunes.apple.com/assets/shared/badges/en-us/appstore-lrg.svg) no-repeat;
-                width:135px;height:40px;background-size:contain;\"></a>")
+            ->line("<a href='https://itunes.apple.com/us/app/odinlite/id1290654035?mt=8\' 
+            style='display:inline-block;overflow:hidden;
+            background:url(https://linkmaker.itunes.apple.com/assets/shared/badges/en-us/appstore-lrg.svg) no-repeat;
+            width:135px;height:40px;background-size:contain;'></a>")
             ->line('Please create a password to use with the account using our Password Reset Facility. This facility optimizes the security of our software suite by not 
               emailing passwords to users or sharing passwords with the person who registered the account.')
             ->line('It also enables you to change the password at your convenience. 
