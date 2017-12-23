@@ -978,16 +978,16 @@ Route::group(['middleware' => 'auth:api'], function () {
     //and for which the shift has started but not ended
     Route::get("/commencedshifts/{mobileuserid}", 'JobsController@getCommencedShifts');
 
+
+    //mobile
+    //get shift details already stored in db for a shift that has been started
+    Route::get("/commencedshiftdetails/{assignedid}", 'JobsController@getCommencedShiftDetails');
+
     //mobile
     //route to get the locations for a particular assigned_shift
     Route::get("/assignedshifts/locations/{asgnshftid}", function ($asgnshftid) {
 
-        $assigned = DB::table('assigned_shift_locations')
-            ->join('locations', 'locations.id', '=', 'assigned_shift_locations.location_id')
-            ->where('assigned_shift_locations.assigned_shift_id', '=', $asgnshftid)
-            ->where('locations.deleted_at', '=', null)
-            ->where('assigned_shift_locations.deleted_at', '=', null)
-            ->get();
+        $assigned = app('App\Http\Controllers\JobsController')->getShiftLocations($asgnshftid);
 
         return response()->json($assigned);
     });
