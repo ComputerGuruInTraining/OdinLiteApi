@@ -904,7 +904,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //mobile
-    //route to get assigned shifts for a particular mobile_user/employee
+    //route to get assigned shifts (ie complete roster) for a particular mobile_user/employee
     //that occur within the specified INTERVAL X DAY
     //and for which the shift has not ended
     Route::get("/assignedshifts/{id}", function ($id) {
@@ -971,6 +971,12 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         return response()->json($myAssigned);
     });
+
+    //mobile
+    //route to get commenced assigned shifts for a particular mobile_user/employee
+    //that occur within the specified INTERVAL X DAY
+    //and for which the shift has started but not ended
+    Route::get("/commencedshifts/{mobileuserid}", 'JobsController@getCommencedShifts');
 
     //mobile
     //route to get the locations for a particular assigned_shift
