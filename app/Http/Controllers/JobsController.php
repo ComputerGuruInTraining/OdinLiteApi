@@ -55,7 +55,7 @@ class JobsController extends Controller
             }
 
             return response()->json([
-                'location' => $assignedLoc,
+                'locations' => $assignedLoc,
                 'shiftId' => $shiftId,
                 'singleCaseNote' => $singleCaseNote,
                 ]);
