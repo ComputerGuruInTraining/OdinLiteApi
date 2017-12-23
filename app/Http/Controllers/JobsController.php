@@ -57,7 +57,7 @@ class JobsController extends Controller
             return response()->json([
                 'locations' => $assignedLoc,
                 'shiftId' => $shiftId,
-                'singleCaseNote' => $singleCaseNote,
+                'caseCheck' => $singleCaseNote,
                 ]);
 
         }else{
@@ -93,22 +93,25 @@ class JobsController extends Controller
                     //if a case note exists for the current check in
                     if(count($casePerCheck) > 0){
                         $assignedLoc[$i]->casePerCheck = true;
+                        $caseCheck = true;
 
                     }else if(count($casePerCheck) == 0){
                         //case note not submitted
                         $assignedLoc[$i]->casePerCheck = false;
+                        $caseCheck = false;
                     }
 
                 }else if(count($checkId) == 0){
                     //location not checked in
                     $assignedLoc[$i]->checkedIn  = false;
                     $assignedLoc[$i]->casePerCheck = false;
+                    $caseCheck = false;
                 }
             }
 
             return response()->json([
                 'locations' => $assignedLoc,
-                'casePerCheck' => $casePerCheck,
+                'caseCheck' => $caseCheck,
                 'shiftId' => $shiftId
             ]);
 
