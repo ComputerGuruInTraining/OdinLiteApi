@@ -19,7 +19,7 @@ class JobsController extends Controller
             ->where('shifts.mobile_user_id', '=', $mobileuserid)
             ->where('shifts.end_time', '=' , null)//shift has not ended
             ->where('shifts.deleted_at', '=', null)//ensuring shift has not been deleted
-            ->orderBy('shifts.start_time')//the most recent first
+            ->orderBy('shifts.start_time', 'desc')//the most recent first
             ->get();
 
         //returns a result set of assigned_shift_ids
