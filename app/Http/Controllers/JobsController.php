@@ -12,14 +12,11 @@ class JobsController extends Controller
 
         //step 1: all assigned shifts that have an entry in the shifts table, but have not ended
         $myCommenced = DB::table('assigned_shifts')
-            ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=',
-                'assigned_shifts.id')
             ->join('shifts', 'assigned_shifts.id', '=', 'shifts.assigned_shift_id')
-            ->select('assigned_shifts.id, shifts.start_time')
-            ->where('assigned_shift_employees.mobile_user_id', '=', $mobileuserid)
+            ->select('assigned_shifts.id')
             ->where('assigned_shifts.end', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 2 DAY)'))
             ->where('assigned_shifts.deleted_at', '=', null)
-            ->where('assigned_shift_employees.deleted_at', '=', null)
+            ->where('shifts.mobile_user_id', '=', $mobileuserid)
             ->where('shifts.end_time', '=' , null)//shift has not ended
             ->where('shifts.deleted_at', '=', null)//ensuring shift has not been deleted
             ->get();
