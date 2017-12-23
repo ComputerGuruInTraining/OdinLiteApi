@@ -44,4 +44,14 @@ class CaseNoteApiController extends Controller
         return response()->json($cases);
     }
 
+    //get the case notes for a shift
+    public function getShiftCaseNotes($shiftId){
+
+        $notes = DB::table('case_notes')
+            ->where('shift_id', '=', $shiftId)
+            ->get();
+
+        return $notes;
+    }
+
 }

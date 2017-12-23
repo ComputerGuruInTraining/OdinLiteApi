@@ -1428,6 +1428,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         $position->mobile_user_id = $userId;
         $position->user_first_name = $user->first_name;
         $position->user_last_name = $user->last_name;
+
         if ($request->input('locId') != 0) {
             $position->location_id = $request->input('locId');
         }
@@ -1557,6 +1558,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         }
 
     });
+
+    Route::get('/commencedshiftdetails/{assignedId}', 'JobsController@getCommencedShiftDetails');
 
 
 });//end Route::group...
