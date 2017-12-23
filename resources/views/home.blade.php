@@ -11,7 +11,7 @@
                     You are logged in!
                 </div>
 
-                {{--<a href="/download-photo/1502850591833">Test</a>--}}
+               <a href="/commencedshifttest/404">Test commenced shift</a>
 
             </div>
         </div>
