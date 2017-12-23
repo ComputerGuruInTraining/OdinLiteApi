@@ -56,6 +56,7 @@ class JobsController extends Controller
 
             return response()->json([
                 'location' => $assignedLoc,
+                'shiftId' => $shiftId,
                 'singleCaseNote' => $singleCaseNote,
                 ]);
 
@@ -107,7 +108,8 @@ class JobsController extends Controller
 
             return response()->json([
                 'locations' => $assignedLoc,
-                'casePerCheck' => $casePerCheck
+                'casePerCheck' => $casePerCheck,
+                'shiftId' => $shiftId
             ]);
 
         }//end else several locations
