@@ -32,6 +32,7 @@ class JobsController extends Controller
         //each assigned object will have:
         //location_id, name, address, latitude, longitude, notes, [required] checks
         //result set is a collection, whether 1 or many
+        //Data Requirement 1
         $assignedLoc = $this->getShiftLocations($assignedid);
 
         //Step 2: get the shift_id that corresponds to the assigned_shift_id
@@ -44,8 +45,7 @@ class JobsController extends Controller
         //data required is: location details, has a case note been submitted,
         if(count($assignedLoc) == 1){
 
-            $notes = app('App\Http\Controllers\CaseNoteApiController')->getShiftCaseNotes($shiftId[0]);
-
+            $notes = app('App\Http\Controllers\CaseNoteApiController')->getShiftCaseNotes($shiftId->id);
 
             if(count($notes) > 0){
                 $singleCaseNote = true;
@@ -73,45 +73,35 @@ class JobsController extends Controller
 
             foreach ($assignedLoc as $i => $location) {
 
-                //Data Required 2. number of checks completed
-                $numChecks =  $this->countShiftChecks($shiftId[0], $location.location_id);//fixme: error here?
-                //fixme: error when count=0
+                //Data Requirement 2. number of checks completed
+                $numChecks =  $this->countShiftChecks($shiftId->id, $location->location_id);
 
                 $assignedLoc[$i]->checked = $numChecks;
 
-                $checkId = $this->getCurrentCheckIn($shiftId[0], $location.location_id);
+                $checkId = $this->getCurrentCheckIn($shiftId->id, $location->location_id);
 
-                //Data Required 3. if a shift check is still to be completed
+                //Data Requirement 3. if a shift check is still to be completed
                 //only possibly for 1 location per shift
                 if(count($checkId) > 0){
                     //assign this location to the locationCheckedIn Variable in mobile
                     $assignedLoc[$i]->checkedIn  = true;
 
-                }else if(count($checkId) == 0){
-                    //location not checked in
-                    $assignedLoc[$i]->checkedIn  = false;
-
-                }
-            }
-
-            //Data Required 4:
-//                    has a case note been submitted for the current check in?
-            foreach($assignedLoc as $check){
-
-                if($check->checkedIn == true){
-                    $casePerCheck = $this->caseNoteSbmtd($checkId[0]);//fixme: error here? due to way accessed, also do we have access to variable
+                    //Data Requirement 4:
+                    $casePerCheck = $this->caseNoteSbmtd($checkId->id);
 
                     //if a case note exists for the current check in
                     if(count($casePerCheck) > 0){
-                        $casePerCheck = true;
+                        $assignedLoc[$i]->casePerCheck = true;
 
                     }else if(count($casePerCheck) == 0){
                         //case note not submitted
-                        $casePerCheck = false;
+                        $assignedLoc[$i]->casePerCheck = false;
                     }
 
-                }else{
-                    $casePerCheck = false;
+                }else if(count($checkId) == 0){
+                    //location not checked in
+                    $assignedLoc[$i]->checkedIn  = false;
+                    $assignedLoc[$i]->casePerCheck = false;
                 }
             }
 
@@ -133,7 +123,6 @@ class JobsController extends Controller
             ->get();
 
         return $assigned;
-
     }
 
     public function getShiftId($assignedId){
@@ -143,10 +132,7 @@ class JobsController extends Controller
             ->where('assigned_shift_id', '=', $assignedId)
             ->first();//todo: error here??
 
-        //pluck returns an array
-        $shiftId = $shiftIdObject->pluck('id');
-
-        return $shiftId;
+        return $shiftIdObject;
     }
 
     //get shift checks amount completed for a particular shift_id per location
@@ -161,7 +147,7 @@ class JobsController extends Controller
         return $numChecks;
     }
 
-    //return: should only be one value in the array
+    //return: should only be one value
     public function getCurrentCheckIn($shiftId, $locationId){
 
         $checkInProgress = DB::table('shift_checks')
@@ -169,11 +155,9 @@ class JobsController extends Controller
             ->where('shift_id', '=', $shiftId)
             ->where('location_id', '=', $locationId)
             ->where('check_outs', '=',  null)
-            ->get();
+            ->first();
 
-        $checkId = $checkInProgress->pluck('id');
-
-        return $checkId;
+        return $checkInProgress;
     }
 
     public function caseNoteSbmtd($checkIn){
