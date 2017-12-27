@@ -978,7 +978,6 @@ Route::group(['middleware' => 'auth:api'], function () {
     //and for which the shift has started but not ended
     Route::get("/commencedshifts/{mobileuserid}", 'JobsController@getCommencedShifts');
 
-
     //mobile
     //get shift details already stored in db for a shift that has been started
     Route::get("/commencedshiftdetails/{assignedid}", 'JobsController@getCommencedShiftDetails');
