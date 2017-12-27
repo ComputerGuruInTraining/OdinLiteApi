@@ -11,7 +11,7 @@
                     You are logged in!
                 </div>
 
-               <a href="/commencedshifttest/404">Test commenced shift</a>
+                {{--<a href="/commencedshifttest/404">Test commenced shift</a>--}}
 
             </div>
         </div>

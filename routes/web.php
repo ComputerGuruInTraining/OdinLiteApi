@@ -276,9 +276,6 @@ Route::get('/testing/nofitication/fail', function () {
 
 });
 
-Route::get("/commencedshifttest/{assignedid}", 'JobsController@getCommencedShiftDetails');
-
-
 //TODO: 
 //check to see if access token, assigned via oauth2, exists and is not expired
 //and also used for initial login to mobile
