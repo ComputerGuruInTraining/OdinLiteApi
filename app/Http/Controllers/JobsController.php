@@ -163,7 +163,7 @@ class JobsController extends Controller
     public function getCurrentCheckIn($shiftId, $locationId){
 
         $checkInProgress = DB::table('shift_checks')
-            ->select('id', 'created_at')
+            ->select('id')
             ->where('shift_id', '=', $shiftId)
             ->where('location_id', '=', $locationId)
             ->where('check_outs', '=',  null)
