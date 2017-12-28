@@ -79,39 +79,41 @@ class JobsController extends Controller
 
                 $assignedLoc[$i]->checked = $numChecks;
 
-                $checkId = $this->getCurrentCheckIn($shiftId->id, $location->location_id);
+//todo: implement at a later date as needs to be thorough or there will be errors
+                //returns the shiftCheckId for each location
+//                $checkId = $this->getCurrentCheckIn($shiftId->id, $location->location_id);
 
                 //Data Requirement 3. if a shift check is still to be completed
                 //only possibly for 1 location per shift
-                if(count($checkId) > 0){
-                    //assign this location to the locationCheckedIn Variable in mobile
-                    $assignedLoc[$i]->checkedIn  = true;
-
-                    //Data Requirement 4:
-                    $casePerCheck = $this->caseNoteSbmtd($checkId->id);
-
-                    //if a case note exists for the current check in
-                    if(count($casePerCheck) > 0){
-                        $assignedLoc[$i]->casePerCheck = true;
-                        $caseCheck = true;
-
-                    }else if(count($casePerCheck) == 0){
-                        //case note not submitted
-                        $assignedLoc[$i]->casePerCheck = false;
-                        $caseCheck = false;
-                    }
-
-                }else if(count($checkId) == 0){
-                    //location not checked in
-                    $assignedLoc[$i]->checkedIn  = false;
-                    $assignedLoc[$i]->casePerCheck = false;
-                    $caseCheck = false;
-                }
+//                if(count($checkId) > 0){
+//                    //assign this location to the locationCheckedIn Variable in mobile
+//                    $assignedLoc[$i]->checkedIn  = true;
+//
+//                    //Data Requirement 4:
+//                    $casePerCheck = $this->caseNoteSbmtd($checkId->id);
+//
+//                    //if a case note exists for the current check in
+//                    if(count($casePerCheck) > 0){
+//                        $assignedLoc[$i]->casePerCheck = true;
+//                        $caseCheck = true;
+//
+//                    }else if(count($casePerCheck) == 0){
+//                        //case note not submitted
+//                        $assignedLoc[$i]->casePerCheck = false;
+//                        $caseCheck = false;
+//                    }
+//
+//                }else if(count($checkId) == 0){
+//                    //location not checked in
+//                    $assignedLoc[$i]->checkedIn  = false;
+//                    $assignedLoc[$i]->casePerCheck = false;
+//                    $caseCheck = false;
+//                }
             }
 
             return response()->json([
                 'locations' => $assignedLoc,
-                'caseCheck' => $caseCheck,
+//                'caseCheck' => $caseCheck,
                 'shiftId' => $shiftId
             ]);
 
@@ -153,10 +155,15 @@ class JobsController extends Controller
     }
 
     //return: should only be one value
+    //if a location is checked in at and not checked out of
+    //and the app deals with this thoroughly,
+    //then each shiftcheck will have only one entry
+    //but atm, this requires too many changes to the mobile app
+    //so include a shift check gather once check in data being thoroughly implemented in mobile app
     public function getCurrentCheckIn($shiftId, $locationId){
 
         $checkInProgress = DB::table('shift_checks')
-            ->select('id')
+            ->select('id', 'created_at')
             ->where('shift_id', '=', $shiftId)
             ->where('location_id', '=', $locationId)
             ->where('check_outs', '=',  null)
