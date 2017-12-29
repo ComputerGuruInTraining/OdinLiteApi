@@ -113,7 +113,6 @@ class JobsController extends Controller
 
             return response()->json([
                 'locations' => $assignedLoc,
-//                'caseCheck' => $caseCheck,
                 'shiftId' => $shiftId
             ]);
 
@@ -132,12 +131,16 @@ class JobsController extends Controller
         return $assigned;
     }
 
+    //ensure get the most recent shift that relates to an assigned_shift_id,
+    // mostly useful in development as shouldn't be a factor in production but just in case
+    //as all shift data used within mobile for commenced shifts relies upon the shiftId being accurate
     public function getShiftId($assignedId){
 
         $shiftIdObject = DB::table('shifts')
             ->select('id')
             ->where('assigned_shift_id', '=', $assignedId)
-            ->first();//todo: error here??
+            ->orderBy('created_at', 'desc')
+            ->first();
 
         return $shiftIdObject;
     }
