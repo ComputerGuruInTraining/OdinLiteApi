@@ -94,7 +94,7 @@ class JobsController extends Controller
     }
 
 
-    public function getCommencedShiftDetails($assignedid){
+    public function getCommencedShiftDetails($assignedid, $mobileUserId){
 
         //Step 1: get the shift_locations
         //each assigned object will have:
@@ -107,7 +107,7 @@ class JobsController extends Controller
         //each assigned_shift_id will only have 1 shift_id for a particular user
         //but retrieve first, because technically possible to have more than 1 from db query point of view
         //result is an array even though only one.
-        $shiftId = $this->getShiftId($assignedid);
+        $shiftId = $this->getShiftId($assignedid, $mobileUserId);
 
         //single locations
         //data required is: location details, has a case note been submitted,
@@ -202,11 +202,12 @@ class JobsController extends Controller
     //ensure get the most recent shift that relates to an assigned_shift_id,
     // mostly useful in development as shouldn't be a factor in production but just in case
     //as all shift data used within mobile for commenced shifts relies upon the shiftId being accurate
-    public function getShiftId($assignedId){
+    public function getShiftId($assignedId, $mobileUserId){
 
         $shiftIdObject = DB::table('shifts')
             ->select('id')
             ->where('assigned_shift_id', '=', $assignedId)
+            ->where('mobile_user_id', '=', $mobileUserId)
             ->orderBy('created_at', 'desc')
             ->first();
 

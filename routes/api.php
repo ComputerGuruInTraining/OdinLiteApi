@@ -982,7 +982,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     //mobile
     //get shift details already stored in db for a shift that has been started
-    Route::get("/commencedshiftdetails/{assignedid}", 'JobsController@getCommencedShiftDetails');
+    Route::get("/commencedshiftdetails/{assignedid}/{mobileuserid}", 'JobsController@getCommencedShiftDetails');
 
     //mobile
     //route to get the locations for a particular assigned_shift
