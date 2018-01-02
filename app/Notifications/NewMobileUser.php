@@ -50,9 +50,9 @@ class NewMobileUser extends Notification
                 <img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png'
                 style='height: auto; width: 240px;'/></a>")
 
-            ->line("<a href='https://itunes.apple.com/us/app/odinlite/id1290654035?mt=8'>
+            ->line("<a href='https://itunes.apple.com/us/app/odinlite/id1290654035?mt=8''>
                 <img alt='Find it on App Store' src='https://linkmaker.itunes.apple.com/assets/shared/badges/en-us/appstore-lrg.svg'
-                style='height: 102px; width: 284px;'/></a>")
+                style='height: auto; width: 210px; margin-left: 15px'/></a>")
             
             ->line('Please create a password to use with the account using our Password Reset Facility. This facility optimizes the security of our software suite by not 
               emailing passwords to users or sharing passwords with the person who registered the account.')
