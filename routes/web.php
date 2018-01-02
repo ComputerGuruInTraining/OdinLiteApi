@@ -276,6 +276,18 @@ Route::get('/testing/nofitication/fail', function () {
 
 });
 
+////user = 1164
+//Route::get('/testMail/{id}', function ($id) {
+//
+//$newUser = App\User::find($id);
+//
+//$compName = App\Company::where('id', '=', 354)->pluck('name')->first();
+//
+//
+//    $newUser->notify(new NewMobileUser($compName));
+//
+//});
+
 //TODO: 
 //check to see if access token, assigned via oauth2, exists and is not expired
 //and also used for initial login to mobile
