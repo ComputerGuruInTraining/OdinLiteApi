@@ -281,8 +281,7 @@ Route::get('/testing/nofitication/fail', function () {
 //
 //$newUser = App\User::find($id);
 //
-//$compName = App\Company::where('id', '=', 354)->pluck('name')->first();
-//
+//$compName = App\Company::where('id', '=', 404)->pluck('name')->first();
 //
 //    $newUser->notify(new NewMobileUser($compName));
 //
