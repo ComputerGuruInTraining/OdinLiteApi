@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 use App\CaseFile as CaseFile;
+use App\CaseNote as CaseNote;
+use App\Cases as Cases;
 
 
 class CaseNoteApiController extends Controller
