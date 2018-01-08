@@ -136,7 +136,6 @@ Route::post('/upload', function (Request $request) {
 
         if ($request->hasFile('file')) {
 
-
             //store the file in the /images directory inside storage/app
         $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
 //            $path = $request->file('file')->storeAs('/', 'image1.jpeg');
