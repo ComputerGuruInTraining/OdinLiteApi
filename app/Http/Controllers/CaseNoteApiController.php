@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+use App\CaseFile as CaseFile;
+
 
 class CaseNoteApiController extends Controller
 {
@@ -52,6 +54,96 @@ class CaseNoteApiController extends Controller
             ->get();
 
         return $notes;
+    }
+
+    public function postCase($locId, $title){
+
+        $cases = new Cases;
+        $cases->location_id = $locId;
+        $cases->title = $title;
+
+        if($cases->save()){
+            $id = $cases->id;
+
+            return $id;
+        }else{
+
+            return 0;
+        }
+    }
+
+    public function postCaseNote($userId, $shiftId, $caseId, $title, $desc = null, $img = null){
+
+        $caseNote = new CaseNote;
+        $caseNote->title = $title;
+        $caseNote->img = $img;
+        $caseNote->description = $desc;
+        $caseNote->user_id = $userId;
+        $caseNote->shift_id = $shiftId;
+        $caseNote->case_id = $caseId;
+
+        if($caseNote->save()){
+            $id = $caseNote->id;
+
+            return $id;
+        }else{
+
+            return 0;
+        }
+
+    }
+
+    /*purpose: insert record into Case Files table
+    //can be used for any file
+    //Request needs to contain:
+    length, userId, filepath
+    the first pms are the required, the optional parameters are not required in db
+   */
+    public function postCaseFile($caseId, $userId, $filepath, $caseNoteId = null){
+
+        //post filepath in case_files table
+        $file = new CaseFile;
+        $file->case_id = $caseId;
+        $file->file = $filepath;
+        $file->user_id = $userId;
+        $file->case_note_id = $caseNoteId;
+
+        if ($file->save()) {
+
+            $id = $file->id;
+            return $id;
+        }else{
+
+            return 0;
+        }
+
+    }
+
+    public function loopCaseFile($request, $caseId, $caseNoteId = null){
+
+        if ($request->has('length')) {
+
+            $length = $request->input('length');
+            $userId = $request->input('userId');
+            $numFilesSaved = 0;
+
+            //post filepath to the case_files table
+            for ($i = 0; $i < $length; $i++) {
+
+                $filepath = $request->input('file' + i);
+
+                $caseFileId = app('App\Http\Controllers\CaseNoteApiController')->postCaseFile($caseId, $userId, $filepath, $caseNoteId);
+
+                if($caseFileId != 0){
+                    $numFilesSaved++;
+                }
+            }
+            return $numFilesSaved;
+
+        }else{
+
+            return 0;
+        }
     }
 
 }

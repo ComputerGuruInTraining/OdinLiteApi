@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\ShiftCheckCases as CheckCases;
 
 
 class JobsController extends Controller
@@ -244,12 +245,30 @@ class JobsController extends Controller
         return $checkInProgress;
     }
 
-    public function caseNoteSbmtd($checkIn){
+    public function caseNoteSbmtd($checkIn)
+    {
 
         $shiftCheckCase = DB::table('shift_check_cases')
             ->where('shift_check_id', '=', $checkIn)
             ->first();
 
         return $shiftCheckCase;
+    }
+
+   //insert into shift_check_cases table
+    public function postShiftCheckCase($caseNoteId, $sftChkId){
+
+        $sftChkCase = new CheckCases;
+        $sftChkCase->case_note_id = $caseNoteId;
+        $sftChkCase->shift_check_id = $sftChkId;
+
+        if($sftChkCase->save()){
+            $id = $sftChkCase->id;
+
+            return $id;
+        }else{
+
+            return 0;
+        }
     }
 }
