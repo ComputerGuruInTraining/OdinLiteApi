@@ -550,60 +550,82 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::get("/casenotes/list/{compId}", 'CaseNoteApiController@getCaseNotes');
 
-    //mobile, insert a new case note
+    //insert a new case note
     Route::post("/casenote", function (Request $request) {
 
-        //save to cases table
-        $cases = new Cases;
+        //response variables initialised to false
+        $caseSaved = false;
+        $caseNoteSaved = false;
+        $caseFileSaved = false;
+        $sfkChkCaseSaved = false;
 
+        //input values
+        $userId = $request->input('userId');
         $locId = $request->input('locId');
+
+        //convert to required string for db
         $location = Location::find($locId);
         $locName = $location->name;
-
         $time = Carbon::now();
+        $title = $locName . ' ' . $time;
 
-        $cases->location_id = $locId;
-        $cases->title = $locName . ' ' . $time;
-        $cases->save();
+        //save to cases table
+        $caseId = app('App\Http\Controllers\CaseNoteApiController')->postCase($locId, $title);
 
-        $id = $cases->id;
+        //if cases table insert successfully... proceed with subsequent inserts
+        if($caseId != 0) {
 
-        //save to case_notes table including the case_id
-        $case = new CaseNote;
+            $caseSaved = true;
 
-        $case->title = $request->input('title');
-        $case->img = $request->input('img');
-        $case->description = $request->input('description');
-        $case->user_id = $request->input('mobileUserId');
-        $case->shift_id = $request->input('shiftId');
-        $case->case_id = $id;
-        $case->save();
+            //save to case_notes table including the case_id
+            //first, grab request data
+            $title = $request->input('title');
+            $shiftId = $request->input('shiftId');
 
-        $noteId = $case->id;
+            //description is not required for submit case note feature in mobile
+            if($request->has('description')){
 
+                $desc = $request->input('description');
+                $caseNoteId = app('App\Http\Controllers\CaseNoteApiController')->postCaseNote($userId, $shiftId, $caseId, $title, $desc);
 
-        //save the case_note_id to shift_checks table to relate the data
-        //if there is a shift_check (there won't be if only 1 location)
-        if ($request->input('sftChkId') != 0) {
+            }else{
 
-            $sftChkId = $request->input('sftChkId');
-            $sftChk = new App\ShiftCheckCases;
+                $caseNoteId = app('App\Http\Controllers\CaseNoteApiController')->postCaseNote($userId, $shiftId, $caseId, $title);
+            }
 
-            $sftChk->case_note_id = $noteId;
-            $sftChk->shift_check_id = $sftChkId;
-            $sftChk->save();
+            //if case_notes insert successful
+            if ($caseNoteId != 0) {
+
+                $caseNoteSaved = true;
+
+                //save the case_note_id to shift_checks table to relate the data
+                //if there is a shift_check (there won't be if only 1 location)
+                if ($request->input('sftChkId') != 0) {
+
+                    $sftChkId = $request->input('sftChkId');
+
+                    $sftChkCaseId = app('App\Http\Controllers\JobsController')->postShiftCheckCase($caseNoteId, $sftChkId);
+
+                    if($sftChkCaseId != 0){
+
+                        $sfkChkCaseSaved = true;
+                    }
+                }
+            }
+
+            //insert into case_files if case insert successful, as can proceed even if case note insert fails for some reason, as case_note_id is not required in db ie nullable
+            $numFilesSaved = app('App\Http\Controllers\CaseNoteApiController')->loopCaseFile($request, $caseId, $caseNoteId);
+
         }
 
-        //ensure at least the case table and case note was successful
-        if ($case->save()) {
-            return response()->json([
-                'success' => true
-            ]);
-        } else {
-            return response()->json([
-                'success' => false
-            ]);
-        }
+        //value will be true if saved successfully, or default false if not
+        return response()->json([
+            'caseSaved' => $caseSaved,
+            'caseNoteSaved' => $caseNoteSaved,
+            'caseFileSaved' => $caseFileSaved,
+            'sfkChkCaseSaved' => $sfkChkCaseSaved,
+            'numFilesSaved' => $numFilesSaved
+        ]);
     });
 
     //console, edit a case note via report
@@ -785,7 +807,7 @@ Route::group(['middleware' => 'auth:api'], function () {
                 })
                 ->where('report_case_notes.deleted_at', '=', null)
                 ->select('case_notes.*', 'report_case_notes.report_case_id')
-                ->orderBy('case_notes.created_at')
+                ->orderBy('case_notes.created_at', 'desc')
                 ->get();
 
 
