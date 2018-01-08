@@ -121,7 +121,7 @@ class CaseNoteApiController extends Controller
 
     }
 
-    public function loopCaseFile($request, $caseId, $caseNoteId = null){
+    public function loopCaseFile(Request $request, $caseId, $caseNoteId = null){
 
         if ($request->has('length')) {
 
@@ -134,7 +134,7 @@ class CaseNoteApiController extends Controller
 
                 $filepath = $request->input('file' + i);
 
-                $caseFileId = app('App\Http\Controllers\CaseNoteApiController')->postCaseFile($caseId, $userId, $filepath, $caseNoteId);
+                $caseFileId = $this->postCaseFile($caseId, $userId, $filepath, $caseNoteId);
 
                 if($caseFileId != 0){
                     $numFilesSaved++;
