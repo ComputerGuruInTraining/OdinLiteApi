@@ -583,12 +583,12 @@ Route::group(['middleware' => 'auth:api'], function () {
             $shiftId = $request->input('shiftId');
 
             //description is not required for submit case note feature in mobile
-            if($request->has('description')){
+            if ($request->has('description')) {
 
                 $desc = $request->input('description');
                 $caseNoteId = app('App\Http\Controllers\CaseNoteApiController')->postCaseNote($userId, $shiftId, $caseId, $title, $desc);
 
-            }else{
+            } else {
 
                 $caseNoteId = app('App\Http\Controllers\CaseNoteApiController')->postCaseNote($userId, $shiftId, $caseId, $title);
             }
@@ -606,7 +606,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
                     $sftChkCaseId = app('App\Http\Controllers\JobsController')->postShiftCheckCase($caseNoteId, $sftChkId);
 
-                    if($sftChkCaseId != 0){
+                    if ($sftChkCaseId != 0) {
 
                         $sfkChkCaseSaved = true;
                     }
@@ -614,8 +614,25 @@ Route::group(['middleware' => 'auth:api'], function () {
             }
 
             //insert into case_files if case insert successful, as can proceed even if case note insert fails for some reason, as case_note_id is not required in db ie nullable
-            $numFilesSaved = app('App\Http\Controllers\CaseNoteApiController')->loopCaseFile($request, $caseId, $caseNoteId);
+//            $numFilesSaved = app('App\Http\Controllers\CaseNoteApiController')->loopCaseFile($request, $caseId, $caseNoteId);
+            if ($request->has('length')) {
 
+                $numFilesSaved = 0;
+
+                $length = $request->input('length');
+
+                //post filepath to the case_files table
+                for ($i = 0; $i < $length; $i++) {
+
+                    $filepath = $request->input('file' + i);
+
+                    $caseFileId = app('App\Http\Controllers\CaseNoteApiController')->postCaseFile($caseId, $userId, $filepath, $caseNoteId);
+
+                    if ($caseFileId != 0) {
+                        $numFilesSaved++;
+                    }
+                }
+            }
         }
 
         //value will be true if saved successfully, or default false if not
