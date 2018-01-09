@@ -615,15 +615,17 @@ Route::group(['middleware' => 'auth:api'], function () {
             }
 
             //insert into case_files if case insert successful, as can proceed even if case note insert fails for some reason, as case_note_id is not required in db ie nullable
-////            $numFilesSaved = app('App\Http\Controllers\CaseNoteApiController')->loopCaseFile($request, $caseId, $caseNoteId);
+//            $numFilesSaved = app('App\Http\Controllers\CaseNoteApiController')->loopCaseFile($request, $caseId, $caseNoteId);
             if ($request->has('length')) {
-////
+
                 $length = $request->input('length');
 
                 //post filepath to the case_files table
                 for ($i = 0; $i < $length; $i++) {
 
-                    $filepath = $request->input('file0');
+                    $file = 'file' + $i;
+
+                    $filepath = $request->input($file);
 
                     $caseFileId = app('App\Http\Controllers\CaseNoteApiController')->postCaseFile($caseId, $userId, $filepath, $caseNoteId);
 
@@ -1153,7 +1155,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         }
 
         if ($request->has('desc')) {
-            $assigned->shift_description = $request->input('desc');
+            if($request->input('desc') == "none") {
+                $assigned->shift_description = null;
+            }
         }
 
         if ($request->has('roster_id')) {
