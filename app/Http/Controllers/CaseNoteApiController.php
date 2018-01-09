@@ -16,19 +16,18 @@ class CaseNoteApiController extends Controller
     {
         $cases = DB::table('case_notes')
             ->join('cases', 'cases.id', '=', 'case_notes.case_id')
-            ->join('case_files', 'case_notes.case_id', '=', 'case_files.case_id')
             ->join('users', 'users.id', '=', 'case_notes.user_id')
             ->where('users.company_id', '=', $compId)
             ->where('case_notes.deleted_at', '=', null)
             ->where('cases.deleted_at', '=', null)
             ->where('case_files.deleted_at', '=', null)
-            ->select('case_notes.*', 'cases.location_id', 'users.first_name', 'users.last_name', 'case_files.file')
+            ->select('case_notes.*', 'cases.location_id', 'users.first_name', 'users.last_name')
             ->orderBy('case_notes.created_at', 'desc')
             ->get();
 
         $locationIds = $cases->pluck('location_id');
 
-        //retrieve location names
+        //retrieve location names, will retrieve all whether deleted or not
         $locations = DB::table('locations')
             ->whereIn('id', $locationIds)//array of $locationIds
             ->select('id', 'name', 'latitude', 'longitude')
@@ -47,6 +46,31 @@ class CaseNoteApiController extends Controller
             }
         }
 
+        //each cases object has a different case_id
+        $caseIds = $cases->pluck('case_id');
+
+        //retrieve files for those cases that they exist for
+        $files = DB::table('case_files')
+                ->whereIn('case_id', $caseIds)
+                ->select('case_id','file')
+                ->get();
+
+        //if files exist
+        //there could be more than 1 file for a case_id
+        if(sizeof($files) > 0) {
+            foreach ($cases as $i => $case) {
+
+                $fileArray = [];
+
+                foreach ($files as $file){
+                    if ($file->case_id == $case->case_id) {
+                        array_push($fileArray,$file->file);
+                    }
+                }
+
+                $cases[$i]->fileArray = $fileArray;
+            }
+        }
         return response()->json($cases);
     }
 
