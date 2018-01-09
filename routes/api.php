@@ -624,7 +624,7 @@ Route::group(['middleware' => 'auth:api'], function () {
                 //post filepath to the case_files table
                 for ($i = 0; $i < $length; $i++) {
 
-                    $filepath = $request->input('file' + i);
+                    $filepath = $request->input('file' + $i);
 
                     $caseFileId = app('App\Http\Controllers\CaseNoteApiController')->postCaseFile($caseId, $userId, $filepath, $caseNoteId);
 
