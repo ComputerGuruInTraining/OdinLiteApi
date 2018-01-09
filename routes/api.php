@@ -558,6 +558,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         $caseNoteSaved = false;
         $caseFileSaved = false;
         $sfkChkCaseSaved = false;
+        $numFilesSaved = 0;
 
         //input values
         $userId = $request->input('userId');
@@ -616,9 +617,7 @@ Route::group(['middleware' => 'auth:api'], function () {
             //insert into case_files if case insert successful, as can proceed even if case note insert fails for some reason, as case_note_id is not required in db ie nullable
 ////            $numFilesSaved = app('App\Http\Controllers\CaseNoteApiController')->loopCaseFile($request, $caseId, $caseNoteId);
             if ($request->has('length')) {
-//
-                $numFilesSaved = 0;
-//
+////
                 $length = $request->input('length');
 
                 //post filepath to the case_files table
