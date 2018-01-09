@@ -618,16 +618,65 @@ Route::group(['middleware' => 'auth:api'], function () {
 //            $numFilesSaved = app('App\Http\Controllers\CaseNoteApiController')->loopCaseFile($request, $caseId, $caseNoteId);
             if ($request->has('length')) {
 
-                $length = $request->input('length');
+//fixme: loop through, but trouble passing through variable input key
+//                $length = $request->input('length');
 
                 //post filepath to the case_files table
-                for ($i = 0; $i < $length; $i++) {
+//                for ($i = 0; $i < $length; $i++) {
+//
+//                    $file = 'file' + $i;
 
-                    $file = 'file' + $i;
+//                    $filepath = $request->input($file);
 
-                    $filepath = $request->input($file);
+                if ($request->has('file0')) {
 
-                    $caseFileId = app('App\Http\Controllers\CaseNoteApiController')->postCaseFile($caseId, $userId, $filepath, $caseNoteId);
+                    $file0 = $request->input('file0');
+
+                    $caseFileId = app('App\Http\Controllers\CaseNoteApiController')->postCaseFile($caseId, $userId, $file0, $caseNoteId);
+
+                    if ($caseFileId != 0) {
+                        $numFilesSaved++;
+                    }
+                }
+
+                if ($request->has('file1')) {
+
+                    $file1 = $request->input('file1');
+
+                    $caseFileId = app('App\Http\Controllers\CaseNoteApiController')->postCaseFile($caseId, $userId, $file1, $caseNoteId);
+
+                    if ($caseFileId != 0) {
+                        $numFilesSaved++;
+                    }
+                }
+
+                if ($request->has('file2')) {
+
+                    $file2 = $request->input('file2');
+
+                    $caseFileId = app('App\Http\Controllers\CaseNoteApiController')->postCaseFile($caseId, $userId, $file2, $caseNoteId);
+
+                    if ($caseFileId != 0) {
+                        $numFilesSaved++;
+                    }
+                }
+
+                if ($request->has('file3')) {
+
+                    $file3 = $request->input('file3');
+
+                    $caseFileId = app('App\Http\Controllers\CaseNoteApiController')->postCaseFile($caseId, $userId, $file3, $caseNoteId);
+
+                    if ($caseFileId != 0) {
+                        $numFilesSaved++;
+                    }
+                }
+
+                if ($request->has('file4')) {
+
+                    $file4 = $request->input('file4');
+
+                    $caseFileId = app('App\Http\Controllers\CaseNoteApiController')->postCaseFile($caseId, $userId, $file4, $caseNoteId);
 
                     if ($caseFileId != 0) {
                         $numFilesSaved++;
