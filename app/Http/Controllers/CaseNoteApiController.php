@@ -63,7 +63,7 @@ class CaseNoteApiController extends Controller
                 $fileArray = [];
 
                 foreach ($files as $file){
-                    if ($file->case_id == $case->case_id) {
+                    if ($file->case_id == $cases[$i]->case_id) {
                         array_push($fileArray,$file->file);
                     }
                 }
