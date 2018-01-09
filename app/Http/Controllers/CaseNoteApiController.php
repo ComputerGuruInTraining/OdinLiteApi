@@ -121,31 +121,31 @@ class CaseNoteApiController extends Controller
 
     }
 
-    public function loopCaseFile(Request $request, $caseId, $caseNoteId = null){
-
-        if ($request->has('length')) {
-
-            $length = $request->input('length');
-            $userId = $request->input('userId');
-            $numFilesSaved = 0;
-
-            //post filepath to the case_files table
-            for ($i = 0; $i < $length; $i++) {
-
-                $filepath = $request->input('file' + i);
-
-                $caseFileId = $this->postCaseFile($caseId, $userId, $filepath, $caseNoteId);
-
-                if($caseFileId != 0){
-                    $numFilesSaved++;
-                }
-            }
-            return $numFilesSaved;
-
-        }else{
-
-            return 0;
-        }
-    }
+//    public function loopCaseFile($request, $caseId, $caseNoteId = null){
+//
+//        if ($request->has('length')) {
+//
+//            $length = $request->input('length');
+//            $userId = $request->input('userId');
+//            $numFilesSaved = 0;
+//
+//            //post filepath to the case_files table
+//            for ($i = 0; $i < $length; $i++) {
+//
+//                $filepath = $request->input('file' + i);
+//
+//                $caseFileId = $this->postCaseFile($caseId, $userId, $filepath, $caseNoteId);
+//
+//                if($caseFileId != 0){
+//                    $numFilesSaved++;
+//                }
+//            }
+//            return $numFilesSaved;
+//
+//        }else{
+//
+//            return 0;
+//        }
+//    }
 
 }
