@@ -60,13 +60,13 @@ class CaseNoteApiController extends Controller
         if(sizeof($files) > 0) {
             foreach ($cases as $i => $case) {
 
-                $fileArray = [];
+                $fileArray = ['test', 'test1', 'test2'];
 
-                foreach ($files as $file){
-                    if ($file->case_id == $cases[$i]->case_id) {
-                        array_push($fileArray,$file->file);
-                    }
-                }
+//                foreach ($files as $file){
+//                    if ($file->case_id == $cases[$i]->case_id) {
+//                        array_push($fileArray,$file->file);
+//                    }
+//                }
 
                 $cases[$i]->fileArray = $fileArray;
             }
@@ -100,7 +100,7 @@ class CaseNoteApiController extends Controller
         }
     }
 
-    public function postCaseNote($userId, $shiftId, $caseId, $title, $desc = null, $img = null){
+    public function postCaseNote($userId, $shiftId, $caseId, $title, $posId = null, $desc = null, $img = null){
 
         $caseNote = new CaseNote;
         $caseNote->title = $title;
@@ -109,6 +109,7 @@ class CaseNoteApiController extends Controller
         $caseNote->user_id = $userId;
         $caseNote->shift_id = $shiftId;
         $caseNote->case_id = $caseId;
+        $caseNote->curr_loc_id = $posId;
 
         if($caseNote->save()){
             $id = $caseNote->id;

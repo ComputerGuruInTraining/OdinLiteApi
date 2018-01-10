@@ -582,16 +582,17 @@ Route::group(['middleware' => 'auth:api'], function () {
             //first, grab request data
             $title = $request->input('title');
             $shiftId = $request->input('shiftId');
+            $posId = $request->input('posId');
 
             //description is not required for submit case note feature in mobile
             if ($request->has('description')) {
 
                 $desc = $request->input('description');
-                $caseNoteId = app('App\Http\Controllers\CaseNoteApiController')->postCaseNote($userId, $shiftId, $caseId, $title, $desc);
+                $caseNoteId = app('App\Http\Controllers\CaseNoteApiController')->postCaseNote($userId, $shiftId, $caseId, $title, $posId, $desc);
 
             } else {
 
-                $caseNoteId = app('App\Http\Controllers\CaseNoteApiController')->postCaseNote($userId, $shiftId, $caseId, $title);
+                $caseNoteId = app('App\Http\Controllers\CaseNoteApiController')->postCaseNote($userId, $shiftId, $caseId, $title, $posId);
             }
 
             //if case_notes insert successful
