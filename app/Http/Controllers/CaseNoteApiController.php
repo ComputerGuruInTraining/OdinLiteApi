@@ -20,7 +20,6 @@ class CaseNoteApiController extends Controller
             ->where('users.company_id', '=', $compId)
             ->where('case_notes.deleted_at', '=', null)
             ->where('cases.deleted_at', '=', null)
-            ->where('case_files.deleted_at', '=', null)
             ->select('case_notes.*', 'cases.location_id', 'users.first_name', 'users.last_name')
             ->orderBy('case_notes.created_at', 'desc')
             ->get();
@@ -60,17 +59,18 @@ class CaseNoteApiController extends Controller
         if(sizeof($files) > 0) {
             foreach ($cases as $i => $case) {
 
-                $fileArray = ['test', 'test1', 'test2'];
+                $fileArray = [];
 
-//                foreach ($files as $file){
-//                    if ($file->case_id == $cases[$i]->case_id) {
-//                        array_push($fileArray,$file->file);
-//                    }
-//                }
+                foreach ($files as $file){
+                    if ($file->case_id == $cases[$i]->case_id) {
+                        array_push($fileArray,$file->file);
+                    }
+                }
 
-                $cases[$i]->fileArray = $fileArray;
+                $cases[$i]->files = $fileArray;
             }
         }
+
         return response()->json($cases);
     }
 
