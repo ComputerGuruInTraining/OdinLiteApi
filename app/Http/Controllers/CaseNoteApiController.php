@@ -17,10 +17,11 @@ class CaseNoteApiController extends Controller
         $cases = DB::table('case_notes')
             ->join('cases', 'cases.id', '=', 'case_notes.case_id')
             ->join('users', 'users.id', '=', 'case_notes.user_id')
+            ->join('current_user_locations', 'case_notes.user_id', '=', 'current_user_locations.mobile_user_id')
             ->where('users.company_id', '=', $compId)
             ->where('case_notes.deleted_at', '=', null)
             ->where('cases.deleted_at', '=', null)
-            ->select('case_notes.*', 'cases.location_id', 'users.first_name', 'users.last_name')
+            ->select('case_notes.*', 'cases.location_id', 'users.first_name', 'users.last_name', 'current_user_locations.latitude', 'current_user_locations.longitude')
             ->orderBy('case_notes.created_at', 'desc')
             ->get();
 
