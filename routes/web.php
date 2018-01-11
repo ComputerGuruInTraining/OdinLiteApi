@@ -142,7 +142,8 @@ Route::post('/upload', function (Request $request) {
             $fileName = $request->input('fileName');
 
             //works with folder and file both being created because file object.
-//            Storage::put($request->input('fileName'), $request->file('file'));/
+            Storage::put($fileName,
+                $file);
 
             //didn't work:
 //            Storage::put(
@@ -168,17 +169,17 @@ Route::post('/upload', function (Request $request) {
 //                ]
 //            );
 
-
-            Storage::put(
-                $request->input('fileName'),
-                $file,
-                [
-
-//                    'visibility' => 'public',
-                    'ContentType' => 'image/jpeg'
-
-                ]
-            );
+//didn't work
+//            Storage::put(
+//                $request->input('fileName'),
+//                $file,
+//                [
+//
+////                    'visibility' => 'public',
+//                    'ContentType' => 'image/jpeg'
+//
+//                ]
+//            );
 //
 //            Storage::disk('azure')
 //                ->getDriver()
