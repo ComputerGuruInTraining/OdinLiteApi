@@ -136,8 +136,20 @@ Route::post('/upload', function (Request $request) {
 
         if ($request->hasFile('file')) {
 
+            Storage::put($request->input('fileName'), $request->file('file'), [
+                    'visibility' => 'public',
+                    'ContentType' => 'image/jpeg'
+                ]);
+
+//            $stream = fopen($_FILES[$uploadname]['tmp_name'], 'r+');
+//            $filesystem->writeStream('uploads/'.$_FILES[$uploadname]['name'], $stream);
+//            fclose($stream);
+
             //store the file in the /images directory inside storage/app
-        $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
+//        $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
+
+
+
 //            $path = $request->file('file')->storeAs('/', 'image1.jpeg');
 
 //            $success = azureContentType();
@@ -222,6 +234,8 @@ Route::get('/download-photo/{foldername}/{filename}', function ($foldername, $fi
 //    $file = $filename . '.jpeg';
 
 //    $exists = Storage::disk('azure')->exists('images/'.$foldername.'/'.$filename);
+
+
 
     $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
         config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
