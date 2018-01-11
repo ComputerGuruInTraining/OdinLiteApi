@@ -136,7 +136,22 @@ Route::post('/upload', function (Request $request) {
 
         if ($request->hasFile('file')) {
 
-            Storage::put($request->input('fileName'), $request->file('file'));
+            //        $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
+
+            $file = $request->file('file');
+//            Storage::put($request->input('fileName'), $request->file('file'));//works with folder and file
+            Storage::put($request->input(
+                'fileName'),
+                file_get_contents($file),
+                [
+
+//                    'visibility' => 'public',
+                    'ContentType' => 'image/jpeg'
+
+                ]
+                );//works with folder and file
+
+            $path = ($request->input('fileName'));
 
         } else {
             $path = "";
@@ -155,12 +170,57 @@ Route::post('/upload', function (Request $request) {
     }
 });
 
+
+//route to provide a url to an image stored in azure storage container
+Route::get('/download-photo/{foldername}/{filename}', function ($foldername, $filename) {
+
+//    $file = $filename . '.jpeg';
+
+//    $exists = Storage::disk('azure')->exists('images/'.$foldername.'/'.$filename);
+//TODO function for date from now
+    $end_date = 'st=2018-01-29T22%3A18%3A26Z';
+
+    $_signature = getSASForBlob(config('filesystems.disks.azure.name'), config('filesystems.disks.azure.container'),$filename,
+        'b','r', $end_date,config('filesystems.disks.azure.key'));
+
+    $_blobUrl = getBlobUrl(config('filesystems.disks.azure.name'), config('filesystems.disks.azure.container'),$filename,
+        'b','r',$end_date, $_signature);
+
+
+    $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
+        config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
+
+
+//    $connectionString = "DefaultEndpointsProtocol=https;AccountName=<config('filesystems.disks.azure.name')>;
+//        AccountKey=<config('filesystems.disks.azure.key')>";
+//
+//// Create blob REST proxy.
+//    $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($connectionString);
+
+    return response()->json($url);
+
+//    $pathToFile = 'images/' . $file;
+////    $storagePathToFile = base_path('storage/app/images/'. $file);//works on localhost
+//    $storagePathToFile =  storage_path('app/images/'. $file);
+//
+//    //check if file exists
+//    $fileExists = Storage::exists($pathToFile);
+//
+//    if ($fileExists) {
+//         return response()->download($storagePathToFile);
+//
+//    } else {
+//        return response()->json($fileExists);//false
+//
+//    }
+
+});
+
 //            $stream = fopen($_FILES[$uploadname]['tmp_name'], 'r+');
 //            $filesystem->writeStream('uploads/'.$_FILES[$uploadname]['name'], $stream);
 //            fclose($stream);
 
             //store the file in the /images directory inside storage/app
-//        $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
 
 
 
@@ -220,44 +280,6 @@ Route::get("/dashboard/{compId}/current-positions", function ($compId) {
         ->get();
 
     return response()->json($res);
-
-});
-
-//route to provide a url to an image stored in azure storage container
-Route::get('/download-photo/{foldername}/{filename}', function ($foldername, $filename) {
-
-//    $file = $filename . '.jpeg';
-
-//    $exists = Storage::disk('azure')->exists('images/'.$foldername.'/'.$filename);
-
-
-
-    $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
-        config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
-
-
-//    $connectionString = "DefaultEndpointsProtocol=https;AccountName=<config('filesystems.disks.azure.name')>;
-//        AccountKey=<config('filesystems.disks.azure.key')>";
-//
-//// Create blob REST proxy.
-//    $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($connectionString);
-
-    return response()->json($url);
-
-//    $pathToFile = 'images/' . $file;
-////    $storagePathToFile = base_path('storage/app/images/'. $file);//works on localhost
-//    $storagePathToFile =  storage_path('app/images/'. $file);
-//
-//    //check if file exists
-//    $fileExists = Storage::exists($pathToFile);
-//
-//    if ($fileExists) {
-//         return response()->download($storagePathToFile);
-//
-//    } else {
-//        return response()->json($fileExists);//false
-//
-//    }
 
 });
 
