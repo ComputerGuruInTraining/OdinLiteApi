@@ -275,7 +275,7 @@ Route::get('/testing/nofitication/fail', function () {
 
 });
 
-//Route::get("/casenotes/testlist/{compId}", 'CaseNoteApiController@getCaseNotes');
+Route::get("/casenotes/testlist/{compId}", 'CaseNoteApiController@getCaseNotes');
 
 
 ////user = 1164
