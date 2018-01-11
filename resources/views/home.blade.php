@@ -11,7 +11,7 @@
                     You are logged in!
                 </div>
 
-                {{--<a href="/casenotes/testlist/404">Test Case Notes w FIles</a>--}}
+                <a href="/casenotes/testlist/404">Test Case Notes w FIles</a>
 
             </div>
         </div>

@@ -17,11 +17,11 @@ class CaseNoteApiController extends Controller
         $cases = DB::table('case_notes')
             ->join('cases', 'cases.id', '=', 'case_notes.case_id')
             ->join('users', 'users.id', '=', 'case_notes.user_id')
-            ->join('current_user_locations', 'case_notes.user_id', '=', 'current_user_locations.mobile_user_id')
+//            ->join('current_user_locations', 'case_notes.user_id', '=', 'current_user_locations.mobile_user_id')
             ->where('users.company_id', '=', $compId)
             ->where('case_notes.deleted_at', '=', null)
             ->where('cases.deleted_at', '=', null)
-            ->select('case_notes.*', 'cases.location_id', 'users.first_name', 'users.last_name', 'current_user_locations.latitude', 'current_user_locations.longitude')
+            ->select('case_notes.*', 'cases.location_id', 'users.first_name', 'users.last_name')
             ->orderBy('case_notes.created_at', 'desc')
             ->get();
 
@@ -41,6 +41,25 @@ class CaseNoteApiController extends Controller
                         $cases[$i]->location = $location->name;
                         $cases[$i]->locLat = $location->latitude;
                         $cases[$i]->locLong = $location->longitude;
+                    }
+                }
+            }
+        }
+
+        $currIds = $cases->pluck('curr_loc_id');
+
+        $currLocs = DB::table('current_user_locations')
+            ->whereIn('id', $currIds)
+            ->select('id', 'latitude', 'longitude')
+            ->get();
+
+        //ensure there are $currLocs before adding the details onto the end of case object
+        if(sizeof($currLocs) > 0) {
+            foreach ($cases as $i => $case) {
+                foreach ($currLocs as $currLoc){
+                    if ($currLoc->id == $cases[$i]->curr_loc_id) {
+                        $cases[$i]->geoLatitude = $currLoc->latitude;
+                        $cases[$i]->geoLongitude = $currLoc->longitude;
                     }
                 }
             }
@@ -71,7 +90,6 @@ class CaseNoteApiController extends Controller
                 $cases[$i]->files = $fileArray;
             }
         }
-
         return response()->json($cases);
     }
 
