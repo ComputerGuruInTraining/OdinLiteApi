@@ -226,11 +226,11 @@ Route::get('/download-photo/{foldername}/{filename}', function ($foldername, $fi
 //TODO function for date from now
     $end_date = 'st=2018-01-29T22%3A18%3A26Z';
 
-    $_signature = getSASForBlob(config('filesystems.disks.azure.name'), config('filesystems.disks.azure.container'),$filename,
+    $signature = getSASForBlob(config('filesystems.disks.azure.name'), config('filesystems.disks.azure.container'),$filename,
         'b','r', $end_date,config('filesystems.disks.azure.key'));
 
-    $_blobUrl = getBlobUrl(config('filesystems.disks.azure.name'), config('filesystems.disks.azure.container'),$filename,
-        'b','r',$end_date, $_signature);
+    $blobUrl = getBlobUrl(config('filesystems.disks.azure.name'), config('filesystems.disks.azure.container'),$filename,
+        'b','r',$end_date, $signature);
 
 
     $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
@@ -242,8 +242,9 @@ Route::get('/download-photo/{foldername}/{filename}', function ($foldername, $fi
 //
 //// Create blob REST proxy.
 //    $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($connectionString);
-
     return response()->json($url);
+
+//    return response()->json($blobUrl);
 
 //    $pathToFile = 'images/' . $file;
 ////    $storagePathToFile = base_path('storage/app/images/'. $file);//works on localhost
