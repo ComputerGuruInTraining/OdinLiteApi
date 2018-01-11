@@ -136,10 +136,24 @@ Route::post('/upload', function (Request $request) {
 
         if ($request->hasFile('file')) {
 
-            Storage::put($request->input('fileName'), $request->file('file'), [
-                    'visibility' => 'public',
-                    'ContentType' => 'image/jpeg'
-                ]);
+            Storage::put($request->input('fileName'), $request->file('file'));
+
+        } else {
+            $path = "";
+        }
+
+        return response()->json($path);
+
+    }catch(Exception $e){
+
+        return response()->json('failed to set options');
+
+
+    }catch(ErrorException $err){
+        return response()->json('options not set');
+
+    }
+});
 
 //            $stream = fopen($_FILES[$uploadname]['tmp_name'], 'r+');
 //            $filesystem->writeStream('uploads/'.$_FILES[$uploadname]['name'], $stream);
@@ -179,25 +193,6 @@ Route::post('/upload', function (Request $request) {
 //                ]
 //            );
 
-
-        } else {
-//            $success = "nofile";
-        $path = "";
-        }
-
-        return response()->json($path);
-
-    }catch(Exception $e){
-
-        return response()->json('failed to set options');
-
-
-    }catch(ErrorException $err){
-        return response()->json('options not set');
-
-
-    }
-});
 
 //called from update markers() see route in api.php
 Route::get("/dashboard/{compId}/current-positions", function ($compId) {
