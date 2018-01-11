@@ -232,9 +232,9 @@ Route::get('/download-photo/{foldername}/{filename}', function ($foldername, $fi
     $blobUrl = getBlobUrl(config('filesystems.disks.azure.name'), config('filesystems.disks.azure.container'),$filename,
         'b','r',$end_date, $signature);
 
-
-    $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
-        config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
+//still works with the put
+//    $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
+//        config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
 
 
 //    $connectionString = "DefaultEndpointsProtocol=https;AccountName=<config('filesystems.disks.azure.name')>;
@@ -242,9 +242,9 @@ Route::get('/download-photo/{foldername}/{filename}', function ($foldername, $fi
 //
 //// Create blob REST proxy.
 //    $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($connectionString);
-    return response()->json($url);
+//    return response()->json($url);
 
-//    return response()->json($blobUrl);
+    return response()->json($blobUrl);
 
 //    $pathToFile = 'images/' . $file;
 ////    $storagePathToFile = base_path('storage/app/images/'. $file);//works on localhost
