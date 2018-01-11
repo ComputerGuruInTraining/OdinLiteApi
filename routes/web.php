@@ -141,7 +141,10 @@ Route::post('/upload', function (Request $request) {
             $file = $request->file('file');
             $fileName = $request->input('fileName');
 
-//            Storage::put($request->input('fileName'), $request->file('file'));//works with folder and file
+            //works with folder and file both being created because file object.
+//            Storage::put($request->input('fileName'), $request->file('file'));/
+
+            //didn't work:
 //            Storage::put(
 //                $request->input('fileName'),
 //                file_get_contents($file),
@@ -153,19 +156,28 @@ Route::post('/upload', function (Request $request) {
 //                ]
 //            );
 
-            Storage::disk('azure')
-                ->getDriver()
-                ->put(
-                    $fileName,
-                    $file,
-                    [
+            //didn't work
+//            Storage::put(
+//                $request->input('fileName'),
+//                file_get_contents($file),
+//                [
+//
+////                    'visibility' => 'public',
+//                    'ContentType' => 'image/jpeg'
+//
+//                ]
+//            );
+
+
+            Storage::put(
+                $request->input('fileName'),
+                $file,
+                [
 
 //                    'visibility' => 'public',
-                        'ContentType' => 'image/jpeg'
+                    'ContentType' => 'image/jpeg'
 
-                    ]
-
-
+                ]
             );
 //
 //            Storage::disk('azure')
