@@ -11,7 +11,9 @@
                     You are logged in!
                 </div>
 
-                <a href="/casenotes/testlist/404">Test Case Notes w FIles</a>
+                <a href="download-photo/1515638198829.jpeg/2e4dca1c24076df03586a19c48e2e6c7.jpeg">Download</a>
+
+                {{--<a href="/casenotes/testlist/404">Test Case Notes w FIles</a>--}}
 
             </div>
         </div>
