@@ -12,6 +12,7 @@ use App\Cases as Cases;
 
 class CaseNoteApiController extends Controller
 {
+    //get all data for case notes including geoLocation
     public function getCaseNotes($compId)
     {
         $cases = DB::table('case_notes')
@@ -93,6 +94,18 @@ class CaseNoteApiController extends Controller
         return response()->json($cases);
     }
 
+    //get case files by case_id which is required in case_files table, whereas case_note_id is nullable
+    // to cater for cases where a case_file is being uploaded for a case without an accompanying case_note
+    public function getCaseFiles($caseIds){
+
+        $files = DB::table('case_files')
+            ->whereIn('case_id', $caseIds)
+            ->select('case_id','file', 'case_note_id')
+            ->get();
+
+        return $files;
+    }
+
     //get the case notes for a shift
     public function getShiftCaseNotes($shiftId){
 
@@ -164,6 +177,29 @@ class CaseNoteApiController extends Controller
 
             return 0;
         }
+    }
+
+    //returns $collection with a fileArray added to each object
+    //purpose: where a collection has a case_id, append files to object where the case_file case_id matches
+    public function appendCaseFiles($files, $collection){
+
+        if(sizeof($files) > 0) {
+            foreach ($collection as $i => $collect) {
+
+                $fileArray = [];
+
+                foreach ($files as $file){
+
+                    if ($file->case_id == $collection[$i]->case_id) {
+                        array_push($fileArray,$file->file);
+                    }
+                }
+
+            $collection[$i]->files = $fileArray;
+            }
+        }
+
+        return $collection;
 
     }
 
