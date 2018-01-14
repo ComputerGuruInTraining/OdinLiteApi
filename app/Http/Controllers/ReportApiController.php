@@ -479,7 +479,7 @@ class ReportApiController extends Controller
             $location = locationAddressDetails($locationId);
 
             return response()->json([
-                'clientData' => $reportData,
+                'reportData' => $reportData,
                 'location' => $location,
                 'success' => true
             ]);
