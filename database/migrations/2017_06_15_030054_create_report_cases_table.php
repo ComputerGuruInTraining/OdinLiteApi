@@ -20,12 +20,6 @@ class CreateReportCasesTable extends Migration
             $table->integer('total_guards');
             $table->integer('report_id')->unsigned();//fk
             $table->timestamps();
-//            $table->foreign('location_id')
-//            	->references('id')->on('locations');
-//            //	->onDelete('set null');
-//            $table->foreign('report_id')
-//            	->references('id')->on('reports');
-            //	->onDelete('cascade');
             $table->softDeletes();
         });
     }
