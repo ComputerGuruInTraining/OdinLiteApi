@@ -15,6 +15,9 @@
 
                 <a href="/reports/individual/test/2018-01-01 00:00:00/2018-01-31 00:00:00/1374">Test Shift Ids when select, Pluck ok</a>
 
+                <a href="/reports/individual/testNotes/1374">Test query report case notes</a>
+
+
                 {{--<a href="/casenotes/testlist/404">Test Case Notes w FIles</a>--}}
 
             </div>
