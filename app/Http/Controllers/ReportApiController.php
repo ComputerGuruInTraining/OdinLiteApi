@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Report_Individuals;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,8 @@ use App\ReportCases as ReportCase;
 use App\ReportCheckCase as ReportCheckCase;
 use App\ShiftCheckCases as CheckCases;
 use App\ReportCaseNotes as ReportCaseNote;
+use App\ReportNotes as ReportNote;
+use App\ReportIndividuals as ReportIndividual;
 use App\CaseNote as CaseNote;
 use App\Cases as Cases;
 use App\ShiftCheck as ShiftCheck;
@@ -247,6 +250,143 @@ class ReportApiController extends Controller
         }
     }
 
+    public function postIndividual($userId, Request $request)
+    {
+        //get request data
+        $dateFrom = $request->input('dateFrom');
+        $dateTo = $request->input('dateTo');
+        $type = $request->input('type');
+        $compId = $request->input('compId');
+
+        //convert the date strings to Carbon timestamps
+        $dateStart = Carbon::createFromFormat('Y-m-d H:i:s', $dateFrom);
+        $dateEnd = Carbon::createFromFormat('Y-m-d H:i:s', $dateTo);
+
+        //check to see if there were shifts for the location during the period
+        //otherwise will not create a report
+        $sIds = $this->queryReportUser($dateStart, $dateEnd, $userId);//datatype is eg collect([0=>{id:3814}, 1=>{id:3824}])
+
+        $errorResponse = "";
+        //if there is data for the report, post to the report tables
+        if (count($sIds) > 0) {
+
+            //shift_ids
+            $shiftIds = $sIds->pluck('id');//datatype is eg collect([0=>3814, 1=>3824])
+
+            //get the case notes for a report
+            $cnIds = $this->queryCaseNotesUser($userId, $shiftIds);//fixme: error here?
+
+            //if there are no case notes, we will not generate a report
+            //as the app structure requires case notes and therefore very rare for this not to be the case
+            //and presume not enough data
+//fixme: not dependant on whether case notes or not, though should be if have undertaken a shift properly and ended shift.
+            if (count($cnIds) > 0) {
+
+                $chksIds = $this->queryShiftChecks($shiftIds);//fixme: error here same same
+
+                if (count($chksIds) > 0) {
+
+                    //insert into Reports table via function
+                    $result = $this->storeReport($dateStart, $dateEnd, $compId, $type);
+
+                    //report saved and id returned in $result
+                    if ($result->get('error') == null) {
+
+                        $reportId = $result->get('id');
+
+                        $resultUser = $this->storeReportIndividual($reportId, $shiftIds, $userId);
+
+//                        $resultCase = $this->storeReportCase($reportId, $shifts, $locId);
+
+                        if ($resultUser->get('error') == null) {
+
+                            //variables needed to retrieve case_notes for the period and store in report_case_notes table
+//                            $reportCaseId = $resultUser->get('reportIndId');
+
+                            $caseNoteIds = $cnIds->pluck('id');//datatype is eg collect([0=>3814, 1=>3824])
+
+                            $resultNote = $this->storeReportNote($reportId, $caseNoteIds);
+
+                            if ($resultNote->get('error') == null) {
+
+                                $checkIds = $chksIds->pluck('id');
+
+                                $resultCheck = $this->storeReportCheck($reportId, $checkIds);
+
+                                if ($resultCheck->get('error') == null) {
+
+                                    return response()->json([
+                                        //all inserts occurred successfully
+                                        'success' => true,
+                                        'reportId' => $reportId
+                                    ]);
+                                } else {
+                                    $errorResponse = "error storing the report location check details";
+                                    //no shift checks at the location
+                                    //ie in the case of a single location that does not have check in and check out
+                                    return response()->json([
+                                        'success' => false,
+                                        'errorResponse' => $errorResponse,
+                                    ]);
+                                }
+
+                            } else {
+                                $errorResponse = "error storing the report case note details";
+                                //error storing report notes
+                                return response()->json([
+                                    'success' => false,
+                                    'errorResponse' => $errorResponse,
+                                ]);
+                            }
+
+                        } else {
+                            $errorResponse = "error storing the report calculations or user details";
+                            //error storing report individual
+                            return response()->json([
+                                'success' => false,
+                                'errorResponse' => $errorResponse,
+                            ]);
+                        }
+
+                    } else {
+                        $errorResponse = "error storing the report";
+
+                        //error storing report
+                        return response()->json([
+                            'success' => false,
+                            'errorResponse' => $errorResponse,
+                        ]);
+                    }
+                } else {
+                    $errorResponse = "the employee has started shifts but not submitted enough shift data to generate a report (specifically, no location checks were completed)";
+
+                    //no shift checks, therefore presumably a single location with no location check data
+                    return response()->json([
+                        'success' => false,
+                        'errorResponse' => $errorResponse,
+                    ]);
+                }
+            } else {
+                $errorResponse = "the employee has started shifts but not submitted enough shift data to generate a report (specifically, case notes and location checks)";
+                //no case notes
+                return response()->json([
+                    'success' => false,
+                    'errorResponse' => $errorResponse,
+
+                ]);
+            }
+
+        } else {
+            $errorResponse = "the employee has not undertaken any shifts for the period specified";
+            //no shifts for the period at the location or no notes for the location during the shifts
+            return response()->json([
+                'success' => false,
+                'errorResponse' => $errorResponse,
+
+            ]);
+        }
+    }
+
     public function storeReportCheckCase($reportCaseId, $caseCheckIds)
     {
         //add to shift_check_cases table
@@ -272,6 +412,25 @@ class ReportApiController extends Controller
         foreach ($caseNoteIds as $caseNoteId) {
             $reportNotes = new ReportCaseNote;
             $reportNotes->report_case_id = $reportCaseId;
+            $reportNotes->case_note_id = $caseNoteId;
+            $reportNotes->save();
+        }
+
+        $error = array('error' => 'error');
+
+        if ($reportNotes->save()) {
+            return $caseNoteIds;
+        } else {
+            return $error;
+        }
+    }
+
+    public function storeReportNote($reportId, $caseNoteIds)
+    {
+        //add to report_case_notes table
+        foreach ($caseNoteIds as $caseNoteId) {
+            $reportNotes = new ReportNote;
+            $reportNotes->report_id = $reportId;
             $reportNotes->case_note_id = $caseNoteId;
             $reportNotes->save();
         }
@@ -343,6 +502,32 @@ class ReportApiController extends Controller
         }
 
     }
+
+    public function storeReportIndividual($reportId, $shifts, $userId)
+    {
+        $totalHoursWorked = totalHoursWorked($shifts);
+
+        //add to report_individual table
+
+        $reportInd = new ReportIndividual;
+        $reportInd->report_id = $reportId;
+        $reportInd->mobile_user_id = $userId;
+        $reportInd->total_hours = $totalHoursWorked;
+        $reportInd->save();
+
+        $reportIndId = $reportInd->id;
+
+        $data = collect(['reportIndId' => $reportIndId]);
+        $error = collect(['error' => 'error']);
+
+        if ($reportInd->save()) {
+            return $data;
+        } else {
+            return $error;
+        }
+
+    }
+
 
     public function getReportCasesChecks($reportCaseId){
 
@@ -592,7 +777,7 @@ class ReportApiController extends Controller
 //        'success' => false
 //        ]);
 //        }
-//    }
+//
 
     //get the location checks report data
     public function getCasesAndChecks($id)
@@ -732,6 +917,25 @@ class ReportApiController extends Controller
         return $shifts;
     }
 
+
+    //returns a collection or array?? of shifts
+    public function queryReportUser($dateStart, $dateEnd, $userId)
+    {
+        //Retrieve the data for the location and date range needed to calculate totalHours and numGuards
+        //NB: only retrieving shifts using shift_start_date, as ordinarily the shift_end_date would be the same or next day
+        //get from table so that includes deletes from assigned_shifts so that the data can be provided in the report
+        $shiftIds = DB::table('assigned_shift_employees')
+            ->select('shifts.id')//datatype is eg collect([0=>{id:3814}, 1=>{id:3824}])
+            ->join('shifts', 'shifts.assigned_shift_id', '=', 'assigned_shift_employees.assigned_shift_id')
+            ->where('assigned_shift_employees.mobile_user_id', '=', $userId)
+            ->whereBetween('shifts.start_time', [$dateStart, $dateEnd])
+            ->get();
+
+
+        dd($shiftIds, $shiftIds->pluck('id'));
+        return $shiftIds;
+    }
+
     public function queryCaseNotes($locId, $shiftIds)
     {
         //retrieve non-deleted case_notes that match the location and shifts in question
@@ -754,6 +958,29 @@ class ReportApiController extends Controller
         return $caseNoteIds;
     }
 
+    public function queryCaseNotesUser($userId, $shiftIds)
+    {
+        //retrieve non-deleted case_notes that match the location and shifts in question
+        //quirk: errors when trying to retrieve case_notes.id therefore subsequent query to get this data
+        $noteIds = DB::table('case_notes')
+            ->join('cases', 'case_notes.case_id', '=', 'cases.id')
+            ->where('case_notes.user_id', '=', $userId)
+            ->whereIn('case_notes.shift_id', $shiftIds)//whereIn equal to an array of shiftIds
+            ->where('cases.deleted_at', '=', null)
+            ->where('case_notes.deleted_at', '=', null)
+            ->select('case_notes.id')
+            ->get();
+
+        //these ids will be the case_ids for the query results (not the case_note_ids)
+//        $caseIds = $notes->pluck('case_id');
+//
+//        $caseNotes = CaseNote::whereIn('case_id', $caseIds)->get();
+
+//        $caseNoteIds = $notes->pluck('id');
+
+        return $noteIds;
+    }
+
     public function queryShiftCheckCases($noteIds)
     {
 
@@ -764,6 +991,18 @@ class ReportApiController extends Controller
         $caseCheckIds = $caseChecks->pluck('id');
 
         return $caseCheckIds;
+    }
+
+    public function queryShiftChecks($shiftIds)
+    {
+
+        //retrieve from ShiftCheckCases the records for those shift_checks
+        //ie all checks and the case notes created during the checks for the shifts
+        $checkIds = ShiftCheck::whereIn('shift_id', $shiftIds)->select('id')->get();
+
+//        $checkIds = $checks->pluck('id');
+
+        return $checkIds;
     }
 
 }

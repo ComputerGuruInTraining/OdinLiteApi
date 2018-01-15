@@ -399,3 +399,29 @@ if (!function_exists('getBlobUrl')) {
         return $_url;
     }
 }
+
+//calculate the total hours (double) based on many shift durations (int)
+if (!function_exists('totalHoursWorked')) {
+
+    function totalHoursWorked($shifts)
+    {
+        //calculate the total hours
+        $totalMins = $shifts->sum('duration');//duration is in minutes
+        $hours = $totalMins / 60;
+        $totalHours = floor($hours * 100) / 100;//hours to 2 decimal places
+
+        return $totalHours;
+    }
+}
+
+//calculate the number of guards
+if (!function_exists('numGuards')) {
+
+    function numGuards($shifts)
+    {
+        $numGuards = $shifts->groupBy('mobile_user_id')->count();
+
+        return $numGuards;
+    }
+}
+

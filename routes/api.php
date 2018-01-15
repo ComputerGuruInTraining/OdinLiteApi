@@ -797,11 +797,15 @@ Route::group(['middleware' => 'auth:api'], function () {
         return response()->json($report);
     });
 
-    //insert a report of type = "Cases and Checks"
+    //insert a report of type = "Cases and Checks" || "Client" \\ "Management"
     Route::post("/reports/casesandchecks", 'ReportApiController@postCasesAndChecks');
 
     //insert a report of type = "Case Notes"
     Route::post("/reports/casenotes", 'ReportApiController@postCaseNotes');
+
+    //insert a report of type = "Individual"
+    Route::post("/reports/individual/{userId}", 'ReportApiController@postIndividual');
+
 
     //soft delete a report and relevant tables by report_id
     Route::delete('/reports/{id}', function ($id) {
@@ -848,6 +852,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get("/reportchecks/{id}", 'ReportApiController@getCasesAndChecks');
 
     Route::get("/locationreport/{id}", 'ReportApiController@getLocationReport');
+
+
 
 
 
