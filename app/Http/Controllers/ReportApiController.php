@@ -264,14 +264,14 @@ class ReportApiController extends Controller
 
         //check to see if there were shifts for the location during the period
         //otherwise will not create a report
-        $sIds = $this->queryReportUser($dateStart, $dateEnd, $userId);//datatype is eg collect([0=>{id:3814}, 1=>{id:3824}])
+        $shifts = $this->queryReportUser($dateStart, $dateEnd, $userId);//datatype is eg collect([0=>{id:3814}, 1=>{id:3824}])
 
         $errorResponse = "";
         //if there is data for the report, post to the report tables
-        if (count($sIds) > 0) {
+        if (count($shifts) > 0) {
 
             //shift_ids
-            $shiftIds = $sIds->pluck('id');//datatype is eg collect([0=>3814, 1=>3824])
+            $shiftIds = $shifts->pluck('id');//datatype is eg collect([0=>3814, 1=>3824])
 
             //get the case notes for a report
             $cnIds = $this->queryCaseNotesUser($userId, $shiftIds);//fixme: error here?
@@ -294,7 +294,7 @@ class ReportApiController extends Controller
 
                         $reportId = $result->get('id');
 
-                        $resultUser = $this->storeReportIndividual($reportId, $shiftIds, $userId);
+                        $resultUser = $this->storeReportIndividual($reportId, $shifts, $userId);
 
 //                        $resultCase = $this->storeReportCase($reportId, $shifts, $locId);
 
@@ -924,16 +924,13 @@ class ReportApiController extends Controller
         //Retrieve the data for the location and date range needed to calculate totalHours and numGuards
         //NB: only retrieving shifts using shift_start_date, as ordinarily the shift_end_date would be the same or next day
         //get from table so that includes deletes from assigned_shifts so that the data can be provided in the report
-        $shiftIds = DB::table('assigned_shift_employees')
-            ->select('shifts.id')//datatype is eg collect([0=>{id:3814}, 1=>{id:3824}])
+        $shifts = DB::table('assigned_shift_employees')
             ->join('shifts', 'shifts.assigned_shift_id', '=', 'assigned_shift_employees.assigned_shift_id')
             ->where('assigned_shift_employees.mobile_user_id', '=', $userId)
             ->whereBetween('shifts.start_time', [$dateStart, $dateEnd])
             ->get();
 
-
-        dd($shiftIds, $shiftIds->pluck('id'));
-        return $shiftIds;
+        return $shifts;
     }
 
     public function queryCaseNotes($locId, $shiftIds)
