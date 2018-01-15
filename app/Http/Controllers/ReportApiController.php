@@ -11,9 +11,9 @@ use Carbon\Carbon;
 use App\Report as Report;
 use App\ReportCases as ReportCase;
 use App\ReportCheckCase as ReportCheckCase;
-use App\ShiftCheckCases as CheckCases;
 use App\ReportCaseNotes as ReportCaseNote;
 use App\ReportNotes as ReportNote;
+use App\ReportChecks as ReportCheck;
 use App\ReportIndividuals as ReportIndividual;
 use App\CaseNote as CaseNote;
 use App\Cases as Cases;
@@ -274,7 +274,7 @@ class ReportApiController extends Controller
             $shiftIds = $shifts->pluck('id');//datatype is eg collect([0=>3814, 1=>3824])
 
             //get the case notes for a report
-            $cnIds = $this->queryCaseNotesUser($userId, $shiftIds);//fixme: error here?
+            $cnIds = $this->queryCaseNotesUser($userId, $shiftIds);
 
             //if there are no case notes, we will not generate a report
             //as the app structure requires case notes and therefore very rare for this not to be the case
@@ -282,7 +282,7 @@ class ReportApiController extends Controller
 //fixme: not dependant on whether case notes or not, though should be if have undertaken a shift properly and ended shift.
             if (count($cnIds) > 0) {
 
-                $chksIds = $this->queryShiftChecks($shiftIds);//fixme: error here same same
+                $chksIds = $this->queryShiftChecks($shiftIds);
 
                 if (count($chksIds) > 0) {
 
@@ -528,6 +528,25 @@ class ReportApiController extends Controller
 
     }
 
+    public function storeReportCheck($reportId, $checkIds){
+
+        foreach ($checkIds as $checkId) {
+
+            $reportChk = new ReportCheck;
+            $reportChk->report_id = $reportId;
+            $reportChk->shift_check_id = $checkId;
+            $reportChk->save();
+        }
+
+        $error = collect(['error' => 'error']);
+
+        if ($reportChk->save()) {
+            return $reportId;
+        } else {
+            return $error;
+        }
+
+    }
 
     public function getReportCasesChecks($reportCaseId){
 
@@ -550,7 +569,6 @@ class ReportApiController extends Controller
     }
 
     //returns 'shift_checks.*', 'case_notes.case_id', 'case_notes.title', 'case_notes.user_id', 'case_notes.description'
-
     public function getShiftCheckCases($shiftCheckIds, $caseNoteIds){
 
         $shiftChecks = DB::table('shift_check_cases')
@@ -569,6 +587,111 @@ class ReportApiController extends Controller
             ->get();
 
         return $shiftChecks;
+    }
+
+    public function getIndividualReport($reportId){
+//todo: IMPORTANT change, only copied from getlocationReport
+        try {
+
+            //$reportCaseId will hold just one value for the report_case record that matches the report_id
+            $reportCaseId = getTable2Id('report_cases', $reportId, 'report_id');
+
+            //from reports tables
+            $reportChecks = $this->getReportCasesChecks($reportCaseId);
+
+            //get shift_check data using the shift_check_cases.shift_check_id (array of different ids)
+//            and case_note data using the shift_check_cases.case_note_id (array of different ids)
+
+            $shiftCheckIds = $reportChecks->pluck('shift_check_id');
+
+            $caseNoteIds = $reportChecks->pluck('case_note_id');
+
+            //use data from reports tables to get details from other tables
+            $shiftChecks = $this->getShiftCheckCases($shiftCheckIds, $caseNoteIds);
+
+            $caseIds = $shiftChecks->pluck('case_id');
+
+            $files = app('App\Http\Controllers\CaseNoteApiController')->getCaseFiles($caseIds);
+
+            $reportData = app('App\Http\Controllers\CaseNoteApiController')->appendCaseFiles($files, $shiftChecks);
+
+            //for each object,
+            // 1: find the current_location details
+            //2: add onto the end of the object
+            //3: join reportChecks with shiftChecks
+
+            //Note: not beyond reasonable possibility that the number of results returned could vary,
+            //especially if a post fails, so cannot operate on the assumption will not vary
+
+            foreach ($reportData as $x => $item) {
+
+                //functions.php
+                //using the user_loc_id, gather details about the geoLocation from the current_user_locations table and add to the shiftChecks object
+                //check_ins
+                $geoIn = getGeoData($item->user_loc_check_in_id);
+
+                $reportData[$x]->checkin_latitude = $geoIn->get('lat');
+                $reportData[$x]->checkin_longitude = $geoIn->get('long');
+                $reportData[$x]->checkin_id = $geoIn->get('geoId');
+
+                //check_outs
+                $geoOut = getGeoData($item->user_loc_check_out_id);
+
+                $reportData[$x]->checkout_latitude = $geoOut->get('lat');
+                $reportData[$x]->checkout_longitude = $geoOut->get('long');
+                $reportData[$x]->checkout_id = $geoOut->get('geoId');
+
+                foreach ($reportChecks as $j => $report) {
+
+                    if ($reportData[$x]->id == $reportChecks[$j]->shift_check_id) {
+
+                        //add values onto the end of the shiftChecks object to correlate the data
+                        $reportData[$x]->shift_check_id = $reportChecks[$j]->shift_check_id;
+                        $reportData[$x]->shift_check_case_id = $reportChecks[$j]->id;
+                        $reportData[$x]->case_note_id = $reportChecks[$j]->case_note_id;
+                        $reportData[$x]->location_id = $reportChecks[$j]->location_id;
+                        $reportData[$x]->total_hours = $reportChecks[$j]->total_hours;
+                        $reportData[$x]->total_guards = $reportChecks[$j]->total_guards;
+                        $reportData[$x]->report_id = $reportChecks[$j]->report_id;
+                    }
+                }
+            }
+
+            //get employee's name using user_id from case_notes table
+            $checkUserIds = $reportData->pluck('user_id');
+
+            $usersNames = userFirstLastName($checkUserIds);
+
+            //add employee's name onto the end of the object data
+            if ($usersNames != null) {
+                foreach ($reportData as $i => $item) {
+
+                    foreach ($usersNames as $user) {
+                        if ($reportData[$i]->user_id == $user->id) {
+
+                            //store name in the object
+                            $reportData[$i]->user = $user->first_name . ' ' . $user->last_name;
+                        }
+                    }
+                }
+            }
+
+            //get location details
+            $locationId = $reportData->pluck('location_id')->first();
+//             retrieve location using location_id from shiftChecks using table so as to still retrieve data if the location has been deleted.
+            $location = locationAddressDetails($locationId);
+
+            return response()->json([
+                'reportData' => $reportData,
+                'location' => $location,
+                'success' => true
+            ]);
+        } //error thrown if no report_case record for a report_id ie when no shift falls within the date range for a location
+        catch (\ErrorException $e) {
+            return response()->json([
+                'success' => false
+            ]);
+        }
     }
 
     public function getLocationReport($id){
@@ -675,109 +798,6 @@ class ReportApiController extends Controller
             ]);
         }
     }
-
-//    public function getMgmtReport($id){
-//        try{
-//            //$reportCaseId will hold just one value for the report_case record that matches the report_id
-//            $reportCaseId = getTable2Id('report_cases', $id, 'report_id');
-//
-//            //from reports tables
-//            $reportChecks = $this->getReportCasesChecks($reportCaseId);
-//
-//            $shiftCheckIds = $reportChecks->pluck('shift_check_id');
-//
-//            $caseNoteIds = $reportChecks->pluck('case_note_id');
-//
-//            //use data from reports tables to get details from other tables
-//            $shiftChecks = $this->getShiftCheckCases($shiftCheckIds, $caseNoteIds);
-//
-//
-//            $caseIds = $shiftChecks->pluck('case_id');
-//
-//            $files = app('App\Http\Controllers\CaseNoteApiController')->getCaseFiles($caseIds);
-//
-//            $reportData = app('App\Http\Controllers\CaseNoteApiController')->appendCaseFiles($files, $shiftChecks);
-////for each object,
-//            // 1: find the current_location details
-//            //2: add onto the end of the object
-//            //3: join reportChecks with shiftChecks
-//
-//            //Note: not beyond reasonable possibility that the number of results returned could vary,
-//            //especially if a post fails, so cannot operate on the assumption will not vary
-//
-//            foreach ($reportData as $x => $item) {
-//
-//                //functions.php
-//                //using the user_loc_id, gather details about the geoLocation from the current_user_locations table and add to the shiftChecks object
-//                //check_ins
-//                $geoIn = getGeoData($item->user_loc_check_in_id);
-//
-//                $reportData[$x]->checkin_latitude = $geoIn->get('lat');
-//                $reportData[$x]->checkin_longitude = $geoIn->get('long');
-//                $reportData[$x]->checkin_id = $geoIn->get('geoId');
-//
-//                //check_outs
-//                $geoOut = getGeoData($item->user_loc_check_out_id);
-//
-//                $reportData[$x]->checkout_latitude = $geoOut->get('lat');
-//                $reportData[$x]->checkout_longitude = $geoOut->get('long');
-//                $reportData[$x]->checkout_id = $geoOut->get('geoId');
-//
-//                foreach ($reportChecks as $j => $report) {
-//
-//                    if ($reportData[$x]->id == $reportChecks[$j]->shift_check_id) {
-//
-//                        //add values onto the end of the shiftChecks object to correlate the data
-//                        $reportData[$x]->shift_check_id = $reportChecks[$j]->shift_check_id;
-//                        $reportData[$x]->shift_check_case_id = $reportChecks[$j]->id;
-//                        $reportData[$x]->case_note_id = $reportChecks[$j]->case_note_id;
-//                        $reportData[$x]->location_id = $reportChecks[$j]->location_id;
-//                        $reportData[$x]->total_hours = $reportChecks[$j]->total_hours;
-//                        $reportData[$x]->total_guards = $reportChecks[$j]->total_guards;
-//                        $reportData[$x]->report_id = $reportChecks[$j]->report_id;
-//                    }
-//                }
-//            }
-//
-//            //get employee's name using user_id from case_notes table
-//            $checkUserIds = $reportData->pluck('user_id');
-//
-//            $usersNames = userFirstLastName($checkUserIds);
-//
-//            //add employee's name onto the end of the object data
-//            if ($usersNames != null) {
-//                foreach ($reportData as $i => $item) {
-//
-//                    foreach ($usersNames as $user) {
-//                        if ($reportData[$i]->user_id == $user->id) {
-//
-//                            //store name in the object
-//                            $reportData[$i]->user = $user->first_name . ' ' . $user->last_name;
-//                        }
-//                    }
-//                }
-//            }
-//
-//            //get location details
-//            $locationId = $reportData->pluck('location_id')->first();
-////             retrieve location using location_id from shiftChecks using table so as to still retrieve data if the location has been deleted.
-//            $location = locationAddressDetails($locationId);
-//
-//            return response()->json([
-//                'clientData' => $reportData,
-//                'location' => $location,
-//                'success' => true
-//            ]);
-//
-//
-//
-//        } //error thrown if no report_case record for a report_id ie when no shift falls within the date range for a location
-//        catch (\ErrorException $e) {
-//        return response()->json([
-//        'success' => false
-//        ]);
-//        }
-//
 
     //get the location checks report data
     public function getCasesAndChecks($id)
@@ -917,7 +937,6 @@ class ReportApiController extends Controller
         return $shifts;
     }
 
-
     //returns a collection or array?? of shifts
     public function queryReportUser($dateStart, $dateEnd, $userId)
     {
@@ -929,6 +948,8 @@ class ReportApiController extends Controller
             ->where('assigned_shift_employees.mobile_user_id', '=', $userId)
             ->whereBetween('shifts.start_time', [$dateStart, $dateEnd])
             ->get();
+
+//        dd($shifts->pluck('id'));
 
         return $shifts;
     }
@@ -975,6 +996,7 @@ class ReportApiController extends Controller
 
 //        $caseNoteIds = $notes->pluck('id');
 
+
         return $noteIds;
     }
 
@@ -1000,6 +1022,30 @@ class ReportApiController extends Controller
 //        $checkIds = $checks->pluck('id');
 
         return $checkIds;
+    }
+
+
+
+
+    //ARCHIVED
+    public function queryCaseNotesUserTest($userId)
+    {
+         $shifts = $this->queryReportUser('2018-01-01 00:00:00','2018-01-31 00:00:00',1374);
+
+         $shiftIds = $shifts->pluck('id');
+
+        //retrieve non-deleted case_notes that match the location and shifts in question
+        //quirk: errors when trying to retrieve case_notes.id therefore subsequent query to get this data
+        $noteIds = DB::table('case_notes')
+            ->join('cases', 'case_notes.case_id', '=', 'cases.id')
+            ->where('case_notes.user_id', '=', $userId)
+            ->whereIn('case_notes.shift_id', $shiftIds)//whereIn equal to an array of shiftIds
+            ->where('cases.deleted_at', '=', null)
+            ->where('case_notes.deleted_at', '=', null)
+            ->select('case_notes.id')
+            ->get();
+
+            return $noteIds;
     }
 
 }

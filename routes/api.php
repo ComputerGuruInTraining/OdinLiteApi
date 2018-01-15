@@ -853,8 +853,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::get("/locationreport/{id}", 'ReportApiController@getLocationReport');
 
-
-
+    Route::get("/individualreport/{reportId}", 'ReportApiController@getIndividualReport');
 
 
     /*---------------Report Type = Case Notes----------------*/

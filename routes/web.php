@@ -620,7 +620,7 @@ Route::get("/casenotes/testlist/{compId}", 'CaseNoteApiController@getCaseNotes')
 Route::get("/reports/individual/test/{dateFrom}/{dateTo}/{userId}", 'ReportApiController@queryReportUser');
 
 
-
+Route::get("/reports/individual/testNotes/{userId}", 'ReportApiController@queryCaseNotesUserTest');
 
 ////user = 1164
 //Route::get('/testMail/{id}', function ($id) {
