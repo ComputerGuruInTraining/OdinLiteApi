@@ -13,7 +13,7 @@ class CreateReportChecksTable extends Migration
      */
     public function up()
     {
-        Schema::create('report__checks', function (Blueprint $table) {
+        Schema::create('report_checks', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('report_id')->unsigned();//fk
             $table->integer('shift_check_id')->unsigned();//fk
@@ -29,6 +29,6 @@ class CreateReportChecksTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('report__checks');
+        Schema::dropIfExists('report_checks');
     }
 }

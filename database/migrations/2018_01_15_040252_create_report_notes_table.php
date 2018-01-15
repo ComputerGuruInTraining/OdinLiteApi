@@ -13,7 +13,7 @@ class CreateReportNotesTable extends Migration
      */
     public function up()
     {
-        Schema::create('report__notes', function (Blueprint $table) {
+        Schema::create('report_notes', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('report_id')->unsigned();//fk
             $table->integer('case_note_id')->unsigned();//fk
@@ -29,6 +29,6 @@ class CreateReportNotesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('report__notes');
+        Schema::dropIfExists('report_notes');
     }
 }
