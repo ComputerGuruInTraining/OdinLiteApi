@@ -807,15 +807,12 @@ class ReportApiController extends Controller
 
     public function getReportIndividualData($reportId)
     {
-//        $report = Report::find($reportId);
-
         $reportInd = DB::table('report_individuals')
-            ->join('reports', 'reports.id', '=', 'report_individuals.report_id')
-            ->where('reports.id', '=', $reportId)
+//            ->join('reports', 'reports.id', '=', 'report_individuals.report_id')
+            ->where('id', '=', $reportId)
             ->get();
 
         return $reportInd;
-
     }
 
     public function getLocationReport($id)
