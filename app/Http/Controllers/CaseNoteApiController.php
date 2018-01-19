@@ -176,16 +176,35 @@ class CaseNoteApiController extends Controller
 //        return response()->json($cases);
 //    }
 
-    //return case_notes associated with a shift check
-    public function getShiftCheckCaseNotes($arrayShiftCheckIds)
+//$users = DB::table("users")->select('*')
+//->whereIn('id',function($query){
+//    $query->select('user_id')->from('invite_users');
+//})
+//->get();
+
+    public function getShiftCheckCaseNotes($shiftCheckCasesIds)
     {
         $shiftCheckCaseNotes = DB::table('shift_check_cases')
             ->join('case_notes', 'case_notes.id', '=', 'shift_check_cases.case_note_id')
-            ->whereIn('shift_check_cases.shift_check_id', $arrayShiftCheckIds)
+            ->join('shift_checks', 'shift_checks.id', '=', 'shift_check_cases.shift_check_id')
+                        ->join('locations', 'shift_checks.location_id', '=', 'locations.id')
+            ->whereIn('shift_check_cases.id', $shiftCheckCasesIds)
+            ->where('case_notes.deleted_at', '=', null)
             ->get();
 
         return $shiftCheckCaseNotes;
     }
+
+//    public function getShiftCheckCaseNotes($arrayShiftCheckIds)
+//    {
+//        $shiftCheckCaseNotes = DB::table('shift_check_cases')
+//            ->join('case_notes', 'case_notes.id', '=', 'shift_check_cases.case_note_id')
+//            ->whereIn('shift_check_cases.shift_check_id', $arrayShiftCheckIds)
+//            ->where('case_notes.deleted_at', '=', null)
+//            ->get();
+//
+//        return $shiftCheckCaseNotes;
+//    }
 
     //get case files by case_id which is required in case_files table, whereas case_note_id is nullable
     // to cater for cases where a case_file is being uploaded for a case without an accompanying case_note

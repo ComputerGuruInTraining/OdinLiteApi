@@ -626,41 +626,94 @@ class ReportApiController extends Controller
     public function getIndividualReport($reportId)
     {
         try {
+            //report object & report individual object
+            $reportInd = $this->getReportIndividualData($reportId);
 
+            /*shift_checks object*/
+//            $reportShiftCheckIds = $this->getReportChecks_ShiftCheckId($reportId);//83
 
-//            $reportData = DB::table('reports')
-//                ->join('report_individuals', 'report_individuals.report_id', '=', 'reports.id')
-//                ->join('report_notes', 'report_notes.report_id', '=', 'reports.id')
-//                ->join('report_checks', 'report_checks.report_id', '=', 'reports.id')
-//                ->where('reports.id', '=', $reportId)
-//                ->get();
+            //report_checks for a report_id and join with shift_check_cases on shift_check_id
+            $reportShiftCheckCases = DB::table('report_checks')
+                ->join('shift_check_cases', 'shift_check_cases.shift_check_id', '=', 'report_checks.shift_check_id')
+                ->select('shift_check_cases.id as shift_check_case_id')
+                ->where('report_checks.report_id', '=', $reportId)
+                ->get();
 
-            //report object
-            $report = $this->getReportData($reportId);
-
-
-
-            //report individual object
-//            $reportInd =
-
-
-
-            //shift object
-                $shift = $this->
-
-
-
-            //shift_checks object
-            $reportShiftCheckIds = $this->getReportChecks_ShiftCheckId($reportId);
-
+//            dd($reportShiftCheckCases);//83 shift_check_ids possibly deleted
             //array
-            $reportSftChkIds = $reportShiftCheckIds->pluck('id');
+//            $reportSftChkIds = $reportShiftCheckIds->pluck('shift_check_id');//83
 
-            $shiftCheckCaseNotes = app('App\Http\Controllers\CaseNoteApiController')->getShiftCheckCaseNotes($reportSftChkIds);
+//            $shiftCheckCases = DB::table('shift_check_cases')
+//                ->select('id')
+//                ->whereIn('shift_check_id', $reportSftChkIds)
+//                ->get();//so 2 shift_checks do not have case_notes. Expected
+
+//            $shiftCheckCasesIds = $shiftCheckCases->pluck('id');
+            $shiftCheckCasesIds = $reportShiftCheckCases->pluck('shift_check_case_id');
+
+//            dd($shiftCheckCasesIds);
+
+            //return all case_note details for the related shift_check_ids
+            $shiftCheckCaseNotes = app('App\Http\Controllers\CaseNoteApiController')->getShiftCheckCaseNotes($shiftCheckCasesIds);
+
+//            dd($shiftCheckCaseNotes, $reportInd);
+
+
+            return response()->json([
+                'report' => $reportInd,
+                'reportData' => $shiftCheckCaseNotes,
+                'success' => true
+            ]);
+        } //error thrown if no report_case record for a report_id ie when no shift falls within the date range for a location
+        catch (\ErrorException $e) {
+            return response()->json([
+                'success' => false
+            ]);
+        }
+    }
 
 
 
-            //$reportCaseId will hold just one value for the report_case record that matches the report_id
+
+
+    //shift object
+            //fixme: report_shifts table necessary?? single location shifts as is would dictate yes, if single location shifts change to have shift_checks, not so necessary,
+            //but feels more concrete to have report _shifts table rather than working backwards from report: shift_check_id
+            //where case_notes.shift_id = shiftId, just 1 object
+//            $shifts = app('App\Http\Controllers\JobsController')->getShiftsByShiftCheckIds($reportSftChkIds);
+
+
+
+
+//            dd($shiftCheckCasesIds);//81
+//
+
+
+//            dd($shiftCheckCaseNotes);//80 - lose one for a case_notes.deleted_at
+
+
+//            dd($reportSftChkIds);
+
+
+//
+////            dd($shiftCheckCaseNotes);
+//            //append shift_check details onto the $shiftCheckCaseNotes for related records
+//            foreach($shiftCheckCaseNotes as $shiftCheckCaseNote){
+//
+//                $shiftCheckId = $shiftCheckCaseNote->shift_check_id;
+//
+//                //loop through the shiftcasenotes and use the shift_check_id to get details from the shift_checks table and append
+//
+//                $shiftCheck = DB::table('shift_checks')
+//                    ->where('shift_checks.id', '=', $shiftCheckId)
+//                    ->get();
+//
+//                $shiftCheckCaseNote->shiftCheck = $shiftCheck;
+//
+//            }
+
+
+    //$reportCaseId will hold just one value for the report_case record that matches the report_id
 //            $reportIndivId = getTable2Id('report_individuals', $reportId, 'report_id');
 //
 //            //todo: up to here
@@ -749,26 +802,19 @@ class ReportApiController extends Controller
 ////             retrieve location using location_id from shiftChecks using table so as to still retrieve data if the location has been deleted.
 //            $location = locationAddressDetails($locationId);
 
-            return response()->json([
-//                'reportData' => $reportData,
-//                'location' => $location,
-                'success' => true
-            ]);
-        } //error thrown if no report_case record for a report_id ie when no shift falls within the date range for a location
-        catch (\ErrorException $e) {
-            return response()->json([
-                'success' => false
-            ]);
-        }
-    }
 
 
 
-    public function getReportData($reportId)
+    public function getReportIndividualData($reportId)
     {
-        $report = Report::find($reportId);
+//        $report = Report::find($reportId);
 
-        return $report;
+        $reportInd = DB::table('report_individuals')
+            ->join('reports', 'reports.id', '=', 'report_individuals.report_id')
+            ->where('reports.id', '=', $reportId)
+            ->get();
+
+        return $reportInd;
 
     }
 

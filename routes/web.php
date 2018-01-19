@@ -615,7 +615,17 @@ Route::get('/testing/nofitication/fail', function () {
 
 });
 
-Route::get("/post/shiftcheckouts/test/{shiftCheckId}/{posId}", 'JobsController@storeCheckOutTest');
+
+
+
+
+
+
+/*Test Routes*/
+Route::get("/individualreport/test/{reportId}", 'ReportApiController@getIndividualReport');
+
+
+//Route::get("/post/shiftcheckouts/test/{shiftCheckId}/{posId}", 'JobsController@storeCheckOutTest');
 
 //Route::get("/casenotes/testlist/{compId}", 'CaseNoteApiController@getCaseNotes');
 
@@ -625,7 +635,7 @@ Route::get("/post/shiftcheckouts/test/{shiftCheckId}/{posId}", 'JobsController@s
 //Route::get("/reports/individual/testNotes/{userId}", 'ReportApiController@queryCaseNotesUserTest');
 
 //storeCheckInTest($posId, $locId, $shiftId, $checks)
-Route::get("/post/shiftchecks/test/{posId}/{locId}/{shiftId}/{checks}", 'JobsController@storeCheckInTest');
+//Route::get("/post/shiftchecks/test/{posId}/{locId}/{shiftId}/{checks}", 'JobsController@storeCheckInTest');
 
 ////user = 1164
 //Route::get('/testMail/{id}', function ($id) {
