@@ -12,7 +12,7 @@ use App\Cases as Cases;
 
 class CaseNoteApiController extends Controller
 {
-    //get all data for case notes including geoLocation
+    //get all data for case notes including geoLocation given a company_id
     public function getCaseNotes($compId)
     {
         $cases = DB::table('case_notes')
@@ -92,6 +92,99 @@ class CaseNoteApiController extends Controller
             }
         }
         return response()->json($cases);
+    }
+
+    //get all data for case notes including geoLocation given a case_note_id
+//    public function getCaseNote($caseNoteId)
+//    {
+//        $cases = DB::table('case_notes')
+//            ->join('cases', 'cases.id', '=', 'case_notes.case_id')
+//            ->join('users', 'users.id', '=', 'case_notes.user_id')
+////            ->join('current_user_locations', 'case_notes.user_id', '=', 'current_user_locations.mobile_user_id')
+//            ->where('users.company_id', '=', $compId)
+//            ->where('case_notes.deleted_at', '=', null)
+//            ->where('cases.deleted_at', '=', null)
+//            ->select('case_notes.*', 'cases.location_id', 'users.first_name', 'users.last_name')
+//            ->orderBy('case_notes.created_at', 'desc')
+//            ->get();
+//
+//        $locationIds = $cases->pluck('location_id');
+//
+//        //retrieve location names, will retrieve all whether deleted or not
+//        $locations = DB::table('locations')
+//            ->whereIn('id', $locationIds)//array of $locationIds
+//            ->select('id', 'name', 'latitude', 'longitude')
+//            ->get();
+//
+//        // //ensure there are $locations before adding the location names onto the end of case object
+//        if(sizeof($locations) > 0) {
+//            foreach ($cases as $i => $case) {
+//                foreach ($locations as $location){
+//                    if ($location->id == $cases[$i]->location_id) {
+//                        $cases[$i]->location = $location->name;
+//                        $cases[$i]->locLat = $location->latitude;
+//                        $cases[$i]->locLong = $location->longitude;
+//                    }
+//                }
+//            }
+//        }
+//
+//        $currIds = $cases->pluck('curr_loc_id');
+//
+//        $currLocs = DB::table('current_user_locations')
+//            ->whereIn('id', $currIds)
+//            ->select('id', 'latitude', 'longitude')
+//            ->get();
+//
+//        //ensure there are $currLocs before adding the details onto the end of case object
+//        if(sizeof($currLocs) > 0) {
+//            foreach ($cases as $i => $case) {
+//                foreach ($currLocs as $currLoc){
+//                    if ($currLoc->id == $cases[$i]->curr_loc_id) {
+//                        $cases[$i]->geoLatitude = $currLoc->latitude;
+//                        $cases[$i]->geoLongitude = $currLoc->longitude;
+//                    }
+//                }
+//            }
+//        }
+//
+//        //each cases object has a different case_id
+//        $caseIds = $cases->pluck('case_id');
+//
+//        //retrieve files for those cases that they exist for
+//        $files = DB::table('case_files')
+//            ->whereIn('case_id', $caseIds)
+//            ->select('case_id','file')
+//            ->get();
+//
+//        //if files exist
+//        //there could be more than 1 file for a case_id
+//        if(sizeof($files) > 0) {
+//            foreach ($cases as $i => $case) {
+//
+//                $fileArray = [];
+//
+//                foreach ($files as $file){
+//                    if ($file->case_id == $cases[$i]->case_id) {
+//                        array_push($fileArray,$file->file);
+//                    }
+//                }
+//
+//                $cases[$i]->files = $fileArray;
+//            }
+//        }
+//        return response()->json($cases);
+//    }
+
+    //return case_notes associated with a shift check
+    public function getShiftCheckCaseNotes($arrayShiftCheckIds)
+    {
+        $shiftCheckCaseNotes = DB::table('shift_check_cases')
+            ->join('case_notes', 'case_notes.id', '=', 'shift_check_cases.case_note_id')
+            ->whereIn('shift_check_cases.shift_check_id', $arrayShiftCheckIds)
+            ->get();
+
+        return $shiftCheckCaseNotes;
     }
 
     //get case files by case_id which is required in case_files table, whereas case_note_id is nullable
