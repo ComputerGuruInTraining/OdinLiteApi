@@ -56,6 +56,7 @@ if (!function_exists('getTable2Id')) {
     }
 }
 
+//for a current_user_location_id, select latitude and longitude and return as a collection
 if (!function_exists('getGeoData')) {
 
     function getGeoData($userLocId)
@@ -424,4 +425,5 @@ if (!function_exists('numGuards')) {
         return $numGuards;
     }
 }
+
 

@@ -655,7 +655,7 @@ class ReportApiController extends Controller
 
             //array
             $reportSftChkIds = $reportShiftCheckIds->pluck('id');
-            
+
             $shiftCheckCaseNotes = app('App\Http\Controllers\CaseNoteApiController')->getShiftCheckCaseNotes($reportSftChkIds);
 
 

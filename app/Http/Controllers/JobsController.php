@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\ShiftCheckCases as CheckCases;
+use App\ShiftCheck as ShiftCheck;
+
 
 
 class JobsController extends Controller
@@ -271,4 +273,81 @@ class JobsController extends Controller
             return 0;
         }
     }
+
+    //Called to store the shift check_in in the shift_checks table
+    public function storeCheckIn($request)
+    {
+        //use posId to get the latitude and the longitude of the geoLocation
+        //and compare with the location of the shiftCheck to determine if withinRange
+        $posId = $request->input('posId');
+        $locId = $request->input('locId');
+
+        //gets the geoLongitude, geoLatitude for the current_user_location_id
+        $currLocData = getGeoData($posId);
+
+        $geoLat = $currLocData->get('lat');
+        $geoLong = $currLocData->get('long');
+
+        $locData = app('App\Http\Controllers\LocationController')->getLocationData($locId);
+
+        $locLat = $locData->latitude;
+        $locLong = $locData->longitude;
+
+        $withinRange = app('App\Http\Controllers\LocationController')->withinRangeApi($geoLat, $geoLong, $locLat, $locLong);
+
+        $shiftCheck = new ShiftCheck;
+
+        //$shift->check_ins will take the default current_timestamp
+        $shiftCheck->shift_id = $request->input('shiftId');
+        $shiftCheck->user_loc_check_in_id = $posId;
+        $shiftCheck->location_id = $locId;//note: ts is in UTC time
+        $shiftCheck->checks = $request->input('checks');
+        $shiftCheck->within_range_check_in = $withinRange;
+        $shiftCheck->save();
+
+//        $createdAt = $shiftCheck->created_at;
+
+        //retrieve id of the saved shift
+        $id = $shiftCheck->id;
+
+        return $id;
+    }
+
+//    public function storeCheckInTest($posId, $locId, $shiftId, $checks)
+//    {
+//        //use posId to get the latitude and the longitude of the geoLocation
+//        //and compare with the location of the shiftCheck to determine if withinRange
+////        $posId = $request->input('posId');
+////        $locId = $request->input('locId');
+//
+//        //gets the geoLongitude, geoLatitude for the current_user_location_id
+//        $currLocData = getGeoData($posId);
+//
+//        $geoLat = $currLocData->get('lat');
+//        $geoLong = $currLocData->get('long');
+//
+//        $locData = app('App\Http\Controllers\LocationController')->getLocationData($locId);
+//
+//        $locLat = $locData->latitude;
+//        $locLong = $locData->longitude;
+//
+//        $withinRange = app('App\Http\Controllers\LocationController')->withinRangeApi($geoLat, $geoLong, $locLat, $locLong);
+//
+//        $shiftCheck = new ShiftCheck;
+//
+//        //$shift->check_ins will take the default current_timestamp
+//        $shiftCheck->shift_id = $shiftId;
+//        $shiftCheck->user_loc_check_in_id = $posId;
+//        $shiftCheck->location_id = $locId;//note: ts is in UTC time
+//        $shiftCheck->checks = $checks;
+//        $shiftCheck->within_range_check_in = $withinRange;
+//        $shiftCheck->save();
+//
+////        $createdAt = $shiftCheck->created_at;
+//
+//        //retrieve id of the saved shift
+//        $id = $shiftCheck->id;
+//
+//        return $id;
+//    }
 }

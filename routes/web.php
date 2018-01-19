@@ -615,12 +615,15 @@ Route::get('/testing/nofitication/fail', function () {
 
 });
 
-Route::get("/casenotes/testlist/{compId}", 'CaseNoteApiController@getCaseNotes');
+//Route::get("/casenotes/testlist/{compId}", 'CaseNoteApiController@getCaseNotes');
 
-Route::get("/reports/individual/test/{dateFrom}/{dateTo}/{userId}", 'ReportApiController@queryReportUser');
+//Route::get("/reports/individual/test/{dateFrom}/{dateTo}/{userId}", 'ReportApiController@queryReportUser');
 
 
-Route::get("/reports/individual/testNotes/{userId}", 'ReportApiController@queryCaseNotesUserTest');
+//Route::get("/reports/individual/testNotes/{userId}", 'ReportApiController@queryCaseNotesUserTest');
+
+//storeCheckInTest($posId, $locId, $shiftId, $checks)
+//Route::get("/post/shiftchecks/test/{posId}/{locId}/{shiftId}/{checks}", 'JobsController@storeCheckInTest');
 
 ////user = 1164
 //Route::get('/testMail/{id}', function ($id) {

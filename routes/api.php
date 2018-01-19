@@ -1613,25 +1613,49 @@ Route::group(['middleware' => 'auth:api'], function () {
     //Called to log the shift check in
     Route::post('/shift/checks', function (Request $request) {
 
-        $shift = new ShiftCheck;
-
-        //$shift->check_ins will take the default current_timestamp
-        $shift->shift_id = $request->input('shiftId');
-        $shift->user_loc_check_in_id = $request->input('posId');
-        $shift->location_id = $request->input('locId');//note: ts is in UTC time
-        $shift->checks = $request->input('checks');
-        $shift->save();
-
-        $createdAt = $shift->created_at;
-
-        //retrieve id of the saved shift
-        $id = $shift->id;
+        $id = app('App\Http\Controllers\JobsController')->storeCheckIn($request);
 
         return response()->json([
             'success' => true,
             'id' => $id,
         ]);
+
     });
+//
+//        //use posId to get the latitude and the longitude of the geoLocation
+//        //and compare with the location of the shiftCheck to determine if withinRange
+//        $posId = $request->input('posId');
+//        $locId = $request->input('locId');
+//
+//        //gets the geoLongitude, geoLatitude for the current_user_location_id
+//        $currLocData = getGeoData($posId);
+//
+//        $geoLat = $currLocData->get('lat');
+//        $geoLong = $currLocData->get('long');
+//
+//        $locData = app('App\Http\Controllers\LocationController')->getLocationData($locId);
+//
+//        $locLat = $locData->latitude;
+//        $locLong = $locData->longitude;
+//
+//        $withinRange = app('App\Http\Controllers\LocationController')->withinRangeApi($geoLat, $geoLong, $locLat, $locLong);
+//
+//        $shift = new ShiftCheck;
+//
+//        //$shift->check_ins will take the default current_timestamp
+//        $shift->shift_id = $request->input('shiftId');
+//        $shift->user_loc_check_in_id = $posId;
+//        $shift->location_id = $locId;//note: ts is in UTC time
+//        $shift->checks = $request->input('checks');
+//        $shift->within_range_check_in = $withinRange;
+//        $shift->save();
+//
+//        $createdAt = $shift->created_at;
+//
+//        //retrieve id of the saved shift
+//        $id = $shift->id;
+
+
 
     //called to log the shift check out
     Route::put('/shift/checkouts', function (Request $request) {
