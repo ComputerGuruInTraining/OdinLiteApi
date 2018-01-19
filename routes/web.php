@@ -624,7 +624,9 @@ Route::get('/testing/nofitication/fail', function () {
 /*Test Routes*/
 Route::get("/individualreport/test/{reportId}", 'ReportApiController@getIndividualReport');
 
+Route::get("/post/reports/individual/test/{dateFrom}/{dateTo}/{userId}", 'ReportApiController@postIndividualTest');
 
+///reports/individual/test/2018-01-01 00:00:00/2018-01-31 00:00:00/1374
 //Route::get("/post/shiftcheckouts/test/{shiftCheckId}/{posId}", 'JobsController@storeCheckOutTest');
 
 //Route::get("/casenotes/testlist/{compId}", 'CaseNoteApiController@getCaseNotes');

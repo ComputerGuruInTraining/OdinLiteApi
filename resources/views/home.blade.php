@@ -11,7 +11,19 @@
                     You are logged in!
                 </div>
 
-                <a href="/individualreport/test/1174">Get Individual Report</a>
+                <a href="/individualreport/test/1254">Get Individual Report 1254 user_id = 1374</a>
+                <br/>
+                {{--get took a count of 7 secs--}}
+                <a href="/individualreport/test/1234">Get Individual Report 1234 user_id = 1384</a>
+                <br/>
+
+                <a href="/post/reports/individual/test/2018-01-01 00:00:00/2018-01-31 00:00:00/1384">Post Individual Report 1384</a>
+                {{--1384 returns 33 records when the get is conducted. Post took a count of 40 seconds--}}
+                <br/>
+
+                <a href="/post/reports/individual/test/2018-01-01 00:00:00/2018-01-31 00:00:00/1374">Post Individual Report 1374</a>
+                {{--1374 returns 21 records when the get is conducted. Post took 95 secs!!!--}}
+                <br/>
 
 
                 {{--<a href="/post/shiftcheckouts/test/4144/40244">Test store check out</a>--}}
