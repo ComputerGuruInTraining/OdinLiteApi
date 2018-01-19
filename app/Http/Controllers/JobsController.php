@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\ShiftCheckCases as CheckCases;
+use App\ShiftCheck as ShiftCheck;
+use Carbon\Carbon;
 
 
 class JobsController extends Controller
@@ -93,7 +95,6 @@ class JobsController extends Controller
         //returns a result set of assigned_shift_ids
         return response()->json($myCommenced);
     }
-
 
     public function getCommencedShiftDetails($assignedid, $mobileUserId){
 
@@ -271,4 +272,139 @@ class JobsController extends Controller
             return 0;
         }
     }
+
+    //mobile: Called to store the shift check_in in the shift_checks table
+    public function storeCheckIn($request)
+    {
+        //use posId to get the latitude and the longitude of the geoLocation
+        //and compare with the location of the shiftCheck to determine if withinRange
+        $posId = $request->input('posId');
+        $locId = $request->input('locId');
+
+        $distance = app('App\Http\Controllers\LocationController')->implementDistance($posId, $locId);
+
+        $shiftCheck = new ShiftCheck;
+
+        //$shift->check_ins will take the default current_timestamp
+        $shiftCheck->shift_id = $request->input('shiftId');
+        $shiftCheck->user_loc_check_in_id = $posId;
+        $shiftCheck->location_id = $locId;//note: ts is in UTC time
+        $shiftCheck->checks = $request->input('checks');
+        $shiftCheck->distance_check_in = $distance;
+        $shiftCheck->save();
+
+//        $createdAt = $shiftCheck->created_at;
+
+        //retrieve id of the saved shift
+        $id = $shiftCheck->id;
+
+        return $id;
+    }
+
+    //mobile: store the location check out
+    public function storeCheckOut($request)
+    {
+        //retrieve current shift's record for update
+        //using shift_id and location_id where check_outs null
+        $checkId = $request->input('shiftChecksId');
+        $check = ShiftCheck::find($checkId);
+
+        $posId = $request->input('posId');
+        $locId = $check->location_id;
+
+        $distance = app('App\Http\Controllers\LocationController')->implementDistance($posId, $locId);
+
+        $checkOut = Carbon::now();
+        $checkInTime = $check->check_ins;
+
+        //calculate checkDuration
+        $checkDuration = checkDuration($checkInTime, $checkOut);
+
+        $check->user_loc_check_out_id = $posId;
+        $check->check_outs = $checkOut;
+        $check->distance_check_out = $distance;
+        $check->check_duration = $checkDuration;
+
+        if ($check->save()) {
+            return 'success';
+        } else {
+            return 'failed';
+        }
+    }
+
+//    public function getShiftsByShiftCheckIds($reportSftChkIds)
+//    {
+//        $shifts = DB::table('shifts')
+//            ->whereIn('id', $reportSftChkIds)
+//            ->get();
+//
+//        return $shifts;
+//
+//    }
+//
+//    public function storeCheckOutTest($shiftCheckId, $posId)
+//    {
+//        //retrieve current shift's record for update
+//        //using shift_id and location_id where check_outs null
+//        $checkId = $shiftCheckId;
+//        $check = ShiftCheck::find($checkId);
+//
+////        dd($check);
+//
+//        $posId = $posId;
+//        $locId = $check->location_id;
+//
+//        $distance = app('App\Http\Controllers\LocationController')->implementDistance($posId, $locId);
+//
+//        $checkOut = Carbon::now();
+//        $checkInTime = $check->check_ins;
+//
+//        //calculate checkDuration
+//        $checkDuration = checkDuration($checkInTime, $checkOut);
+//
+//        $check->user_loc_check_out_id = $posId;
+//        $check->check_outs = $checkOut;
+//        $check->distance_check_out = $distance;
+//        $check->check_duration = $checkDuration;
+////dd($checkDuration);
+//
+////        $check->save()
+//        if ($check->save()) {
+//            return response()->json([
+//                'success' => true
+//            ]);
+//        } else {
+//            return response()->json([
+//                'success' => false
+//            ]);
+//        }
+//    }
+
+//    public function storeCheckInTest($posId, $locId, $shiftId, $checks)
+//    {
+//        //use posId to get the latitude and the longitude of the geoLocation
+//        //and compare with the location of the shiftCheck to determine if withinRange
+////        $posId = $request->input('posId');
+////        $locId = $request->input('locId');
+//
+//        //gets the geoLongitude, geoLatitude for the current_user_location_id
+//        $distance = app('App\Http\Controllers\LocationController')->implementDistance($posId, $locId);
+//
+//        $shiftCheck = new ShiftCheck;
+//
+//        //$shift->check_ins will take the default current_timestamp
+//        $shiftCheck->shift_id = $shiftId;
+//        $shiftCheck->user_loc_check_in_id = $posId;
+//        $shiftCheck->location_id = $locId;//note: ts is in UTC time
+//        $shiftCheck->checks = $checks;
+//        $shiftCheck->distance_check_in = $distance;
+//        $shiftCheck->save();
+//
+////        $createdAt = $shiftCheck->created_at;
+//
+//        //retrieve id of the saved shift
+//        $id = $shiftCheck->id;
+//
+//        return $id;
+//    }
 }

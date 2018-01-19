@@ -56,6 +56,7 @@ if (!function_exists('getTable2Id')) {
     }
 }
 
+//for a current_user_location_id, select latitude and longitude and return as a collection
 if (!function_exists('getGeoData')) {
 
     function getGeoData($userLocId)
@@ -424,4 +425,21 @@ if (!function_exists('numGuards')) {
         return $numGuards;
     }
 }
+
+//a singular check in time in minutes
+if (!function_exists('checkDuration')) {
+
+    function checkDuration($checkInTime, $checkOutTime)
+    {
+        $carbonStart = Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $checkInTime);
+        $carbonEnd = Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $checkOutTime);
+        //calculate duration based on start date and time and end date and time
+        $lengthM = $carbonStart->diffInMinutes($carbonEnd);//calculate in minutes
+        return $lengthM;
+    }
+}
+
+
+
+
 
