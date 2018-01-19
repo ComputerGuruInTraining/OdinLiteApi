@@ -426,4 +426,20 @@ if (!function_exists('numGuards')) {
     }
 }
 
+//a singular check in time in minutes
+if (!function_exists('checkDuration')) {
+
+    function checkDuration($checkInTime, $checkOutTime)
+    {
+        $carbonStart = Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $checkInTime);
+        $carbonEnd = Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $checkOutTime);
+        //calculate duration based on start date and time and end date and time
+        $lengthM = $carbonStart->diffInMinutes($carbonEnd);//calculate in minutes
+        return $lengthM;
+    }
+}
+
+
+
+
 

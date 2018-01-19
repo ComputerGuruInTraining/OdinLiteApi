@@ -1660,19 +1660,22 @@ Route::group(['middleware' => 'auth:api'], function () {
     //called to log the shift check out
     Route::put('/shift/checkouts', function (Request $request) {
 
-        //retrieve current shift's record for update
-        //using shift_id and location_id where check_outs null
+        $id = app('App\Http\Controllers\JobsController')->storeCheckOut($request);
 
+//
+//        //retrieve current shift's record for update
+//        //using shift_id and location_id where check_outs null
+//
+//
+//        $checkId = $request->input('shiftChecksId');
+//        $check = ShiftCheck::find($checkId);
+//
+//        $checkOut = Carbon::now();
+//
+//        $check->user_loc_check_out_id = $request->input('posId');
+//        $check->check_outs = $checkOut;
 
-        $checkId = $request->input('shiftChecksId');
-        $check = ShiftCheck::find($checkId);
-
-        $checkOut = Carbon::now();
-
-        $check->user_loc_check_out_id = $request->input('posId');
-        $check->check_outs = $checkOut;
-
-        if ($check->save()) {
+        if ($id == 'success') {
             return response()->json([
                 'success' => true
             ]);
