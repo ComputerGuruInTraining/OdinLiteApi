@@ -762,34 +762,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     /*---------------Reports----------------*/
 
     //retrieve a list of reports generated for a company
-    Route::get("/reports/list/{compId}", function ($compId) {
-        $reports = App\Report::where('company_id', $compId)
-            ->orderBy('date_start', 'asc')
-            ->get();
-
-        /********get location*******/
-
-        //if type="CaseNotes" from report_cases table
-        if(count($reports) > 0) {
-            foreach ($reports as $i => $report) {
-                $reportCase = DB::table('report_cases')
-                    ->join('locations', 'report_cases.location_id', '=', 'locations.id')
-                    ->where('report_cases.deleted_at', '=', null)
-                    ->where('report_id', '=', $reports[$i]->id)
-                    ->first();
-                // ->get();
-
-                if ($reportCase != null) {
-                    $reports[$i]->location = $reportCase->name;
-                } else {
-                    $reports[$i]->location = "";
-                }
-            }
-        }
-
-        return response()->json($reports);
-
-    });
+    Route::get("/reports/list/{compId}", 'ReportApiController@getReportList');
 
     //get basic details about a report
     Route::get("/report/{id}", function ($id) {

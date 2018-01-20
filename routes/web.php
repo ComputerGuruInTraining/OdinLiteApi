@@ -626,6 +626,9 @@ Route::get("/individualreport/test/{reportId}", 'ReportApiController@getIndividu
 
 Route::get("/post/reports/individual/test/{dateFrom}/{dateTo}/{userId}", 'ReportApiController@postIndividualTest');
 
+Route::get("/reports/list/{compId}", 'ReportApiController@getReportList');
+
+
 ///reports/individual/test/2018-01-01 00:00:00/2018-01-31 00:00:00/1374
 //Route::get("/post/shiftcheckouts/test/{shiftCheckId}/{posId}", 'JobsController@storeCheckOutTest');
 
