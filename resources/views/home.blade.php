@@ -17,7 +17,7 @@
 
                 <a href="/individualreport/test/1254">Get Individual Report 1254 user_id = 1374</a>
                 <br/>
-                {{--get took a count of 7 secs--}}
+                {{--get took a count of 7 secs, 25 sec once added for loop, also at different hourse with nbn other house had adsl2+--}}
                 <a href="/individualreport/test/1234">Get Individual Report 1234 user_id = 1384</a>
                 <br/>
 

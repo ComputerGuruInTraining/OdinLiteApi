@@ -662,7 +662,27 @@ class ReportApiController extends Controller
             //return all case_note details for the related shift_check_ids
             $shiftCheckCaseNotes = app('App\Http\Controllers\CaseNoteApiController')->getShiftCheckCaseNotes($shiftCheckCasesIds);
 
+
+            foreach ($shiftCheckCaseNotes as $x => $item) {
+
+                //functions.php
+                //using the user_loc_id, gather details about the geoLocation from the current_user_locations table and add to the shiftChecks object
+                //check_ins
+                $geoIn = getGeoData($item->user_loc_check_in_id);
+
+                $shiftCheckCaseNotes[$x]->checkin_latitude = $geoIn->get('lat');
+                $shiftCheckCaseNotes[$x]->checkin_longitude = $geoIn->get('long');
+
+                //check_outs
+                $geoOut = getGeoData($item->user_loc_check_out_id);
+
+                $shiftCheckCaseNotes[$x]->checkout_latitude = $geoOut->get('lat');
+                $shiftCheckCaseNotes[$x]->checkout_longitude = $geoOut->get('long');
+
+            }
 //            dd($shiftCheckCaseNotes);
+
+
 
             return response()->json([
                 'report' => $reportInd,
