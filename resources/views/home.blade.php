@@ -11,6 +11,10 @@
                     You are logged in!
                 </div>
 
+
+                <a href="/reports/list/404">Get Report List for Comp 404</a>
+                <br/>
+
                 <a href="/individualreport/test/1254">Get Individual Report 1254 user_id = 1374</a>
                 <br/>
                 {{--get took a count of 7 secs--}}

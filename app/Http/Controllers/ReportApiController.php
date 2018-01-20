@@ -32,6 +32,48 @@ class ReportApiController extends Controller
     {
     }
 
+    public function getReportList($compId)
+    {
+        $reports = Report::where('company_id', $compId)
+            ->orderBy('date_start', 'asc')
+            ->get();
+
+        if(count($reports) > 0) {
+            foreach ($reports as $i => $report) {
+                /********get location for some types of reports*******/
+
+                $reportCase = DB::table('report_cases')
+                    ->join('locations', 'report_cases.location_id', '=', 'locations.id')
+                    ->where('report_cases.deleted_at', '=', null)
+                    ->where('report_id', '=', $reports[$i]->id)
+                    ->first();
+
+                if ($reportCase != null) {
+                    $reports[$i]->location = $reportCase->name;
+                } else {
+                    $reports[$i]->location = "";
+                }
+
+                /********get individual for other types of reports*******/
+
+                $reportUser = DB::table('report_individuals')
+                    ->join('users', 'report_individuals.mobile_user_id', '=', 'users.id')
+                    ->select('users.first_name', 'users.last_name')
+                    ->where('report_id', '=', $reports[$i]->id)
+                    ->where('report_individuals.deleted_at', '=', null)
+                    ->first();
+
+                if ($reportUser != null) {
+                    $reports[$i]->individual = $reportUser->first_name." ".$reportUser->last_name;
+                } else {
+                    $reports[$i]->individual = "";
+                }
+            }
+        }
+
+        return response()->json($reports);
+    }
+
     public function postCaseNotes(Request $request)
     {
         //get request data
@@ -636,7 +678,6 @@ class ReportApiController extends Controller
     }
 
             //fixme: report_shifts table necessary?? single location shifts as is would dictate yes, if single location shifts change to have shift_checks, not so necessary,
-    //fixme: shift_locations necessary?
     public function getReportIndividualData($reportId)
     {
         $reportInd = DB::table('report_individuals')
@@ -876,11 +917,7 @@ class ReportApiController extends Controller
     }
 
     //returns a collection or array?? of shifts
-    //fixme: potentially gathers all shifts that appear in assigned_shift_locations. How check? For this one, perhaps ok as if assigned to the shift, then the shift is undertaken, it is ok.
-    // fixme cont.: Not so for users though when only want one users. Oh. only want one location.
-    // fixme cont. can go via shift_check or for single, only location assigned so ok.?? need to check this thoroughly.
-    //otherwise, check if filtered out later in process so that many shifts grabbed here, but less used later and only those for the location_id.
-    //fixme: todo: !!THIS!! as a test, need to attributer location id to each object.
+    //returns all shifts started that the location is assigned to
     public function queryReport($dateStart, $dateEnd, $locId)
     {
         //Retrieve the data for the location and date range needed to calculate totalHours and numGuards
