@@ -680,9 +680,6 @@ class ReportApiController extends Controller
                 $shiftCheckCaseNotes[$x]->checkout_longitude = $geoOut->get('long');
 
             }
-            dd($shiftCheckCaseNotes, $reportInd);
-
-
 
             return response()->json([
                 'report' => $reportInd,
