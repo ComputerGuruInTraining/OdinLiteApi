@@ -680,7 +680,7 @@ class ReportApiController extends Controller
                 $shiftCheckCaseNotes[$x]->checkout_longitude = $geoOut->get('long');
 
             }
-//            dd($shiftCheckCaseNotes);
+            dd($shiftCheckCaseNotes, $reportInd);
 
 
 
@@ -701,7 +701,11 @@ class ReportApiController extends Controller
     public function getReportIndividualData($reportId)
     {
         $reportInd = DB::table('report_individuals')
-            ->where('report_id', '=', $reportId)
+            ->join('users', 'users.id', '=', 'report_individuals.mobile_user_id')
+            ->select('report_individuals.*', 'users.first_name', 'users.last_name')
+            ->where('report_individuals.report_id', '=', $reportId)
+            ->where('users.deleted_at', '=', null)
+            ->where('report_individuals.deleted_at', '=', null)
             ->get();
 
         return $reportInd;
