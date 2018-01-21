@@ -29,6 +29,11 @@
                 {{--1374 returns 21 records when the get is conducted. Post took 95 secs!!!--}}
                 <br/>
 
+                <a href="/commencedshiftdetails/test/814/1374">Get Commenced Shift Details</a>
+                {{--1374 returns 21 records when the get is conducted. Post took 95 secs!!!--}}
+                <br/>
+
+
 
                 {{--<a href="/post/shiftcheckouts/test/4144/40244">Test store check out</a>--}}
 
