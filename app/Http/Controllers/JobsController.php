@@ -111,50 +111,19 @@ class JobsController extends Controller
         //result is an array even though only one.
         $shiftId = $this->getShiftId($assignedid, $mobileUserId);
 
-        //single locations
-        //data required is: location details, has a case note been submitted,
-        if(count($assignedLoc) == 1){
+        foreach ($assignedLoc as $i => $location) {
 
-            $notes = app('App\Http\Controllers\CaseNoteApiController')->getShiftCaseNotes($shiftId->id);
+            //Data Requirement 2. number of checks completed
+            $numChecks =  $this->countShiftChecks($shiftId->id, $location->location_id);
 
-            if(count($notes) > 0){
-                $singleCaseNote = true;
-
-            }else{
-                $singleCaseNote = false;
-            }
-
-            return response()->json([
-                'locations' => $assignedLoc,
-                'shiftId' => $shiftId,
-                'caseCheck' => $singleCaseNote,
-                ]);
-
-        }else{
-            //several locations
-            //data required is: 1.location details, 2.number of checks completed at each location,
-            // 3.the current check in (if there is one),
-            // 4.has a case note been submitted?
-
-            //Note: Data Requirement 2 ie number of checks:
-            //can be deciphered from the number of shift_check entries that
-            //correspond to the shift_id and the location_id and that have a check_outs entry
-            //unfortunately, if the put_check_out fails, the check will not be recorded as complete.
-            //one of those imperfections. But success rate is high thankfully.
-
-            foreach ($assignedLoc as $i => $location) {
-
-                //Data Requirement 2. number of checks completed
-                $numChecks =  $this->countShiftChecks($shiftId->id, $location->location_id);
-
-                $assignedLoc[$i]->checked = $numChecks;
+            $assignedLoc[$i]->checked = $numChecks;
 
 //todo: implement at a later date as needs to be thorough or there will be errors
-                //returns the shiftCheckId for each location
+            //returns the shiftCheckId for each location
 //                $checkId = $this->getCurrentCheckIn($shiftId->id, $location->location_id);
 
-                //Data Requirement 3. if a shift check is still to be completed
-                //only possibly for 1 location per shift
+            //Data Requirement 3. if a shift check is still to be completed
+            //only possibly for 1 location per shift
 //                if(count($checkId) > 0){
 //                    //assign this location to the locationCheckedIn Variable in mobile
 //                    $assignedLoc[$i]->checkedIn  = true;
@@ -179,7 +148,41 @@ class JobsController extends Controller
 //                    $assignedLoc[$i]->casePerCheck = false;
 //                    $caseCheck = false;
 //                }
+        }
+
+        //single locations
+        //data required is: location details, has a case note been submitted,
+        if(count($assignedLoc) == 1){
+
+            $notes = app('App\Http\Controllers\CaseNoteApiController')->getShiftCaseNotes($shiftId->id);
+
+            if(count($notes) > 0){
+                $singleCaseNote = true;
+
+            }else{
+                $singleCaseNote = false;
             }
+
+            return response()->json([
+                'locations' => $assignedLoc,
+                'shiftId' => $shiftId,
+                'caseCheck' => $singleCaseNote,
+            ]);
+
+        }
+        else{
+            //several locations
+            //data required is: 1.location details, 2.number of checks completed at each location,
+            // 3.the current check in (if there is one),
+            // 4.has a case note been submitted?
+
+            //Note: Data Requirement 2 ie number of checks:
+            //can be deciphered from the number of shift_check entries that
+            //correspond to the shift_id and the location_id and that have a check_outs entry
+            //unfortunately, if the put_check_out fails, the check will not be recorded as complete.
+            //one of those imperfections. But success rate is high thankfully.
+
+
 
             return response()->json([
                 'locations' => $assignedLoc,
@@ -188,6 +191,100 @@ class JobsController extends Controller
 
         }//end else several locations
     }
+
+
+//    public function getCommencedShiftDetails($assignedid, $mobileUserId){
+//
+//        //Step 1: get the shift_locations
+//        //each assigned object will have:
+//        //location_id, name, address, latitude, longitude, notes, [required] checks
+//        //result set is a collection, whether 1 or many
+//        //Data Requirement 1
+//        $assignedLoc = $this->getShiftLocations($assignedid);
+//
+//        //Step 2: get the shift_id that corresponds to the assigned_shift_id
+//        //each assigned_shift_id will only have 1 shift_id for a particular user
+//        //but retrieve first, because technically possible to have more than 1 from db query point of view
+//        //result is an array even though only one.
+//        $shiftId = $this->getShiftId($assignedid, $mobileUserId);
+//
+//        //single locations
+//        //data required is: location details, has a case note been submitted,
+//        if(count($assignedLoc) == 1){
+//
+//            $notes = app('App\Http\Controllers\CaseNoteApiController')->getShiftCaseNotes($shiftId->id);
+//
+//            if(count($notes) > 0){
+//                $singleCaseNote = true;
+//
+//            }else{
+//                $singleCaseNote = false;
+//            }
+//
+//            return response()->json([
+//                'locations' => $assignedLoc,
+//                'shiftId' => $shiftId,
+//                'caseCheck' => $singleCaseNote,
+//                ]);
+//
+//        }else{
+//            //several locations
+//            //data required is: 1.location details, 2.number of checks completed at each location,
+//            // 3.the current check in (if there is one),
+//            // 4.has a case note been submitted?
+//
+//            //Note: Data Requirement 2 ie number of checks:
+//            //can be deciphered from the number of shift_check entries that
+//            //correspond to the shift_id and the location_id and that have a check_outs entry
+//            //unfortunately, if the put_check_out fails, the check will not be recorded as complete.
+//            //one of those imperfections. But success rate is high thankfully.
+//
+//            foreach ($assignedLoc as $i => $location) {
+//
+//                //Data Requirement 2. number of checks completed
+//                $numChecks =  $this->countShiftChecks($shiftId->id, $location->location_id);
+//
+//                $assignedLoc[$i]->checked = $numChecks;
+//
+////todo: implement at a later date as needs to be thorough or there will be errors
+//                //returns the shiftCheckId for each location
+////                $checkId = $this->getCurrentCheckIn($shiftId->id, $location->location_id);
+//
+//                //Data Requirement 3. if a shift check is still to be completed
+//                //only possibly for 1 location per shift
+////                if(count($checkId) > 0){
+////                    //assign this location to the locationCheckedIn Variable in mobile
+////                    $assignedLoc[$i]->checkedIn  = true;
+////
+////                    //Data Requirement 4:
+////                    $casePerCheck = $this->caseNoteSbmtd($checkId->id);
+////
+////                    //if a case note exists for the current check in
+////                    if(count($casePerCheck) > 0){
+////                        $assignedLoc[$i]->casePerCheck = true;
+////                        $caseCheck = true;
+////
+////                    }else if(count($casePerCheck) == 0){
+////                        //case note not submitted
+////                        $assignedLoc[$i]->casePerCheck = false;
+////                        $caseCheck = false;
+////                    }
+////
+////                }else if(count($checkId) == 0){
+////                    //location not checked in
+////                    $assignedLoc[$i]->checkedIn  = false;
+////                    $assignedLoc[$i]->casePerCheck = false;
+////                    $caseCheck = false;
+////                }
+//            }
+//
+//            return response()->json([
+//                'locations' => $assignedLoc,
+//                'shiftId' => $shiftId
+//            ]);
+//
+//        }//end else several locations
+//    }
 
     public function getShiftLocations($asgnshftid){
 
