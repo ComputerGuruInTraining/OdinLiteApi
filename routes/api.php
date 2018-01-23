@@ -1089,22 +1089,27 @@ Route::group(['middleware' => 'auth:api'], function () {
         $employeeArray = $request->input('employees');
 
         $locationArray = $request->input('locations');
+
+        $checksArray =  $request->input('checksArray');
+
         //for each employee...
         for ($emp = 0; $emp < sizeof($employeeArray); $emp++) {
             $employee = new App\AssignedShiftEmployee;
             $employee->mobile_user_id = $employeeArray[$emp];
             $employee->assigned_shift_id = $id;
             $employee->save();
-//            insert a job record for each location
 
         }
 
+        //insert a job record for each location
         for ($loc = 0; $loc < sizeof($locationArray); $loc++) {
 
             $location = new App\AssignedShiftLocation;
             $location->location_id = $locationArray[$loc];
             $location->assigned_shift_id = $id;
-            $location->checks = $request->input('checks');
+
+            //checks
+            $location->checks = $checksArray[$loc];
             $location->save();
         }
 
