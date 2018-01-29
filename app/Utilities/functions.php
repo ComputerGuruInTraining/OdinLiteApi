@@ -434,8 +434,8 @@ if (!function_exists('checkDuration')) {
         $carbonStart = Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $checkInTime);
         $carbonEnd = Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $checkOutTime);
         //calculate duration based on start date and time and end date and time
-        $lengthM = $carbonStart->diffInMinutes($carbonEnd);//calculate in minutes
-        return $lengthM;
+        $lengthS = $carbonStart->diffInSeconds($carbonEnd);//calculate in seconds
+        return $lengthS;
     }
 }
 
