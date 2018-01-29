@@ -1102,16 +1102,29 @@ Route::group(['middleware' => 'auth:api'], function () {
         }
 
         //insert a job record for each location
-        for ($loc = 0; $loc < sizeof($locationArray); $loc++) {
+//        if(sizeof($locationArray) > 1){
+            for ($loc = 0; $loc < sizeof($locationArray); $loc++) {
 
-            $location = new App\AssignedShiftLocation;
-            $location->location_id = $locationArray[$loc];
-            $location->assigned_shift_id = $id;
+                $location = new App\AssignedShiftLocation;
+                $location->location_id = $locationArray[$loc];
+                $location->assigned_shift_id = $id;
 
-            //checks
-            $location->checks = $checksArray[$loc];
-            $location->save();
-        }
+                //checks
+                $location->checks = $checksArray[$loc];
+                $location->save();
+            }
+
+//        }else{
+//            $location = new App\AssignedShiftLocation;
+//            $location->location_id = $locationArray[$loc];
+//            $location->assigned_shift_id = $id;
+//
+//            //checks
+//            $location->checks = $checksArray[$loc];
+//            $location->save();
+//
+//        }
+
 
         //if($assigned->save()) {
         return response()->json([
