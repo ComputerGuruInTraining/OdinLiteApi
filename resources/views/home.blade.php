@@ -34,6 +34,9 @@
                 <br/>
 
 
+                <a href="/putshifttest/1054">Edit Shift 1054</a>
+                <br/>
+
 
                 {{--<a href="/post/shiftcheckouts/test/4144/40244">Test store check out</a>--}}
 
