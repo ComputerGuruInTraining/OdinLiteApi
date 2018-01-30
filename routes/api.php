@@ -1185,7 +1185,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         return response()->json($assigned);
     });
 
-    Route::put("/assignedshifts/{id}/edit", 'JobsController@putShiftTest');
+    Route::put("/assignedshifts/{id}/edit", 'JobsController@putShift');
 
 //        //table: assigned_shifts
 //
