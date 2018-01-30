@@ -51,7 +51,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'https://odinliteapitest.azurewebsites.net'),
+    'url' => env('APP_URL', 'https://odinliteapi.azurewebsites.net'),
 
     /*
     |--------------------------------------------------------------------------
