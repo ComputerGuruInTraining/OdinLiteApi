@@ -1185,139 +1185,150 @@ Route::group(['middleware' => 'auth:api'], function () {
         return response()->json($assigned);
     });
 
-    Route::put("/assignedshifts/{id}/edit", function (Request $request, $id) {
+    Route::put("/assignedshifts/{id}/edit", 'JobsController@putShift');
 
-        //table: assigned_shifts
+//        //table: assigned_shifts
+//
+//        //TODO: variable datetimes
+//        $start = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('start'));
+//        $end = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('end'));
+//
+//        $assigned = App\AssignedShift::find($id);
+//
+//        if ($request->has('compid')) {
+//            $assigned->company_id = $request->input('compId');
+//        }
+//
+//        if ($request->has('title')) {
+//            $assigned->shift_title = $request->input('title');
+//        }
+//
+//        if ($request->has('desc')) {
+//            if($request->input('desc') == "none") {
+//                $assigned->shift_description = null;
+//            }
+//        }
+//
+//        if ($request->has('roster_id')) {
+//            $assigned->roster_id = $request->input('roster_id');
+//        }
+//
+//        $assigned->start = $start;
+//        $assigned->end = $end;
+//
+//        $assigned->save();
+//
+//        //assigned_shift_employees
+//        //update the employees assigned to the shift
+//
+//        //new employee values to be used for updating the table
+//        $newEmpArray = $request->input('employees');
+//
+//        $newEmp = collect($newEmpArray);
+//
+//        //current employee values to be replaced with the new edits that haven't already been deleted by way of deleting employee
+//        $oldEmps = DB::table('assigned_shift_employees')
+//            ->where('assigned_shift_id', '=', $id)
+//            ->where('deleted_at', '=', null)
+//            ->pluck('mobile_user_id');
+//
+//        /*
+//        **compare the old employees to the new employees
+//        **in assigned_shift_employees table
+//        */
+//
+//        //create new records for those new employees updated in the view that aren't already in the assigned_shift_employees table
+//        $addEmps = $newEmp->diff($oldEmps);
+//
+//        foreach ($addEmps as $addEmp) {
+//            $employee = new App\AssignedShiftEmployee;
+//            $employee->mobile_user_id = $addEmp;
+//            $employee->assigned_shift_id = $id;
+//            $employee->save();
+//        }
+//
+//        //delete those records that are currently in the assigned_shift_employees table but were not included in the edit
+//        $deleteEmps = $oldEmps->diff($newEmp);
+//
+//        foreach ($deleteEmps as $deleteEmp) {
+//            $assignedEmp = AssignedEmp::where('mobile_user_id', '=', $deleteEmp)
+//                ->where('assigned_shift_id', '=', $id)
+//                ->delete();
+//
+//        }
+//
+//        //might fixme be best to include an object with the location and check, not just an array which is separate
+//        $checksArray = $request->input('checks');
+//        //assigned_shift_locations
+//        //update the locations assigned to the shift
+//
+//        $newLocArray = $request->input('locations');
+//
+//        //for location checks
+//        $array = [];
+//        for($l = 0; $l < sizeof($newLocArray); $l++){
+//
+//            $array = array_add(['location' => $newLocArray[$l], 'checks' => $checksArray[$l]]);
+//            dd($array);
+//        }
+//
+//        $newLoc = collect($newLocArray);
+//
+//        //current old assigned_location values to be edited that have not otherwise been deleted
+//        $oldLocs = DB::table('assigned_shift_locations')
+//            ->where('assigned_shift_id', '=', $id)
+//            ->where('deleted_at', '=', null)
+//            ->pluck('location_id');
+//
+//        //create new records for those new locations updated in the view that aren't already in the assigned_shift_locations table
+//        $addLocs = $newLoc->diff($oldLocs);
+//
+//        foreach ($addLocs as $addLoc) {
+//            $location = new App\AssignedShiftLocation;
+//            $location->location_id = $addLoc;
+//            $location->assigned_shift_id = $id;
+//            $location->checks = $checksArray;
+//            $location->save();
+//        }
+//
+//        //delete those records that are currently in the assigned_shift_locations table but were not included in the edit
+//        $deleteLocs = $oldLocs->diff($newLoc);
+//
+//        //soft delete on model
+//        foreach ($deleteLocs as $deleteLoc) {
+//            $assignedLoc = AssignedLoc::where('location_id', '=', $deleteLoc)
+//                ->where('assigned_shift_id', '=', $id)
+//                ->delete();
+//        }
+//
+//        //update those records that have the same location_id and assigned_shift_id, but a different amount of checks
+//        $sameLocs = $oldLocs->intersect($newLoc);
+//
+//        foreach ($sameLocs as $sameLoc) {
+//            $toUpdateId = DB::table('assigned_shift_locations')
+//                ->where('location_id', '=', $sameLoc)
+//                ->where('assigned_shift_id', '=', $id)
+//                ->where('deleted_at', '=', null)
+//                ->pluck('id');
+//
+//            $location = App\AssignedShiftLocation::find($toUpdateId);
+//            if ($location->checks != $request->input('checks')) {
+//                $location->checks = $request->input('checks');
+//                $location->save();
+//            }
+//        }
 
-        //TODO: variable datetimes
-        $start = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('start'));
-        $end = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('end'));
+//        if ($assigned->save()) {
+//            return response()->json(
+//                ['success' => true]
+//            );
+//        } else {
+//            return response()->json(
+//                ['success' => false]
+//            );
+//        }
 
-        $assigned = App\AssignedShift::find($id);
-
-        if ($request->has('compid')) {
-            $assigned->company_id = $request->input('compId');
-        }
-
-        if ($request->has('title')) {
-            $assigned->shift_title = $request->input('title');
-        }
-
-        if ($request->has('desc')) {
-            if($request->input('desc') == "none") {
-                $assigned->shift_description = null;
-            }
-        }
-
-        if ($request->has('roster_id')) {
-            $assigned->roster_id = $request->input('roster_id');
-        }
-
-        $assigned->start = $start;
-        $assigned->end = $end;
-
-        $assigned->save();
-
-        //assigned_shift_employees
-        //update the employees assigned to the shift
-
-        //new employee values to be used for updating the table
-        $newEmpArray = $request->input('employees');
-
-        $newEmp = collect($newEmpArray);
-
-        //current employee values to be replaced with the new edits that haven't already been deleted by way of deleting employee
-        $oldEmps = DB::table('assigned_shift_employees')
-            ->where('assigned_shift_id', '=', $id)
-            ->where('deleted_at', '=', null)
-            ->pluck('mobile_user_id');
-
-        /*
-        **compare the old employees to the new employees
-        **in assigned_shift_employees table
-        */
-
-        //create new records for those new employees updated in the view that aren't already in the assigned_shift_employees table
-        $addEmps = $newEmp->diff($oldEmps);
-
-        foreach ($addEmps as $addEmp) {
-            $employee = new App\AssignedShiftEmployee;
-            $employee->mobile_user_id = $addEmp;
-            $employee->assigned_shift_id = $id;
-            $employee->save();
-        }
-
-        //delete those records that are currently in the assigned_shift_employees table but were not included in the edit
-        $deleteEmps = $oldEmps->diff($newEmp);
-
-        foreach ($deleteEmps as $deleteEmp) {
-            $assignedEmp = AssignedEmp::where('mobile_user_id', '=', $deleteEmp)
-                ->where('assigned_shift_id', '=', $id)
-                ->delete();
-
-        }
-
-        //assigned_shift_locations
-        //update the locations assigned to the shift
-
-        $newLocArray = $request->input('locations');
-        $newLoc = collect($newLocArray);
-
-        //current old assigned_location values to be edited that have not otherwise been deleted
-        $oldLocs = DB::table('assigned_shift_locations')
-            ->where('assigned_shift_id', '=', $id)
-            ->where('deleted_at', '=', null)
-            ->pluck('location_id');
-
-        //create new records for those new locations updated in the view that aren't already in the assigned_shift_locations table
-        $addLocs = $newLoc->diff($oldLocs);
-
-        foreach ($addLocs as $addLoc) {
-            $location = new App\AssignedShiftLocation;
-            $location->location_id = $addLoc;
-            $location->assigned_shift_id = $id;
-            $location->checks = $request->input('checks');
-            $location->save();
-        }
-
-        //delete those records that are currently in the assigned_shift_locations table but were not included in the edit
-        $deleteLocs = $oldLocs->diff($newLoc);
-
-        //soft delete on model
-        foreach ($deleteLocs as $deleteLoc) {
-            $assignedLoc = AssignedLoc::where('location_id', '=', $deleteLoc)
-                ->where('assigned_shift_id', '=', $id)
-                ->delete();
-        }
-
-        //update those records that have the same location_id and assigned_shift_id, but a different amount of checks
-        $sameLocs = $oldLocs->intersect($newLoc);
-
-        foreach ($sameLocs as $sameLoc) {
-            $toUpdateId = DB::table('assigned_shift_locations')
-                ->where('location_id', '=', $sameLoc)
-                ->where('assigned_shift_id', '=', $id)
-                ->where('deleted_at', '=', null)
-                ->pluck('id');
-
-            $location = App\AssignedShiftLocation::find($toUpdateId);
-            if ($location->checks != $request->input('checks')) {
-                $location->checks = $request->input('checks');
-                $location->save();
-            }
-        }
-
-        if ($assigned->save()) {
-            return response()->json(
-                ['success' => true]
-            );
-        } else {
-            return response()->json(
-                ['success' => false]
-            );
-        }
-
-    });
+//    });
 
     //soft delete from the assigned_shifts_table and the relations where assigned_shift_id is a fk
     Route::delete('/assignedshift/{id}', function ($id) {
