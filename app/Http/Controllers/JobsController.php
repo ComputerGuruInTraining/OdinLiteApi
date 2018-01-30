@@ -436,8 +436,8 @@ class JobsController extends Controller
         //table: assigned_shifts
 
         //TODO: variable datetimes
-        $start = Carbon::createFromFormat('Y-m-d H:i:s', '2018-03-01 09:00:00');
-        $end = Carbon::createFromFormat('Y-m-d H:i:s', '2018-03-01 17:00:00');
+        $start = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('start'));
+        $end = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('end'));
 
         $assigned = AssignedShift::find($id);
 
