@@ -633,6 +633,9 @@ Route::get("/commencedshiftdetails/test/{assignedid}/{mobileuserid}", 'JobsContr
 
 Route::get("/putshifttest/{mobileuserid}", 'JobsController@putShift');
 
+Route::get("/reportnotestest/{reportId}", 'ReportApiController@getReportCaseNotes');
+
+
 ///reports/individual/test/2018-01-01 00:00:00/2018-01-31 00:00:00/1374
 //Route::get("/post/shiftcheckouts/test/{shiftCheckId}/{posId}", 'JobsController@storeCheckOutTest');
 
@@ -676,6 +679,7 @@ Route::get("/putshifttest/{mobileuserid}", 'JobsController@putShift');
             'success' => $userId
         ]);
 }); */
+
 
 
 
