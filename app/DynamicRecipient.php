@@ -8,7 +8,6 @@
 
 namespace App;
 
-
 class DynamicRecipient extends Recipient
 {
     public function __construct($email)

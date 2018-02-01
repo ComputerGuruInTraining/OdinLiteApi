@@ -38,10 +38,6 @@
                 <br/>
 
 
-                <a href="reportnotestest/1404">Get case notes for a report id (1404)</a>
-                <br/>
-
-
 
                 {{--<a href="/post/shiftcheckouts/test/4144/40244">Test store check out</a>--}}
 

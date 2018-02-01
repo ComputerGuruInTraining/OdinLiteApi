@@ -852,7 +852,7 @@ class ReportApiController extends Controller
                 ->join('case_notes', function ($join) use ($caseNoteIds) {
                     //single value in where clause variable, array of report_case_notes with variable value
                     $join->on('case_notes.id', '=', 'shift_check_cases.case_note_id')
-//                        ->where('case_notes.deleted_at', '=', null)//TODO
+                        ->where('case_notes.deleted_at', '=', null)
                         ->whereIn('case_notes.id', $caseNoteIds);
                 })
                 ->select('shift_checks.*', 'case_notes.case_id', 'case_notes.title', 'case_notes.user_id')
@@ -1166,6 +1166,7 @@ class ReportApiController extends Controller
         }
     }
 
+    //not implemented yet, WIP as may be needed for individuals
     public function getReportCaseNotes($reportId){
         try {
             //using reportId to get case note ids fro the report from report_notes table???
@@ -1181,9 +1182,8 @@ class ReportApiController extends Controller
             return response()->json($notes);
 
         }catch (\ErrorException $e) {
-            return response()->json([
-                'notes' => null
-            ]);
+            $notes = null;
+            return response()->json($notes);
         }
     }
 
