@@ -903,6 +903,15 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     });
 
+
+
+    /*---------------Report Type = Client || Management----------------*/
+
+    Route::get("/reportnotes/{reportId}", 'ReportApiController@getReportCaseNotes');
+
+
+
+
     /*
       * Assigned Shifts
      */

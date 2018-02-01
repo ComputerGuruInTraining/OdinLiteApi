@@ -1166,6 +1166,28 @@ class ReportApiController extends Controller
         }
     }
 
+    public function getReportCaseNotes($reportId){
+        try {
+            //using reportId to get case note ids fro the report from report_notes table???
+            //already???
+            //join with case_notes table for details
+            $notes = DB::table('report_notes')
+                ->join('case_notes', 'case_notes.id', '=', 'report_notes.case_note_id')
+                ->where('report_notes.report_id', '=', $reportId)
+                ->where('report_notes.deleted_at', '=', null)
+                ->where('case_notes.deleted_at', '=', null)
+                ->get();
+
+            return response()->json($notes);
+
+        }catch (\ErrorException $e) {
+            return response()->json([
+                'notes' => null
+            ]);
+        }
+    }
+
+
 }
     //ARCHIVED
 
