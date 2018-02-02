@@ -74,7 +74,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         //save User role
         $userRole = new App\UserRole;
-        $userRole->role = 'Manager';
+        $userRole->role = $request->input('role');
         $userRole->user_id = $id;
         $userRole->save();
 
@@ -550,7 +550,6 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::get("/casenotes/list/{compId}", 'CaseNoteApiController@getCaseNotes');
 
-    //insert a new case note
     Route::post("/casenote", function (Request $request) {
 
         //response variables initialised to false

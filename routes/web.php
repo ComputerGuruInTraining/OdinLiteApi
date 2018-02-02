@@ -605,30 +605,31 @@ dd($signature);
 
 
 /*Test Routes*/
-Route::get('/testing/nofitication/fail', function () {
-
-//    $newUser = App\User::find(974);//dds a bit of info
-    $newUser = App\User::find(974);//if user doesn't exist, fatal error
-
-    $newUser->notify(new NewMobileUser('test notification'));
-
-//    dd($response);
-    return response()->json([
-        'success' => true
-    ]);
-
-});
-
-Route::get("/individualreport/test/{reportId}", 'ReportApiController@getIndividualReport');
-
-Route::get("/post/reports/individual/test/{dateFrom}/{dateTo}/{userId}", 'ReportApiController@postIndividualTest');
-
-Route::get("/reports/list/{compId}", 'ReportApiController@getReportList');
-
-Route::get("/commencedshiftdetails/test/{assignedid}/{mobileuserid}", 'JobsController@getCommencedShiftDetails');
-
-
-Route::get("/putshifttest/{mobileuserid}", 'JobsController@putShift');
+//Route::get('/testing/nofitication/fail', function () {
+//
+////    $newUser = App\User::find(974);//dds a bit of info
+//    $newUser = App\User::find(974);//if user doesn't exist, fatal error
+//
+//    $newUser->notify(new NewMobileUser('test notification'));
+//
+////    dd($response);
+//    return response()->json([
+//        'success' => true
+//    ]);
+//
+//});
+//
+//Route::get("/individualreport/test/{reportId}", 'ReportApiController@getIndividualReport');
+//
+//Route::get("/post/reports/individual/test/{dateFrom}/{dateTo}/{userId}", 'ReportApiController@postIndividualTest');
+//
+//Route::get("/reports/list/{compId}", 'ReportApiController@getReportList');
+//
+//Route::get("/commencedshiftdetails/test/{assignedid}/{mobileuserid}", 'JobsController@getCommencedShiftDetails');
+//
+//Route::get("/notdeletedcasenotestest/", 'ReportApiController@getShiftCheckCasesTest');
+//
+//Route::get("/putshifttest/{mobileuserid}", 'JobsController@putShift');
 
 
 
