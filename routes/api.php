@@ -138,11 +138,14 @@ Route::group(['middleware' => 'auth:api'], function () {
             }
         }
 
-        if($request->has('role')){
-            $user->role = $request->input('role');
-        }
-
         $user->save();
+
+        if($request->has('role')){
+
+            $userRole = App\UserRole::where('user_id', '=', $id);
+            $userRole->role = $request->input('role');
+            $userRole->save();
+        }
 
         if ($user->save()) {
             return response()->json([
