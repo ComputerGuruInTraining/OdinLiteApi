@@ -8,10 +8,16 @@
 
 namespace App;
 
+use Illuminate\Notifications\Notifiable;
+
+
 class DynamicRecipient extends Recipient
 {
+    use Notifiable;
+
     public function __construct($email)
     {
         $this->email = $email;
     }
+
 }

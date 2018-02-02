@@ -103,6 +103,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     //Update Console user
     Route::put("/user/{id}/edit", function (Request $request, $id) {
+
         $user = App\User::find($id);
 
         if ($request->has('first_name')) {
@@ -114,33 +115,34 @@ Route::group(['middleware' => 'auth:api'], function () {
         }
 
         if ($request->has('email')) {
-            $user->email = $request->input('email');
+
+            //before changing the email, check the email has changed,
+            //if so, email the employee/mobile user's new email address,
+            $emailOld = $user->email;
+
+            $emailNew = $request->input('email');
+
+            if ($emailNew != $emailOld) {
+                //email the new email address and old email address and advise the employee changed
+                $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
+
+                //new email address notification mail
+                $recipientNew = new DynamicRecipient($emailNew);
+                $recipientNew->notify(new ChangeEmailNew($compName));
+
+                //old email address notification mail
+                $recipientOld = new DynamicRecipient($emailOld);
+                $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
+
+                $user->email = $emailNew;
+            }
         }
 
-        $emailNew = $request->input('email');
-        //before changing the email, check the email has changed,
-        //if so, email the employee/mobile user's new email address,
-        $emailOld = $user->email;
-
-        if ($emailNew != $emailOld) {
-            //email the new email address and old email address and advise the employee changed
-            $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
-
-            //new email address notification mail
-            $recipientNew = new DynamicRecipient($emailNew);
-            $recipientNew->notify(new ChangeEmailNew($compName));
-
-            //old email address notification mail
-            $recipientOld = new DynamicRecipient($emailOld);
-            $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
-
-            $user->email = $emailNew;
-
-            $user->save();
-        } else {
-            //don't change the email because it hasn't changed
-            $user->save();
+        if($request->has('role')){
+            $user->role = $request->input('role');
         }
+
+        $user->save();
 
         if ($user->save()) {
             return response()->json([
