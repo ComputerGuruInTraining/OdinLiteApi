@@ -11,6 +11,8 @@
                     You are logged in!
                 </div>
 
+                {{--<a href="/user/1454/edit/test">Put User role 1454</a>--}}
+                {{--<br/>--}}
 
                 {{--<a href="/reports/list/404">Get Report List for Comp 404</a>--}}
                 {{--<br/>--}}
