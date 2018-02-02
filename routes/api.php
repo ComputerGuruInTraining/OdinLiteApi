@@ -74,7 +74,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         //save User role
         $userRole = new App\UserRole;
-        $userRole->role = 'Manager';
+        $userRole->role = $request->input('role');
         $userRole->user_id = $id;
         $userRole->save();
 
@@ -103,6 +103,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     //Update Console user
     Route::put("/user/{id}/edit", function (Request $request, $id) {
+
         $user = App\User::find($id);
 
         if ($request->has('first_name')) {
@@ -114,32 +115,37 @@ Route::group(['middleware' => 'auth:api'], function () {
         }
 
         if ($request->has('email')) {
-            $user->email = $request->input('email');
+
+            //before changing the email, check the email has changed,
+            //if so, email the employee/mobile user's new email address,
+            $emailOld = $user->email;
+
+            $emailNew = $request->input('email');
+
+            if ($emailNew != $emailOld) {
+                //email the new email address and old email address and advise the employee changed
+                $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
+
+                //new email address notification mail
+                $recipientNew = new DynamicRecipient($emailNew);
+                $recipientNew->notify(new ChangeEmailNew($compName));
+
+                //old email address notification mail
+                $recipientOld = new DynamicRecipient($emailOld);
+                $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
+
+                $user->email = $emailNew;
+            }
         }
 
-        $emailNew = $request->input('email');
-        //before changing the email, check the email has changed,
-        //if so, email the employee/mobile user's new email address,
-        $emailOld = $user->email;
+        $user->save();
 
-        if ($emailNew != $emailOld) {
-            //email the new email address and old email address and advise the employee changed
-            $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
+        if($request->has('role')){
 
-            //new email address notification mail
-            $recipientNew = new DynamicRecipient($emailNew);
-            $recipientNew->notify(new ChangeEmailNew($compName));
+            $userRole = App\UserRole::where('user_id', '=', $id)->first();
 
-            //old email address notification mail
-            $recipientOld = new DynamicRecipient($emailOld);
-            $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
-
-            $user->email = $emailNew;
-
-            $user->save();
-        } else {
-            //don't change the email because it hasn't changed
-            $user->save();
+            $userRole->role = $request->input('role');
+            $userRole->save();
         }
 
         if ($user->save()) {
@@ -550,7 +556,6 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::get("/casenotes/list/{compId}", 'CaseNoteApiController@getCaseNotes');
 
-    //insert a new case note
     Route::post("/casenote", function (Request $request) {
 
         //response variables initialised to false

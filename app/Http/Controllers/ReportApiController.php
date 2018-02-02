@@ -617,7 +617,7 @@ class ReportApiController extends Controller
             ->join('case_notes', function ($join) use ($caseNoteIds) {
                 //single value in where clause variable, array of report_case_notes with variable value
                 $join->on('case_notes.id', '=', 'shift_check_cases.case_note_id')
-//                        ->where('case_notes.deleted_at', '=', null)//TODO
+                    ->where('case_notes.deleted_at', '=', null)
                     ->whereIn('case_notes.id', $caseNoteIds);
             })
             ->select('shift_checks.*', 'case_notes.case_id', 'case_notes.title', 'case_notes.user_id', 'case_notes.description')
@@ -814,7 +814,7 @@ class ReportApiController extends Controller
         }
     }
 
-    //get the location checks report data
+    //get the location checks/client/management report data
     public function getCasesAndChecks($id)
     {
         try {
@@ -852,7 +852,7 @@ class ReportApiController extends Controller
                 ->join('case_notes', function ($join) use ($caseNoteIds) {
                     //single value in where clause variable, array of report_case_notes with variable value
                     $join->on('case_notes.id', '=', 'shift_check_cases.case_note_id')
-//                        ->where('case_notes.deleted_at', '=', null)//TODO
+                        ->where('case_notes.deleted_at', '=', null)//todo: test should we use this fn again, this was added without being tested
                         ->whereIn('case_notes.id', $caseNoteIds);
                 })
                 ->select('shift_checks.*', 'case_notes.case_id', 'case_notes.title', 'case_notes.user_id')
@@ -1166,131 +1166,38 @@ class ReportApiController extends Controller
         }
     }
 
-}
-    //ARCHIVED
+    //not implemented yet, WIP as may be needed for individuals
+    public function getReportCaseNotes($reportId){
+        try {
+            //using reportId to get case note ids fro the report from report_notes table???
+            //already???
+            //join with case_notes table for details
+            $notes = DB::table('report_notes')
+                ->join('case_notes', 'case_notes.id', '=', 'report_notes.case_note_id')
+                ->where('report_notes.report_id', '=', $reportId)
+                ->where('report_notes.deleted_at', '=', null)
+                ->where('case_notes.deleted_at', '=', null)
+                ->get();
 
-//    public function queryCaseNotesUserTest($userId)
+            return response()->json($notes);
+
+        }catch (\ErrorException $e) {
+            $notes = null;
+            return response()->json($notes);
+        }
+    }
+
+    //test route
+//    public function getShiftCheckCasesTest()
 //    {
-//         $shifts = $this->queryReportUser('2018-01-01 00:00:00','2018-01-31 00:00:00',1374);
-//
-//         $shiftIds = $shifts->pluck('id');
-//
-//        //retrieve non-deleted case_notes that match the location and shifts in question
-//        //quirk: errors when trying to retrieve case_notes.id therefore subsequent query to get this data
-//        //quirk: errors when trying to retrieve case_notes.id therefore subsequent query to get this data
-//        $noteIds = DB::table('case_notes')
-//            ->join('cases', 'case_notes.case_id', '=', 'cases.id')
-//            ->where('case_notes.user_id', '=', $userId)
-//            ->whereIn('case_notes.shift_id', $shiftIds)//whereIn equal to an array of shiftIds
-//            ->where('cases.deleted_at', '=', null)
-//            ->where('case_notes.deleted_at', '=', null)
-//            ->select('case_notes.id')
-//            ->get();
-//
-//
-//            $checkIds = $this->queryShiftChecks($shiftIds);
-//
-//        //insert into Reports table via function
-//        $result = $this->storeReport('2018-01-01 00:00:00', '2018-01-31 00:00:00', 404, "Individual");
-//
-//        //report saved and id returned in $result
-//        if ($result->get('error') == null) {
-//
-//            $reportId = $result->get('id');
-//
-//            $resultUser = $this->storeReportIndividual($reportId, $shifts, $userId);
-//
-////                        $resultCase = $this->storeReportCase($reportId, $shifts, $locId);
-//
-//            if ($resultUser->get('error') == null) {
-//
-//                //variables needed to retrieve case_notes for the period and store in report_case_notes table
-////                            $reportCaseId = $resultUser->get('reportIndId');
-//
-//                $caseNoteIds = $noteIds->pluck('id');//datatype is eg collect([0=>3814, 1=>3824])
-//
-//                $resultNote = $this->storeReportNote($reportId, $caseNoteIds);
-//
-//                if ($resultNote->get('error') == null) {
-//
-//                    $checkIds = $checkIds->pluck('id');
-//
-//                    $resultCheck = $this->storeReportCheck($reportId, $checkIds);
-//
-//                    if ($resultCheck->get('error') == null) {
-//
-//                        return response()->json([
-//                            //all inserts occurred successfully
-//                            'success' => true,
-//                            'reportId' => $reportId
-//                        ]);
-//                    } else {
-//                        $errorResponse = "error storing the report location check details";
-//                        //no shift checks at the location
-//                        //ie in the case of a single location that does not have check in and check out
-//                        return response()->json([
-//                            'success' => false,
-//                            'errorResponse' => $errorResponse,
-//                        ]);
-//                    }
-//
-//                } else {
-//                    $errorResponse = "error storing the report case note details";
-//                    //error storing report notes
-//                    return response()->json([
-//                        'success' => false,
-//                        'errorResponse' => $errorResponse,
-//                    ]);
-//                }
-//
-//            } else {
-//                $errorResponse = "error storing the report calculations or user details";
-//                //error storing report individual
-//                return response()->json([
-//                    'success' => false,
-//                    'errorResponse' => $errorResponse,
-//                ]);
-//            }
-//
-//        } else {
-//            $errorResponse = "error storing the report";
-//
-//            //error storing report
-//            return response()->json([
-//                'success' => false,
-//                'errorResponse' => $errorResponse,
-//            ]);
-//        }
-
-//        if (count($checkIds) > 0) {
-//
-//            $ids = $checkIds->pluck('id');
-//
-//
-//            dd($ids, count($checkIds));
-//        }
-//
-//            return $noteIds;
-//    }
-
-
-//    public function getReportCasesChecks($reportCaseId)
-//    {
-//
-//        $reportChecks = DB::table('report_check_cases')
-//            //single value to join on
-//            ->join('shift_check_cases', function ($join) {
-//                //single value in where clause variable, array of report_case_notes with variable value
-//                $join->on('shift_check_cases.id', '=', 'report_check_cases.shift_check_case_id');
-//            })
-//            ->join('report_cases', function ($join) use ($reportCaseId) {
-//                //single value in where clause variable, array of report_case_notes with variable value
-//                $join->on('report_cases.id', '=', 'report_check_cases.report_case_id')
-//                    ->where('report_check_cases.report_case_id', '=', $reportCaseId);
-//            })
-//            ->select('shift_check_cases.*', 'report_cases.*')
-//            ->get();
-//
+//        $reportChecks = $this->getShiftCheckCases([3314, 2884], [3964, 3484]);
+//        dd($reportChecks);
 //        return $reportChecks;
 //    }
+
+}
+
+
+
+
 

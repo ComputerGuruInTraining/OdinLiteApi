@@ -11,31 +11,37 @@
                     You are logged in!
                 </div>
 
+                {{--<a href="/user/1454/edit/test">Put User role 1454</a>--}}
+                {{--<br/>--}}
 
-                <a href="/reports/list/404">Get Report List for Comp 404</a>
-                <br/>
+                {{--<a href="/reports/list/404">Get Report List for Comp 404</a>--}}
+                {{--<br/>--}}
 
-                <a href="/individualreport/test/1254">Get Individual Report 1254 user_id = 1374</a>
-                <br/>
+                {{--<a href="/individualreport/test/1254">Get Individual Report 1254 user_id = 1374</a>--}}
+                {{--<br/>--}}
                 {{--get took a count of 7 secs, 25 sec once added for loop, also at different hourse with nbn other house had adsl2+--}}
-                <a href="/individualreport/test/1234">Get Individual Report 1234 user_id = 1384</a>
-                <br/>
+                {{--<a href="/individualreport/test/1234">Get Individual Report 1234 user_id = 1384</a>--}}
+                {{--<br/>--}}
 
-                <a href="/post/reports/individual/test/2018-01-01 00:00:00/2018-01-31 00:00:00/1384">Post Individual Report 1384</a>
+                {{--<a href="/post/reports/individual/test/2018-01-01 00:00:00/2018-01-31 00:00:00/1384">Post Individual Report 1384</a>--}}
                 {{--1384 returns 33 records when the get is conducted. Post took a count of 40 seconds--}}
-                <br/>
+                {{--<br/>--}}
 
-                <a href="/post/reports/individual/test/2018-01-01 00:00:00/2018-01-31 00:00:00/1374">Post Individual Report 1374</a>
+                {{--<a href="/post/reports/individual/test/2018-01-01 00:00:00/2018-01-31 00:00:00/1374">Post Individual Report 1374</a>--}}
                 {{--1374 returns 21 records when the get is conducted. Post took 95 secs!!!--}}
-                <br/>
+                {{--<br/>--}}
 
-                <a href="/commencedshiftdetails/test/814/1374">Get Commenced Shift Details</a>
+                {{--<a href="/commencedshiftdetails/test/814/1374">Get Commenced Shift Details</a>--}}
                 {{--1374 returns 21 records when the get is conducted. Post took 95 secs!!!--}}
-                <br/>
+                {{--<br/>--}}
+
+                {{--<a href="/putshifttest/1054">Edit Shift 1054</a>--}}
+                {{--<br/>--}}
+
+                {{--<a href="/notdeletedcasenotestest">not deleted case notes test</a>--}}
+                {{--<br/>--}}
 
 
-                <a href="/putshifttest/1054">Edit Shift 1054</a>
-                <br/>
 
 
                 {{--<a href="/post/shiftcheckouts/test/4144/40244">Test store check out</a>--}}
