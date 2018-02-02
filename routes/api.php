@@ -97,14 +97,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     //edit
     Route::get("/user/{id}/edit", function ($id) {
-
-        $user = DB::table('users')
-            ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
-            ->where('users.id', '=', $id)
-            ->select('users.id', 'users.email', 'users.first_name', 'users.last_name', 'users.created_at',
-                'users.updated_at', 'users.deleted_at', 'user_roles.role')
-            ->first();
-
+        $user = App\User::find($id);
         return response()->json($user);
     });
 
