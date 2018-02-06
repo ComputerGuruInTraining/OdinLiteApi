@@ -49,7 +49,7 @@ class ChangeEmailOld extends Notification
             ->greeting('Hello!')
 
             ->line('Just a courtesy notification to advise you that this email address is no longer your login email for
-            OdinLite Application used by '.$this->compName. '. This is due to your email address 
+            Odin Application used by '.$this->compName. '. This is due to your email address 
             recently being updated in the Management Console to '.$this->emailNew.'.')
 
             ->line('If you are not happy about this change, or you do not believe this should have occurred,
