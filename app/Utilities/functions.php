@@ -185,7 +185,7 @@ if (!function_exists('azureContentType')) {
 
 if (!function_exists('getSASForBlob')) {
 
-    function getSASForBlob($accountName, $container, $filename, $permissions, $start, $expiry, $version, $key)
+    function getSASForBlob($accountName, $container, $filename, $permissions, $start, $expiry, $version, $contentType, $key)
     {
 
             $signedpermissions = $permissions;
@@ -200,7 +200,7 @@ if (!function_exists('getSASForBlob')) {
             $rscd = "";
             $rsce = "";
             $rscl = "";
-            $rsct = "";
+            $rsct = $contentType;
 
 
         $StringToSign = $signedpermissions . "\n" .
@@ -225,7 +225,7 @@ if (!function_exists('getSASForBlob')) {
 
 if (!function_exists('getBlobUrl')) {
 
-    function getBlobUrl($accountName, $container, $filename, $permissions, $resourceType, $start, $expiry, $version, $signature)
+    function getBlobUrl($accountName, $container, $filename, $permissions, $resourceType, $start, $expiry, $version, $contentType, $signature)
     {
         /* Create the signed query part */
         $_parts = array();
@@ -234,6 +234,7 @@ if (!function_exists('getBlobUrl')) {
         $_parts[] = 'sr=' . $resourceType;
         $_parts[] = (!empty($permissions)) ? 'sp=' . $permissions : '';
         $_parts[] = 'sv=' . $version;
+        $_parts[] = 'rsct=' . $contentType;
         $_parts[] = 'sig=' . urlencode($signature);
 
 
