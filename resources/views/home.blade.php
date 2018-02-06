@@ -11,6 +11,11 @@
                     You are logged in!
                 </div>
 
+
+
+                <a href="download-photo/casenotes/1513735785025.jpeg">Download 1513735785025.jpeg</a>
+                {{--<br/>--}}
+
                 {{--<a href="/user/1454/edit/test">Put User role 1454</a>--}}
                 {{--<br/>--}}
 

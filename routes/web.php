@@ -260,10 +260,36 @@ Route::get('/storage/app/public/{file}', function ($file) {
 Route::get('/download-photo/{foldername}/{filename}', function ($foldername, $filename) {
 
     //still works with the put
-    $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
-        config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
+//    $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
+//        config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
 
-    return response()->json($url);
+    $accountName = config('filesystems.disks.azure.name');
+    $container = config('filesystems.disks.azure.container');
+    $permissions = 'r';
+    $start = '2018-02-05T09:00:00Z';
+    $expiry = '2018-02-09T17:00:00Z';
+    $version = '2017-04-17';
+    $key = config('filesystems.disks.azure.key');
+    $resourceType = 'b';
+
+
+//    ($accountName, $container, $filename, $permissions, $start, $expiry, $version, $signature)
+//    $signature = getSASForBlob($accountName, $container, $filename, $permissions, $start, $expiry, $version, $key);
+
+    $signature = getSASForBlob($accountName, $container, '1513735785025.jpeg', $permissions,
+        $start, $expiry, $version, $key);
+
+//dd($signature);
+
+    $url = getBlobUrl($accountName, $container, '1513735785025.jpeg', $permissions, $resourceType, $start, $expiry, $version, $signature);
+
+    dd($url);
+
+//        $blobUrl = getBlobUrl(config('filesystems.disks.azure.name'), config('filesystems.disks.azure.container'), $foldername, $filename,
+//        'b','r',$end_date, $signature);
+
+
+//    return response()->json($url);
 });
 
 

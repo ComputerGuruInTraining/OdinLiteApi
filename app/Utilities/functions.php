@@ -185,170 +185,22 @@ if (!function_exists('azureContentType')) {
 
 if (!function_exists('getSASForBlob')) {
 
-    function getSASForBlob($accountName, $container, $foldername, $blob, $resourceType, $permissions, $expiry, $key)
+    function getSASForBlob($accountName, $container, $filename, $permissions, $start, $expiry, $version, $key)
     {
-/*
-        /* Create the signature */
-//        $_arraysign = array();
-//        $_arraysign[] = $permissions;
-//        $_arraysign[] = '';
-//        $_arraysign[] = $expiry;
-//        $_arraysign[] = '/' . $accountName . '/' . $container . '/' . $foldername . '/' .$blob;
-//        $_arraysign[] = '';
-//        $_arraysign[] = "api-version=2012-02-12"; //the API version is now required//changed//fixme: error here
-//        $_arraysign[] = '';
-//        $_arraysign[] = '';
-//        $_arraysign[] = '';
-//        $_arraysign[] = '';
-//        $_arraysign[] = '';
 
-
-
-
-            //required
-//            signed resource??
-//sr=b; //blob
-        $signedpermissions = "sp=r";
-        $signedexpiry = "se=2018-01-31";
-        $signedversion= "sv=2015-04-05";
-
-
-        //optional
-        $signedIP = "";
-        $signedProtocol = "";
-//        $signedIP = "sip=13.85.82.0";
-//        $signedProtocol = "spr=https";
-
-        $signedstart = "";
-        $canonicalizedresource = "";
-        $signedidentifier = "sr=b";
-        $rscc = "";
-        $rscd = "";
-        $rsce = "";
-        $rscl = "";
-        $rsct = "";
-
-
-        $signedstart='2013-08-16';
-$signedexpiry='2013-08-17';
-$signedresource='c';
-$signedpermissions='r';
-$signedidentifier='YWJjZGVmZw==';
-$signedversion='2013-08-15';
-//$responsecontent-disposition='file'; 'attachment';
-//$responsecontent-type='binary' ;
-
-
-//StringToSign = 'r . \n
-//               2013-08-16 . \n
-//               2013-08-17 . \n
-//               /myaccount/pictures . \n
-//               YWJjZGVmZw== . \n
-//               2013-08-15 . \n
-//               . \n
-//                . \n
-//    . \n
-//    . \n ';
-//               binary
-
-
-                           /*'r'."\n".
-                           '2018-01-01' . "\n" .
-                           '2018-01-31' . "\n" .
-                           'odinlitestorage.blob.core.windows.net/'.$foldername."\n"
-                            ."\n".
-                           '2013-08-15'. "\n"
-                           ."\n".
-                           'file; attachment' ."\n"
-                           ."\n"
-                       ."\n".
-                       'image/jpeg';
-                           */
-//
-//        sv=2015-04-05
-//        &st=2015-04-29T22%3A18%3A26Z
-//    &se=2015-04-30T02%3A23%3A26Z
-//    &sr=b
-//    &sp=rw
-//    &sip=168.1.5.60-168.1.5.70
-//    &spr=https
-
-
-//        r + \n
-//               2013-08-16 + \n
-//               2013-08-17 + \n
-//               /myaccount/pictures + \n
-//               YWJjZGVmZw== + \n
-//               2013-08-15 + \n
-//               + \n
-//               file; attachment + \n
-//    + \n
-//    + \n
-//               binary
-
-//        $StringToSign = $signedpermissions."\n".
-//            $signedstart . "\n" .
-//            $signedexpiry . "\n" .
-//            $canonicalizedresource . "\n" .
-//            $signedidentifier . "\n" .
-//            $signedIP . "\n" .
-//            $signedProtocol . "\n" .
-//            $signedversion . "\n" .
-//            $rscc . "\n" .
-//            $rscd . "\n" .
-//            $rsce . "\n" .
-//            $rscl . "\n" .
-//            $rsct;
-
-//        $_str2sign = implode("\n", $_arraysign);*/
-
-//        $StringToSign = "sv=2015-04-05&se=2018-01-12T18:45:17Z&sr=b&sp=r";
-//
-//        $StringToSign = "https://odinlitestorage.blob.core.windows.net/images/1515638198829.jpeg/2e4dca1c24076df03586a19c48e2e6c7.jpeg?
-//        sv=2015-04-05&se=2018-01-12T18:45:17Z&sr=b&sp=r";
-
-
-        //worked before made pirvate, then resource not found, then mismatch or signature not fwell formed
-//        $StringToSign = "sv=2017-04-17&se=2018-01-12T18:45:17Z&sr=b&sp=r";
-
-//with expiry and si
-//        $StringToSign = "sv=2017-04-17&se=2018-01-12T18:45:17Z&sr=b&sp=r&si=12345";
-
-//        Tr4d+FvjMIaSl+qNdT/URIesmpxqNnQI7ArqjfUUaGE=
-
-//        $StringToSign = "sv=2017-04-17&sr=b&si=12345";
-//        $StringToSign = "sv=2017-04-17&sr=c&si=12345";
-
-//        $StringToSign = "sv=2017-04-17&sr=c&si=12348aur";
-
-//        StringToSign = r + \n
-//               2013-08-16 + \n
-//               2013-08-17 + \n
-//               /myaccount/pictures + \n
-//               YWJjZGVmZw== + \n
-//               2013-08-15 + \n
-//               + \n
-//               file; attachment + \n
-//    + \n
-//    + \n
-//               binary
-//
-//        GET https://myaccount.blob.core.windows.net/pictures/profile.jpg?sv=2013-08-15&st=2013-08-16&se=2013-08-17&sr=c&sp=r&rscd=file;%20attachment&rsct=binary &sig=YWJjZGVmZw%3d%3d&sig=a39%2BYozJhGp6miujGymjRpN8tsrQfLo9Z3i8IRyIpnQ%3d HTTP/1.1
-
-
-        $signedpermissions = "r";
-        $signedstart = "2018-01-12T01:00:00Z";
-        $signedexpiry = "2018-01-12T23:00:00Z";
-        $canonicalizedresource = "/odinlitestorage/images/";
-        $signedidentifier = "12348aur";
-        $signedIP = "";
-        $signedProtocol = "";
-        $signedversion = "2017-04-17";
-        $rscc = "";
-        $rscd = "";
-        $rsce = "";
-        $rscl = "";
-        $rsct = "";
+            $signedpermissions = $permissions;
+            $signedstart = $start;
+            $signedexpiry = $expiry;
+            $canonicalizedresource = '/blob/'.$accountName.'/'.$container.'/'.$filename;
+            $signedidentifier = "";
+            $signedIP = "";
+            $signedProtocol = "";
+            $signedversion = $version;
+            $rscc = "";
+            $rscd = "";
+            $rsce = "";
+            $rscl = "";
+            $rsct = "";
 
 
         $StringToSign = $signedpermissions . "\n" .
@@ -365,12 +217,6 @@ $signedversion='2013-08-15';
             $rscl . "\n" .
             $rsct;
 
-//        odinlitestorage.blob.core.windows.net/images/1515638198829.jpeg/2e4dca1c24076df03586a19c48e2e6c7.jpeg?
-
-
-
-
-
         return base64_encode(
             hash_hmac('sha256', urldecode(utf8_encode($StringToSign)), base64_decode($key), true)
         );
@@ -379,25 +225,26 @@ $signedversion='2013-08-15';
 
 if (!function_exists('getBlobUrl')) {
 
-    function getBlobUrl($accountName, $container, $foldername, $blob, $resourceType, $permissions, $expiry, $_signature)
+    function getBlobUrl($accountName, $container, $filename, $permissions, $resourceType, $start, $expiry, $version, $signature)
     {
         /* Create the signed query part */
         $_parts = array();
+        $_parts[] = (!empty($start)) ? 'st=' . urlencode($start) : '';
         $_parts[] = (!empty($expiry)) ? 'se=' . urlencode($expiry) : '';
         $_parts[] = 'sr=' . $resourceType;
         $_parts[] = (!empty($permissions)) ? 'sp=' . $permissions : '';
-        $_parts[] = 'sig=' . urlencode($_signature);
-        $_parts[] = 'sv=2014-02-14';
+        $_parts[] = 'sv=' . $version;
+        $_parts[] = 'sig=' . urlencode($signature);
+
 
         /* Create the signed blob URL */
-        $_url = 'https://'
+        $url = 'https://'
             . $accountName . '.blob.core.windows.net/'
             . $container . '/'
-            . $foldername . '/'
-            . $blob . '?'
+            . $filename . '?'
             . implode('&', $_parts);
 
-        return $_url;
+        return $url;
     }
 }
 
