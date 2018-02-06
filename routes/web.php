@@ -134,9 +134,6 @@ Route::post('/upload', function (Request $request) {
         if ($request->hasFile('file')) {
 
             $path = $request->file('file')->storeAs('/', $request->input('fileName'));
-//            $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
-
-
 
         } else {
             $path = "";
@@ -195,25 +192,29 @@ Route::get('/storage/app/public/{file}', function ($file) {
 //route to provide a url to an image stored in azure storage container
 Route::get('/download-photo/{filename}', function ($filename) {
 
-    //still works with the put
-//    $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
-//        config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
-    $accountName = config('filesystems.disks.azure.name');
-    $container = config('filesystems.disks.azure.container');
-    $permissions = 'r';
-    $start = '2018-02-05T09:00:00Z';
-    $expiry = '2018-02-09T17:00:00Z';
-    $version = '2017-04-17';
-    $key = config('filesystems.disks.azure.key');
-    $resourceType = 'b';
-    $contentType = 'image/jpeg';
+    //check if file exists
+    $exists = Storage::disk('azure')->exists($filename);
 
-    $signature = getSASForBlob($accountName, $container, $filename, $permissions,
-        $start, $expiry, $version, $contentType, $key);
+    if($exists) {
+        $accountName = config('filesystems.disks.azure.name');
+        $container = config('filesystems.disks.azure.container');
+        $permissions = 'r';
+        $start = '2018-02-05T09:00:00Z';
+        $expiry = '2018-02-09T17:00:00Z';
+        $version = '2017-04-17';
+        $key = config('filesystems.disks.azure.key');
+        $resourceType = 'b';
+        $contentType = 'image/jpeg';
 
-    $url = getBlobUrl($accountName, $container, $filename, $permissions, $resourceType, $start, $expiry, $version, $contentType, $signature);
-//dd($url);
-    return response()->json($url);
+        $signature = getSASForBlob($accountName, $container, $filename, $permissions,
+            $start, $expiry, $version, $contentType, $key);
+
+        $url = getBlobUrl($accountName, $container, $filename, $permissions, $resourceType, $start, $expiry, $version, $contentType, $signature);
+dd($url);
+        return response()->json($url);
+    }else{
+        return response()->json(null);//returns {}empty object
+    }
 
 });
 
