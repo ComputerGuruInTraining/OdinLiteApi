@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\Hash;
 use App\Notifications\NewMobileUser;
 use Illuminate\Support\Facades\Storage;
 use MicrosoftAzure\Storage\Common\ServicesBuilder;
+use Carbon\Carbon;
+use Carbon\CarbonInterval;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -133,74 +136,7 @@ Route::post('/upload', function (Request $request) {
 
         if ($request->hasFile('file')) {
 
-                    $path = $request->file('file')->storeAs('casenotes', $request->input('fileName'));
-
-                    //start works, but download doesn't because jsut filename returned so leave as for the moment.
-//            $file = $request->file('file');
-//            $fileName = $request->input('fileName');
-            //            $path = $fileName;
-
-
-            //works with folder and file both being created because file object.
-//            Storage::put($fileName,
-//                $file);
-
-
-
-            //end works
-
-            //didn't work:
-//            Storage::put(
-//                $request->input('fileName'),
-//                file_get_contents($file),
-//                [
-//
-////                    'visibility' => 'public',
-//                    'ContentType' => 'image/jpeg'
-//
-//                ]
-//            );
-
-            //didn't work
-//            Storage::put(
-//                $request->input('fileName'),
-//                file_get_contents($file),
-//                [
-//
-////                    'visibility' => 'public',
-//                    'ContentType' => 'image/jpeg'
-//
-//                ]
-//            );
-
-//didn't work
-//            Storage::put(
-//                $request->input('fileName'),
-//                $file,
-//                [
-//
-////                    'visibility' => 'public',
-//                    'ContentType' => 'image/jpeg'
-//
-//                ]
-//            );
-//
-//            Storage::disk('azure')
-//                ->getDriver()
-//                ->put(
-//                    $fileName,
-//                    file_get_contents($file),
-//                    [
-//
-////                    'visibility' => 'public',
-//                        'ContentType' => 'image/jpeg'
-//
-//                    ]
-//
-//
-//            );
-
-
+            $path = $request->file('file')->storeAs('/', $request->input('fileName'));
 
         } else {
             $path = "";
@@ -257,13 +193,37 @@ Route::get('/storage/app/public/{file}', function ($file) {
 });
 
 //route to provide a url to an image stored in azure storage container
-Route::get('/download-photo/{foldername}/{filename}', function ($foldername, $filename) {
+Route::get('/download-photo/{filename}', function ($filename) {
 
-    //still works with the put
-    $url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
-        config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
+    //check if file exists
+    $exists = Storage::disk('azure')->exists($filename);
 
-    return response()->json($url);
+    if($exists) {
+        $accountName = config('filesystems.disks.azure.name');
+        $container = config('filesystems.disks.azure.container');
+        $permissions = 'r';
+
+        $todayTS = Carbon::now();//format eg 2018-02-06 12:00:44.000000
+        $subStrYesterday = substr($todayTS->subDay(), 0, 10);
+        $subStrTomorrow = substr($todayTS->addDays(2), 0, 10);//add 2 days for tomorrow as date mutated to yesterday
+
+        $start = $subStrYesterday.'T23:59:00Z';//from moments before midnight yesterday
+        $expiry = $subStrTomorrow.'T08:00:00Z';//til 8am tomorrow
+        $version = '2017-04-17';
+        $key = config('filesystems.disks.azure.key');
+        $resourceType = 'b';
+        $contentType = 'image/jpeg';
+
+        $signature = getSASForBlob($accountName, $container, $filename, $permissions,
+            $start, $expiry, $version, $contentType, $key);
+
+        $url = getBlobUrl($accountName, $container, $filename, $permissions, $resourceType, $start, $expiry, $version, $contentType, $signature);
+
+        return response()->json($url);
+    }else{
+        return response()->json(null);//returns {}empty object
+    }
+
 });
 
 

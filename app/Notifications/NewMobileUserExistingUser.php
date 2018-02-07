@@ -45,7 +45,7 @@ class NewMobileUserExistingUser extends Notification
             ->subject('New Employee Account')
             ->greeting('Greetings Existing User!')
             ->line('You are receiving this email because an employee account has been created for you 
-            which enables you to use OdinLite Mobile App on behalf of ' . $this->comp . '.')
+            which enables you to use Odin Mobile App on behalf of ' . $this->comp . '.')
             ->line('Download OdinLite on your mobile or tablet:')
             ->line("<a href='https://play.google.com/store/apps/details?id=com.odinliteapp&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'>
                 <img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png'

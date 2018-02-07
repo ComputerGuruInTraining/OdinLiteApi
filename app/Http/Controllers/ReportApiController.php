@@ -617,10 +617,10 @@ class ReportApiController extends Controller
             ->join('case_notes', function ($join) use ($caseNoteIds) {
                 //single value in where clause variable, array of report_case_notes with variable value
                 $join->on('case_notes.id', '=', 'shift_check_cases.case_note_id')
-                    ->where('case_notes.deleted_at', '=', null)
+//                    ->where('case_notes.deleted_at', '=', null)
                     ->whereIn('case_notes.id', $caseNoteIds);
             })
-            ->select('shift_checks.*', 'case_notes.case_id', 'case_notes.title', 'case_notes.user_id', 'case_notes.description')
+            ->select('shift_checks.*', 'case_notes.case_id', 'case_notes.title', 'case_notes.user_id', 'case_notes.description', 'case_notes.deleted_at as case_notes_deleted_at')
             ->get();
 
         return $shiftChecks;
@@ -814,7 +814,7 @@ class ReportApiController extends Controller
         }
     }
 
-    //get the location checks/client/management report data
+    //get the location checks report data
     public function getCasesAndChecks($id)
     {
         try {
@@ -852,7 +852,7 @@ class ReportApiController extends Controller
                 ->join('case_notes', function ($join) use ($caseNoteIds) {
                     //single value in where clause variable, array of report_case_notes with variable value
                     $join->on('case_notes.id', '=', 'shift_check_cases.case_note_id')
-                        ->where('case_notes.deleted_at', '=', null)//todo: test should we use this fn again, this was added without being tested
+//                        ->where('case_notes.deleted_at', '=', null)//todo: test should we use this fn again, this was added without being tested
                         ->whereIn('case_notes.id', $caseNoteIds);
                 })
                 ->select('shift_checks.*', 'case_notes.case_id', 'case_notes.title', 'case_notes.user_id')
@@ -977,8 +977,8 @@ class ReportApiController extends Controller
             ->join('cases', 'case_notes.case_id', '=', 'cases.id')
             ->where('cases.location_id', '=', $locId)
             ->whereIn('case_notes.shift_id', $shiftIds)//whereIn equal to an array of shiftIds
-            ->where('cases.deleted_at', '=', null)
-            ->where('case_notes.deleted_at', '=', null)
+//            ->where('cases.deleted_at', '=', null)
+//            ->where('case_notes.deleted_at', '=', null)
             ->get();
 
         //these ids will be the case_ids for the query results (not the case_note_ids)
@@ -999,8 +999,8 @@ class ReportApiController extends Controller
             ->join('cases', 'case_notes.case_id', '=', 'cases.id')
             ->where('case_notes.user_id', '=', $userId)
             ->whereIn('case_notes.shift_id', $shiftIds)//whereIn equal to an array of shiftIds
-            ->where('cases.deleted_at', '=', null)
-            ->where('case_notes.deleted_at', '=', null)
+//            ->where('cases.deleted_at', '=', null)
+//            ->where('case_notes.deleted_at', '=', null)
             ->select('case_notes.id')//note: pluck('id') from $noteIds to get the case_note_ids.
             ->get();
 
@@ -1176,7 +1176,7 @@ class ReportApiController extends Controller
                 ->join('case_notes', 'case_notes.id', '=', 'report_notes.case_note_id')
                 ->where('report_notes.report_id', '=', $reportId)
                 ->where('report_notes.deleted_at', '=', null)
-                ->where('case_notes.deleted_at', '=', null)
+//                ->where('case_notes.deleted_at', '=', null)
                 ->get();
 
             return response()->json($notes);
