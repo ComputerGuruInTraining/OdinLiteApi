@@ -620,7 +620,7 @@ class ReportApiController extends Controller
 //                    ->where('case_notes.deleted_at', '=', null)
                     ->whereIn('case_notes.id', $caseNoteIds);
             })
-            ->select('shift_checks.*', 'case_notes.case_id', 'case_notes.title', 'case_notes.user_id', 'case_notes.description')
+            ->select('shift_checks.*', 'case_notes.case_id', 'case_notes.title', 'case_notes.user_id', 'case_notes.description', 'case_notes.deleted_at as case_notes_deleted_at')
             ->get();
 
         return $shiftChecks;
