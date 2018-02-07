@@ -829,7 +829,11 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::get("/reportchecks/{id}", 'ReportApiController@getCasesAndChecks');
 
+    /*---------------Report Type = Client/Management----------------*/
+
     Route::get("/locationreport/{id}", 'ReportApiController@getLocationReport');
+
+    /*---------------Report Type = Individual----------------*/
 
     Route::get("/individualreport/{reportId}", 'ReportApiController@getIndividualReport');
 

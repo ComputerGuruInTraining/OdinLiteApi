@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\Hash;
 use App\Notifications\NewMobileUser;
 use Illuminate\Support\Facades\Storage;
 use MicrosoftAzure\Storage\Common\ServicesBuilder;
+use Carbon\Carbon;
+use Carbon\CarbonInterval;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -199,8 +202,13 @@ Route::get('/download-photo/{filename}', function ($filename) {
         $accountName = config('filesystems.disks.azure.name');
         $container = config('filesystems.disks.azure.container');
         $permissions = 'r';
-        $start = '2018-02-05T09:00:00Z';
-        $expiry = '2018-02-09T17:00:00Z';
+
+        $todayTS = Carbon::now();//format eg 2018-02-06 12:00:44.000000
+        $subStrYesterday = substr($todayTS->subDay(), 0, 10);
+        $subStrTomorrow = substr($todayTS->addDays(2), 0, 10);//add 2 days for tomorrow as date mutated to yesterday
+
+        $start = $subStrYesterday.'T23:59:00Z';//from moments before midnight yesterday
+        $expiry = $subStrTomorrow.'T08:00:00Z';//til 8am tomorrow
         $version = '2017-04-17';
         $key = config('filesystems.disks.azure.key');
         $resourceType = 'b';
@@ -210,7 +218,7 @@ Route::get('/download-photo/{filename}', function ($filename) {
             $start, $expiry, $version, $contentType, $key);
 
         $url = getBlobUrl($accountName, $container, $filename, $permissions, $resourceType, $start, $expiry, $version, $contentType, $signature);
-dd($url);
+
         return response()->json($url);
     }else{
         return response()->json(null);//returns {}empty object
