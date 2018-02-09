@@ -147,14 +147,14 @@ Route::post('/upload', function (Request $request) {
             $fileNameExt = substr($filenameWithExt, -(strlen (strrchr($filenameWithExt,'.'))));
 
             //prior to storing the file, check if file with that filename exists
-            $exists = Storage::disk('azure')->exists($filename.'a');
+            $exists = Storage::disk('azure')->exists($filename.'a'.$fileNameExt);
 
             if($exists != true){
                 $path = $request->file('file')->storeAs('/', $filename.'a'.$fileNameExt);
 
             }else{
                 //file with that filename already exists, therefore add a letter to the end
-                $exists2 = Storage::disk('azure')->exists($filename. 'b');
+                $exists2 = Storage::disk('azure')->exists($filename. 'b'.$fileNameExt);
 
                 if($exists2 != true){
 
@@ -162,21 +162,21 @@ Route::post('/upload', function (Request $request) {
 
                 }else {
                     //file with that filename already exists, therefore add a letter to the end
-                    $exists3 = Storage::disk('azure')->exists($filename.'c');
+                    $exists3 = Storage::disk('azure')->exists($filename.'c'.$fileNameExt);
 
                     if($exists3 != true){
 
                         $path = $request->file('file')->storeAs('/', $filename . 'c'.$fileNameExt);
                     }else{
                         //file with that filename already exists, therefore add a letter to the end
-                        $exists4 = Storage::disk('azure')->exists($filename . 'd');
+                        $exists4 = Storage::disk('azure')->exists($filename . 'd'.$fileNameExt);
 
                         if($exists4 != true){
 
                             $path = $request->file('file')->storeAs('/', $filename . 'd'.$fileNameExt);
                         }else{
                             //file with that filename already exists, therefore add a letter to the end
-                            $exists5 = Storage::disk('azure')->exists($filename . 'e');
+                            $exists5 = Storage::disk('azure')->exists($filename . 'e'.$fileNameExt);
 
                             if($exists5 != true){
 
@@ -279,28 +279,28 @@ Route::get('/download-photo/{filename}', function ($filename) {
 
 
 /*Test Routes*/
-Route::get('/testing/filename/exists', function () {
-
-    $exists = Storage::disk('azure')->exists('15181127.jpeg');
-
-//    $filename = substr('15181127.jpeg', 0,-5);
-    $filename=substr('15181127048.doc', 0, (strlen ('15181127048.doc')) - (strlen (strrchr('15181127048.doc','.'))));
-    $fileNameExt = substr('15181127048.jpeg', -(strlen (strrchr('15181127048.jpeg','.'))));
-
-    dd($fileNameExt);
-
-
-    if($exists != true){
-
-       dd($exists);
-
-    }else{
-        dd($exists);
-        dd('doesnt enter if');
-
-    }
-
-});
+//Route::get('/testing/filename/exists', function () {
+//
+//    $filenameWithExt = '1518141908273.jpeg';
+//
+////    $exists = Storage::disk('azure')->exists('1518141908273'.'a'.$fileNameExt);
+//
+//    $filename = substr($filenameWithExt, 0, (strlen ($filenameWithExt)) - (strlen (strrchr($filenameWithExt,'.'))));
+//    $fileNameExt = substr($filenameWithExt, -(strlen (strrchr($filenameWithExt,'.'))));
+//
+//    //prior to storing the file, check if file with that filename exists
+//    $exists = Storage::disk('azure')->exists($filename.'a');
+//
+//    if($exists != true){
+//        dd($exists);
+//
+//    } else{
+////        dd($exists);
+//        dd($filename.'a'.$fileNameExt);
+//
+//    }
+//
+//});
 
 //Route::get('/testing/nofitication/fail', function () {
 //
