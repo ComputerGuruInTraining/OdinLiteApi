@@ -140,55 +140,18 @@ Route::post('/upload', function (Request $request) {
 
         if ($request->hasFile('file')) {
 
-            $filenameWithExt = $request->input('fileName');
-
-            //remove extension from end of file for modifying the filename
-            $filename = substr($filenameWithExt, 0, (strlen ($filenameWithExt)) - (strlen (strrchr($filenameWithExt,'.'))));
-            $fileNameExt = substr($filenameWithExt, -(strlen (strrchr($filenameWithExt,'.'))));
+            $filename = $request->input('fileName');
 
             //prior to storing the file, check if file with that filename exists
-            $exists = Storage::disk('azure')->exists($filename.'a'.$fileNameExt);
+            $exists = Storage::disk('azure')->exists($filename);
 
-            if($exists != true){
-                $path = $request->file('file')->storeAs('/', $filename.'a'.$fileNameExt);
+            if($exists != true) {
 
+                $path = $request->file('file')->storeAs('/', $filename);
             }else{
-                //file with that filename already exists, therefore add a letter to the end
-                $exists2 = Storage::disk('azure')->exists($filename. 'b'.$fileNameExt);
-
-                if($exists2 != true){
-
-                    $path = $request->file('file')->storeAs('/', $filename.'b'.$fileNameExt);
-
-                }else {
-                    //file with that filename already exists, therefore add a letter to the end
-                    $exists3 = Storage::disk('azure')->exists($filename.'c'.$fileNameExt);
-
-                    if($exists3 != true){
-
-                        $path = $request->file('file')->storeAs('/', $filename . 'c'.$fileNameExt);
-                    }else{
-                        //file with that filename already exists, therefore add a letter to the end
-                        $exists4 = Storage::disk('azure')->exists($filename . 'd'.$fileNameExt);
-
-                        if($exists4 != true){
-
-                            $path = $request->file('file')->storeAs('/', $filename . 'd'.$fileNameExt);
-                        }else{
-                            //file with that filename already exists, therefore add a letter to the end
-                            $exists5 = Storage::disk('azure')->exists($filename . 'e'.$fileNameExt);
-
-                            if($exists5 != true){
-
-                                $path = $request->file('file')->storeAs('/', $filename . 'e'.$fileNameExt);
-                            }else{
-                                //too many (ie 5) requests received with the same filename in request
-                                $path = "fail";
-                            }
-                        }
-                    }
-                }
+                $path = 'file already exists';
             }
+
         } else {
             $path = "";
         }
@@ -197,14 +160,14 @@ Route::post('/upload', function (Request $request) {
 
     }catch(Exception $e){
 
-        return response()->json('failed on server');
-
+        return response()->json('exception');
 
     }catch(ErrorException $err){
-        return response()->json('upload did not succeed');
+        return response()->json('error exception');
 
     }
 });
+
 
 //called from update markers() see route in api.php
 Route::get("/dashboard/{compId}/current-positions", function ($compId) {
@@ -279,6 +242,43 @@ Route::get('/download-photo/{filename}', function ($filename) {
 
 
 /*Test Routes*/
+//Route::get('/uploadtest/{filename}', function ($filename) {
+//    try {
+//
+////        if ($request->hasFile('file')) {
+//
+////            $filename = $request->input('fileName');
+//
+//
+//            //prior to storing the file, check if file with that filename exists
+//            $exists = Storage::disk('azure')->exists($filename);
+//
+//            if($exists != true) {
+//                $path = "store";
+//
+////                $path = $request->file('file')->storeAs('/', $filename);
+//            }else{
+//                $path = 'file already exists';
+//            }
+//
+////        } else {
+////            $path = "";
+////        }
+//dd($path);
+//        return response()->json($path);
+//
+//    }catch(Exception $e){
+//
+//        return response()->json('exception');
+//
+//
+//    }catch(ErrorException $err){
+//        return response()->json('error exception');
+//
+//    }
+//});
+
+
 //Route::get('/testing/filename/exists', function () {
 //
 //    $filenameWithExt = '1518141908273.jpeg';
