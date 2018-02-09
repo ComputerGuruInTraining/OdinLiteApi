@@ -130,52 +130,57 @@ Route::get('/activate/{compId}', 'MainController@activate');
 
 //mobile: upload an image during a new case note
 //CSRF_Token excluded route
+//will work for any file
 //returns "" if no file,
 // or returns "fail" if too many uploads with the same filename in the request,
 // or returns filename on server if succeeds.
+//Important: filename cannot have a fullstop or will fail to remove extension accurately
 Route::post('/upload', function (Request $request) {
     try {
 
         if ($request->hasFile('file')) {
 
-            $filename = $request->input('fileName');
+            $filenameWithExt = $request->input('fileName');
+
+            //remove extension from end of file for modifying the filename
+            $filename = substr($filenameWithExt, 0, (strlen ($filenameWithExt)) - (strlen (strrchr($filenameWithExt,'.'))));
+            $fileNameExt = substr($filenameWithExt, -(strlen (strrchr($filenameWithExt,'.'))));
 
             //prior to storing the file, check if file with that filename exists
             $exists = Storage::disk('azure')->exists($filename.'a');
 
-            if (!$exists) {
-
-                $path = $request->file('file')->storeAs('/', $filename.'a');
+            if($exists != true){
+                $path = $request->file('file')->storeAs('/', $filename.'a'.$fileNameExt);
 
             }else{
                 //file with that filename already exists, therefore add a letter to the end
                 $exists2 = Storage::disk('azure')->exists($filename. 'b');
 
-                if (!$exists2) {
+                if($exists2 != true){
 
-                    $path = $request->file('file')->storeAs('/', $filename.'b');
+                    $path = $request->file('file')->storeAs('/', $filename.'b'.$fileNameExt);
 
                 }else {
                     //file with that filename already exists, therefore add a letter to the end
                     $exists3 = Storage::disk('azure')->exists($filename.'c');
 
-                    if (!$exists3) {
+                    if($exists3 != true){
 
-                        $path = $request->file('file')->storeAs('/', $filename . 'c');
+                        $path = $request->file('file')->storeAs('/', $filename . 'c'.$fileNameExt);
                     }else{
                         //file with that filename already exists, therefore add a letter to the end
                         $exists4 = Storage::disk('azure')->exists($filename . 'd');
 
-                        if (!$exists4) {
+                        if($exists4 != true){
 
-                            $path = $request->file('file')->storeAs('/', $filename . 'd');
+                            $path = $request->file('file')->storeAs('/', $filename . 'd'.$fileNameExt);
                         }else{
                             //file with that filename already exists, therefore add a letter to the end
                             $exists5 = Storage::disk('azure')->exists($filename . 'e');
 
-                            if (!$exists5) {
+                            if($exists5 != true){
 
-                                $path = $request->file('file')->storeAs('/', $filename . 'e');
+                                $path = $request->file('file')->storeAs('/', $filename . 'e'.$fileNameExt);
                             }else{
                                 //too many (ie 5) requests received with the same filename in request
                                 $path = "fail";
@@ -274,6 +279,29 @@ Route::get('/download-photo/{filename}', function ($filename) {
 
 
 /*Test Routes*/
+Route::get('/testing/filename/exists', function () {
+
+    $exists = Storage::disk('azure')->exists('15181127.jpeg');
+
+//    $filename = substr('15181127.jpeg', 0,-5);
+    $filename=substr('15181127048.doc', 0, (strlen ('15181127048.doc')) - (strlen (strrchr('15181127048.doc','.'))));
+    $fileNameExt = substr('15181127048.jpeg', -(strlen (strrchr('15181127048.jpeg','.'))));
+
+    dd($fileNameExt);
+
+
+    if($exists != true){
+
+       dd($exists);
+
+    }else{
+        dd($exists);
+        dd('doesnt enter if');
+
+    }
+
+});
+
 //Route::get('/testing/nofitication/fail', function () {
 //
 ////    $newUser = App\User::find(974);//dds a bit of info
