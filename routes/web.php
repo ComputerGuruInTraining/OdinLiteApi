@@ -130,14 +130,60 @@ Route::get('/activate/{compId}', 'MainController@activate');
 
 //mobile: upload an image during a new case note
 //CSRF_Token excluded route
-//WIP for SAS, works for public urls
+//returns "" if no file,
+// or returns "fail" if too many uploads with the same filename in the request,
+// or returns filename on server if succeeds.
 Route::post('/upload', function (Request $request) {
     try {
 
         if ($request->hasFile('file')) {
 
-            $path = $request->file('file')->storeAs('/', $request->input('fileName'));
+            $filename = $request->input('fileName');
 
+            //prior to storing the file, check if file with that filename exists
+            $exists = Storage::disk('azure')->exists($filename.'a');
+
+            if (!$exists) {
+
+                $path = $request->file('file')->storeAs('/', $filename.'a');
+
+            }else{
+                //file with that filename already exists, therefore add a letter to the end
+                $exists2 = Storage::disk('azure')->exists($filename. 'b');
+
+                if (!$exists2) {
+
+                    $path = $request->file('file')->storeAs('/', $filename.'b');
+
+                }else {
+                    //file with that filename already exists, therefore add a letter to the end
+                    $exists3 = Storage::disk('azure')->exists($filename.'c');
+
+                    if (!$exists3) {
+
+                        $path = $request->file('file')->storeAs('/', $filename . 'c');
+                    }else{
+                        //file with that filename already exists, therefore add a letter to the end
+                        $exists4 = Storage::disk('azure')->exists($filename . 'd');
+
+                        if (!$exists4) {
+
+                            $path = $request->file('file')->storeAs('/', $filename . 'd');
+                        }else{
+                            //file with that filename already exists, therefore add a letter to the end
+                            $exists5 = Storage::disk('azure')->exists($filename . 'e');
+
+                            if (!$exists5) {
+
+                                $path = $request->file('file')->storeAs('/', $filename . 'e');
+                            }else{
+                                //too many (ie 5) requests received with the same filename in request
+                                $path = "fail";
+                            }
+                        }
+                    }
+                }
+            }
         } else {
             $path = "";
         }
@@ -146,11 +192,11 @@ Route::post('/upload', function (Request $request) {
 
     }catch(Exception $e){
 
-        return response()->json('failed to set options');
+        return response()->json('failed on server');
 
 
     }catch(ErrorException $err){
-        return response()->json('options not set');
+        return response()->json('upload did not succeed');
 
     }
 });
