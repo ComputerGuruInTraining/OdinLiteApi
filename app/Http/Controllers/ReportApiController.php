@@ -226,7 +226,7 @@ class ReportApiController extends Controller
 
                         $reportId = $result->get('id');
 
-                        $checks = queryShiftCheckDuration($shiftIds);//will hold the shiftCheckCaseIds and check_duration
+                        $checks = $this->queryShiftCheckDuration($shiftIds);//will hold the shiftCheckCaseIds and check_duration
 
                         $resultCase = $this->storeReportCase($reportId, $shifts, $locId, $checks);
 
