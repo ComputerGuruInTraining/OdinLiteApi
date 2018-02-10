@@ -515,34 +515,29 @@ class ReportApiController extends Controller
 
     public function storeReportCase($reportId, $shifts, $locId, $checks)
     {
-        try {
-            //calculate the total hours from the check_duration which is in seconds
-            $totalHours = totalHoursMonitored($checks);
+        //calculate the total hours from the check_duration which is in seconds
+        $totalHours = totalHoursMonitored($checks);
 
-            //calculate the number of guards
-            $numGuards = $shifts->groupBy('mobile_user_id')->count();
+        //calculate the number of guards
+        $numGuards = $shifts->groupBy('mobile_user_id')->count();
 
-            //add to report_cases table
-            $reportCase = new ReportCase;
-            $reportCase->report_id = $reportId;
-            $reportCase->location_id = $locId;
-            $reportCase->total_hours = $totalHours;
-            $reportCase->total_guards = $numGuards;
-            $reportCase->save();
+        //add to report_cases table
+        $reportCase = new ReportCase;
+        $reportCase->report_id = $reportId;
+        $reportCase->location_id = $locId;
+        $reportCase->total_hours = $totalHours;
+        $reportCase->total_guards = $numGuards;
+        $reportCase->save();
 
-            $reportCaseId = $reportCase->id;
+        $reportCaseId = $reportCase->id;
 
-            $data = collect(['reportCaseId' => $reportCaseId]);
-            $error = collect(['error' => 'error']);
+        $data = collect(['reportCaseId' => $reportCaseId]);
+        $error = collect(['error' => 'error']);
 
-            if ($reportCase->save()) {
-                return $data;
-            } else {
-                return $error;
-            }
-
-        }catch(\Exception $exception){
-            dd($exception);
+        if ($reportCase->save()) {
+            return $data;
+        } else {
+            return $error;
         }
 
     }
