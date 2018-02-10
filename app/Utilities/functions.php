@@ -210,7 +210,6 @@ if (!function_exists('totalHoursMonitored')) {
         $seconds = $checks->sum('check_duration');//duration is in seconds
         $mins = $seconds/60;
         $hours = $mins / 60;
-        dd($seconds, $mins, $hours);
 
         $totalHours = floor($hours * 100) / 100;//hours to 2 decimal places
 

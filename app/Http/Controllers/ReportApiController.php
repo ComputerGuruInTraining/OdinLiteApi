@@ -515,7 +515,6 @@ class ReportApiController extends Controller
 
     public function storeReportCase($reportId, $shifts, $locId, $checks)
     {
-
         //calculate the total hours from the check_duration which is in seconds
         $totalHours = totalHoursMonitored($checks);
 
@@ -589,7 +588,6 @@ class ReportApiController extends Controller
 
     public function getReportCasesChecks($reportCaseId)
     {
-
         $reportChecks = DB::table('report_check_cases')
             //single value to join on
             ->join('shift_check_cases', function ($join) {
@@ -1071,17 +1069,28 @@ class ReportApiController extends Controller
 
 //    public function testCaseNotesDeleted(){
 //        $caseNoteIds = $this->queryCaseNotes(954, [4234, 4244, 4254]);
-//            dd($caseNoteIds);
+//
+//        $caseCheckIds = $this->queryShiftCheckCases($caseNoteIds);
+//
+//        $checks = $this->queryShiftCheckDuration([4234, 4244, 4254], 954);//will hold the shiftCheckCaseIds and check_duration
+//
+//        $shifts = $this->queryReport('2018-01-01 00:00:00', '2018-02-27 00:00:00', 954);
+//
+//
+//        $resultCase = $this->storeReportCase(1787878, $shifts, 954, $checks);
+//
+//
+//        dd($caseNoteIds, $caseCheckIds, $checks, $resultCase);
 //    }
 
 //
 //    public function testCheckDuration(){
 //        $checks = $this->queryShiftCheckDuration([4214, 4224, 4234], 954);
 //
-//        $grouped = $checks->groupBy('shiftCheckId');
-//        $grouped2 = $grouped->groupBy('check_duration');
+////        $grouped = $checks->groupBy('shiftCheckId');
+////        $grouped2 = $grouped->groupBy('check_duration');
 //
-//        dd($checks, $grouped2);
+//        dd($checks);
 //
 //        $totalHours = totalHoursMonitored($checks);
 //
