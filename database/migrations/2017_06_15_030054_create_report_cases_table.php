@@ -16,7 +16,7 @@ class CreateReportCasesTable extends Migration
         Schema::create('report_cases', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('location_id')->unsigned()->nullable();//fk
-            $table->double('total_hours');
+            $table->double('total_hours');//double, hours todo calculated from shift_checks->check_duration which is in seconds
             $table->integer('total_guards');
             $table->integer('report_id')->unsigned();//fk
             $table->timestamps();

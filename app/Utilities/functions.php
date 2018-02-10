@@ -250,7 +250,7 @@ if (!function_exists('numGuards')) {
     }
 }
 
-//a singular check in time in minutes
+//a singular check in time in seconds
 if (!function_exists('checkDuration')) {
 
     function checkDuration($checkInTime, $checkOutTime)
@@ -260,6 +260,22 @@ if (!function_exists('checkDuration')) {
         //calculate duration based on start date and time and end date and time
         $lengthS = $carbonStart->diffInSeconds($carbonEnd);//calculate in seconds
         return $lengthS;
+    }
+}
+
+//calculate the total hours (double) spent monitoring a premis from the total check_durations which are in seconds
+if (!function_exists('totalHoursMonitored')) {
+
+    function  totalHoursMonitored($checks)
+    {
+        //calculate the total hours
+        $seconds = $checks->sum('check_duration');//duration is in seconds
+        $mins = $seconds/60;
+        $hours = $mins / 60;
+
+        $totalHours = floor($hours * 100) / 100;//hours to 2 decimal places
+
+        return $totalHours;
     }
 }
 
