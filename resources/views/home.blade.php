@@ -11,7 +11,10 @@
                     You are logged in!
                 </div>
 
-                <a href="/uploadtest/1518141908273a.jpeg">testing 1518141908273a.jpeg exists</a>
+
+                {{--<a href="/testCheckDuration">testCheckDuration</a>--}}
+
+                {{--<a href="/uploadtest/1518141908273a.jpeg">testing 1518141908273a.jpeg exists</a>--}}
 
 
                 {{--<a href="download-photo/1513735785025.jpeg">Download 1513735785025.jpeg</a>--}}

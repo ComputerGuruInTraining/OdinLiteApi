@@ -779,7 +779,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post("/reports/casesandchecks", 'ReportApiController@postCasesAndChecks');
 
     //insert a report of type = "Case Notes"
-    Route::post("/reports/casenotes", 'ReportApiController@postCaseNotes');
+//    Route::post("/reports/casenotes", 'ReportApiController@postCaseNotes');
 
     //insert a report of type = "Individual"
     Route::post("/reports/individual/{userId}", 'ReportApiController@postIndividual');
@@ -1600,13 +1600,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         //convert string to a Carbon datetime object
         $startDT = new Carbon($startStr);
 
-
-        //$duration =
-
         //calculate duration in minutes and store in db
         $shift->duration = $end->diffInMinutes($startDT);
         $shift->end_time = $end;
-        // $shift->save();
 
         if ($shift->save()) {
             return response()->json([
