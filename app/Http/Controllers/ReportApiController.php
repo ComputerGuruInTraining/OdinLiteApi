@@ -38,7 +38,7 @@ class ReportApiController extends Controller
             ->orderBy('date_start', 'asc')
             ->get();
 
-        if(count($reports) > 0) {
+        if (count($reports) > 0) {
             foreach ($reports as $i => $report) {
                 /********get location for some types of reports*******/
 
@@ -64,7 +64,7 @@ class ReportApiController extends Controller
                     ->first();
 
                 if ($reportUser != null) {
-                    $reports[$i]->individual = $reportUser->first_name." ".$reportUser->last_name;
+                    $reports[$i]->individual = $reportUser->first_name . " " . $reportUser->last_name;
                 } else {
                     $reports[$i]->individual = "";
                 }
@@ -226,7 +226,7 @@ class ReportApiController extends Controller
 
                         $reportId = $result->get('id');
 
-                        $checks = $this->queryShiftCheckDuration($shiftIds);//will hold the shiftCheckCaseIds and check_duration
+                        $checks = $this->queryShiftCheckDuration($shiftIds, $locId);//will hold the shiftCheckCaseIds and check_duration
 
                         $resultCase = $this->storeReportCase($reportId, $shifts, $locId, $checks);
 
@@ -697,7 +697,7 @@ class ReportApiController extends Controller
         }
     }
 
-            //fixme: report_shifts table necessary?? single location shifts as is would dictate yes, if single location shifts change to have shift_checks, not so necessary,
+    //fixme: report_shifts table necessary?? single location shifts as is would dictate yes, if single location shifts change to have shift_checks, not so necessary,
     public function getReportIndividualData($reportId)
     {
         $reportInd = DB::table('report_individuals')
@@ -983,14 +983,14 @@ class ReportApiController extends Controller
             ->join('cases', 'case_notes.case_id', '=', 'cases.id')
             ->where('cases.location_id', '=', $locId)
             ->whereIn('case_notes.shift_id', $shiftIds)//whereIn equal to an array of shiftIds
-//            ->where('cases.deleted_at', '=', null)
-//            ->where('case_notes.deleted_at', '=', null)
             ->get();
 
         //these ids will be the case_ids for the query results (not the case_note_ids)
         $caseIds = $notes->pluck('case_id');
 
-        $caseNotes = CaseNote::whereIn('case_id', $caseIds)->get();
+        $caseNotes = CaseNote::withTrashed()
+            ->whereIn('case_id', $caseIds)
+            ->get();
 
         $caseNoteIds = $caseNotes->pluck('id');
 
@@ -1005,8 +1005,6 @@ class ReportApiController extends Controller
             ->join('cases', 'case_notes.case_id', '=', 'cases.id')
             ->where('case_notes.user_id', '=', $userId)
             ->whereIn('case_notes.shift_id', $shiftIds)//whereIn equal to an array of shiftIds
-//            ->where('cases.deleted_at', '=', null)
-//            ->where('case_notes.deleted_at', '=', null)
             ->select('case_notes.id')//note: pluck('id') from $noteIds to get the case_note_ids.
             ->get();
 
@@ -1035,18 +1033,22 @@ class ReportApiController extends Controller
         return $checkIds;
     }
 
-    public function queryShiftCheckDuration($shiftIds)
+    public function queryShiftCheckDuration($shiftIds, $locId)
     {
 
         //retrieve from ShiftCheckCases the records for those shift_checks
         //ie all checks and the case notes created during the checks for the shifts
-        $checks = ShiftCheck::whereIn('shift_id', $shiftIds)->select('id as shiftCheckCaseId', 'check_duration')->get();
+        $checks = ShiftCheck::whereIn('shift_id', $shiftIds)
+            ->where('location_id', '=', $locId)
+            ->select('id as shiftCheckId', 'check_duration')
+            ->get();
 
         return $checks;
     }
 
     //not implemented yet, WIP as may be needed for individuals
-    public function getReportCaseNotes($reportId){
+    public function getReportCaseNotes($reportId)
+    {
         try {
             //using reportId to get case note ids fro the report from report_notes table???
             //already???
@@ -1055,12 +1057,11 @@ class ReportApiController extends Controller
                 ->join('case_notes', 'case_notes.id', '=', 'report_notes.case_note_id')
                 ->where('report_notes.report_id', '=', $reportId)
                 ->where('report_notes.deleted_at', '=', null)
-//                ->where('case_notes.deleted_at', '=', null)
                 ->get();
 
             return response()->json($notes);
 
-        }catch (\ErrorException $e) {
+        } catch (\ErrorException $e) {
             $notes = null;
             return response()->json($notes);
         }
@@ -1068,10 +1069,22 @@ class ReportApiController extends Controller
 
     //test route
 
+//    public function testCaseNotesDeleted(){
+//        $caseNoteIds = $this->queryCaseNotes(954, [4234, 4244, 4254]);
+//            dd($caseNoteIds);
+//    }
+
+//
 //    public function testCheckDuration(){
-//        $checks = $this->queryShiftCheckDuration([4214, 4224, 4234]);
+//        $checks = $this->queryShiftCheckDuration([4214, 4224, 4234], 954);
+//
+//        $grouped = $checks->groupBy('shiftCheckId');
+//        $grouped2 = $grouped->groupBy('check_duration');
+//
+//        dd($checks, $grouped2);
 //
 //        $totalHours = totalHoursMonitored($checks);
+//
 //
 //        dd($totalHours);
 //

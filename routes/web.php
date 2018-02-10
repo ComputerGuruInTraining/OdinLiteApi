@@ -245,6 +245,8 @@ Route::get('/download-photo/{filename}', function ($filename) {
 
 //Route::get("/testCheckDuration", 'ReportApiController@testCheckDuration');
 
+//Route::get("/testCaseNotesDeleted", 'ReportApiController@testCaseNotesDeleted');
+
 //Route::get('/uploadtest/{filename}', function ($filename) {
 //    try {
 //

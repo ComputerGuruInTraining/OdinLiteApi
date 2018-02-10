@@ -750,7 +750,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::delete('/casenote/{id}', function ($id) {
 
         //report_case_notes table
-        ReportCaseNote::where('case_note_id', $id)->delete();
+//        ReportCaseNote::where('case_note_id', $id)->delete();
 
         //case_notes table
         $deleted = CaseNote::find($id)->delete();
