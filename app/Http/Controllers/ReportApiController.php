@@ -779,6 +779,7 @@ class ReportApiController extends Controller
                         $reportData[$x]->location_id = $reportChecks[$j]->location_id;
                         $reportData[$x]->total_hours = $reportChecks[$j]->total_hours;
                         $reportData[$x]->total_guards = $reportChecks[$j]->total_guards;
+                        $reportData[$x]->total_checks = $reportChecks[$j]->total_checks;
                         $reportData[$x]->report_id = $reportChecks[$j]->report_id;
                     }
                 }
