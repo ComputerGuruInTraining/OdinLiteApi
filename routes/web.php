@@ -282,7 +282,17 @@ Route::get('/download-photo/{filename}', function ($filename) {
 //
 //    }
 //});
-
+//Route::get('/counttest', function () {
+//
+//    $checks = DB::table('shift_checks')
+//        ->where('location_id', '=', 954)
+//        ->select('id as shiftCheckId', 'check_duration')
+//        ->get();
+//
+//    $totalChecks = $checks->count('shiftCheckId');
+//dd($totalChecks);
+//
+//});
 
 //Route::get('/testing/filename/exists', function () {
 //
