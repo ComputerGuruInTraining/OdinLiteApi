@@ -12,7 +12,7 @@ return [
     | any other location as required by the application or its packages.
     */
 
-    'name' => 'Odin',
+    'name' => 'ODIN',
 
     /*
     |--------------------------------------------------------------------------
@@ -51,7 +51,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'https://odinliteapitest.azurewebsites.net'),
+    'url' => env('APP_URL', 'https://odinliteapi.azurewebsites.net'),
 
     /*
     |--------------------------------------------------------------------------
