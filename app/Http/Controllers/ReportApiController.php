@@ -518,6 +518,8 @@ class ReportApiController extends Controller
         //calculate the total hours from the check_duration which is in seconds
         $totalHours = totalHoursMonitored($checks);
 
+        $totalChecks = $checks->count('shiftCheckId');
+
         //calculate the number of guards
         $numGuards = $shifts->groupBy('mobile_user_id')->count();
 
@@ -527,6 +529,7 @@ class ReportApiController extends Controller
         $reportCase->location_id = $locId;
         $reportCase->total_hours = $totalHours;
         $reportCase->total_guards = $numGuards;
+        $reportCase->total_checks = $totalChecks;
         $reportCase->save();
 
         $reportCaseId = $reportCase->id;
