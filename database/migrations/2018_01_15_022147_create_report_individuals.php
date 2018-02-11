@@ -16,7 +16,7 @@ class CreateReportIndividuals extends Migration
         Schema::create('report_individuals', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('mobile_user_id')->unsigned();//fk to users table
-            $table->double('total_hours_worked');
+            $table->double('total_hours_worked');//hours calculated from duration which is in minutes
             $table->integer('report_id')->unsigned();//fk
             $table->softDeletes();
             $table->timestamps();

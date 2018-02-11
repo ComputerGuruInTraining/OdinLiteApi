@@ -10,10 +10,15 @@
                 <div class="panel-body">
                     You are logged in!
                 </div>
+                {{--<a href="/testCaseNotesDeleted">testCaseNotesDeleted</a>--}}
 
 
+                {{--<a href="/testCheckDuration">testCheckDuration</a>--}}
 
-                <a href="download-photo/1513735785025.jpeg">Download 1513735785025.jpeg</a>
+                {{--<a href="/uploadtest/1518141908273a.jpeg">testing 1518141908273a.jpeg exists</a>--}}
+
+
+                {{--<a href="download-photo/1513735785025.jpeg">Download 1513735785025.jpeg</a>--}}
                 {{--<br/>--}}
 
                 {{--<a href="/user/1454/edit/test">Put User role 1454</a>--}}

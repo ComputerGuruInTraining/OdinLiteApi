@@ -130,13 +130,27 @@ Route::get('/activate/{compId}', 'MainController@activate');
 
 //mobile: upload an image during a new case note
 //CSRF_Token excluded route
-//WIP for SAS, works for public urls
+//will work for any file
+//returns "" if no file,
+// or returns "fail" if too many uploads with the same filename in the request,
+// or returns filename on server if succeeds.
+//Important: filename cannot have a fullstop or will fail to remove extension accurately
 Route::post('/upload', function (Request $request) {
     try {
 
         if ($request->hasFile('file')) {
 
-            $path = $request->file('file')->storeAs('/', $request->input('fileName'));
+            $filename = $request->input('fileName');
+
+            //prior to storing the file, check if file with that filename exists
+            $exists = Storage::disk('azure')->exists($filename);
+
+            if($exists != true) {
+
+                $path = $request->file('file')->storeAs('/', $filename);
+            }else{
+                $path = 'file already exists';
+            }
 
         } else {
             $path = "";
@@ -146,14 +160,14 @@ Route::post('/upload', function (Request $request) {
 
     }catch(Exception $e){
 
-        return response()->json('failed to set options');
-
+        return response()->json('exception');
 
     }catch(ErrorException $err){
-        return response()->json('options not set');
+        return response()->json('error exception');
 
     }
 });
+
 
 //called from update markers() see route in api.php
 Route::get("/dashboard/{compId}/current-positions", function ($compId) {
@@ -228,6 +242,71 @@ Route::get('/download-photo/{filename}', function ($filename) {
 
 
 /*Test Routes*/
+
+//Route::get("/testCheckDuration", 'ReportApiController@testCheckDuration');
+
+//Route::get("/testCaseNotesDeleted", 'ReportApiController@testCaseNotesDeleted');
+
+//Route::get('/uploadtest/{filename}', function ($filename) {
+//    try {
+//
+////        if ($request->hasFile('file')) {
+//
+////            $filename = $request->input('fileName');
+//
+//
+//            //prior to storing the file, check if file with that filename exists
+//            $exists = Storage::disk('azure')->exists($filename);
+//
+//            if($exists != true) {
+//                $path = "store";
+//
+////                $path = $request->file('file')->storeAs('/', $filename);
+//            }else{
+//                $path = 'file already exists';
+//            }
+//
+////        } else {
+////            $path = "";
+////        }
+//dd($path);
+//        return response()->json($path);
+//
+//    }catch(Exception $e){
+//
+//        return response()->json('exception');
+//
+//
+//    }catch(ErrorException $err){
+//        return response()->json('error exception');
+//
+//    }
+//});
+
+
+//Route::get('/testing/filename/exists', function () {
+//
+//    $filenameWithExt = '1518141908273.jpeg';
+//
+////    $exists = Storage::disk('azure')->exists('1518141908273'.'a'.$fileNameExt);
+//
+//    $filename = substr($filenameWithExt, 0, (strlen ($filenameWithExt)) - (strlen (strrchr($filenameWithExt,'.'))));
+//    $fileNameExt = substr($filenameWithExt, -(strlen (strrchr($filenameWithExt,'.'))));
+//
+//    //prior to storing the file, check if file with that filename exists
+//    $exists = Storage::disk('azure')->exists($filename.'a');
+//
+//    if($exists != true){
+//        dd($exists);
+//
+//    } else{
+////        dd($exists);
+//        dd($filename.'a'.$fileNameExt);
+//
+//    }
+//
+//});
+
 //Route::get('/testing/nofitication/fail', function () {
 //
 ////    $newUser = App\User::find(974);//dds a bit of info

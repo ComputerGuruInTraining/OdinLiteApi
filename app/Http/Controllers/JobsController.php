@@ -423,7 +423,7 @@ class JobsController extends Controller
         $check->user_loc_check_out_id = $posId;
         $check->check_outs = $checkOut;
         $check->distance_check_out = $distance;
-        $check->check_duration = $checkDuration;
+        $check->check_duration = $checkDuration;//seconds
 
         if ($check->save()) {
             return 'success';

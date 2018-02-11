@@ -20,7 +20,7 @@ class CreateShiftsTable extends Migration
             $table->integer('mobile_user_id')->unsigned();//mobile-users ie employees
             $table->timestamp('start_time')->nullable();
             $table->timestamp('end_time')->nullable();
-            $table->double('duration')->nullable();
+            $table->double('duration')->nullable();//minutes
             $table->timestamps();
 //            $table->foreign('mobile_user_id')
 //            	->references('id')->on('users');

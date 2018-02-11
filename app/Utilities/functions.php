@@ -97,68 +97,6 @@ if (!function_exists('getGeoData')) {
     }
 }
 
-//$url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
-//    config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
-//if (!function_exists('changeContentType')) {
-//
-//    function changeContentType($filepath, $filename)
-//    {
-//
-//    // Return MIME type ala mimetype extension
-////        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-//
-//    // Get the MIME type of the file
-////        $file_mime = finfo_file($finfo, $filepath.'/'.$filename);
-////        finfo_close($finfo);
-//
-//        $file_handle = fopen('/'.$filepath.'/'.$filename, 'r');
-//
-//    // Here is the magic. getDriver() allows us to over-ride the default request config
-//        Storage::disk('azure')
-//            ->getDriver()
-//            ->put( $filename,
-//                $file_handle,
-//                [
-//                    'visibility' => 'public',
-//                    'ContentType' => 'image/jpeg'
-//                ]
-//            );
-//    }
-//}
-
-//if (!function_exists('azureContentType')) {
-//    function azureContentType()
-//    {
-//        try {
-//                Storage::extend('azure', function ($app, $config) {
-//
-//                    $endpoint = sprintf(
-//                        'DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s',
-//                        'odinlitestorage',
-//                        'hPL5J+cWfa98ousjU/24eZaCxjpCIFxQlnAIQU9KvbHDWapwMeEUXJ9u5ePBXTebEj8NeW227SXQgk64woPJog=='
-//                    );
-//
-//                    $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($endpoint);
-//
-//                    $blob = $blobRestProxy->getBlob("images", "image1.jpeg");
-//
-//
-//                    $name = $blob->getName();
-//
-//                    return $name;
-//                    });
-//            } catch (ServiceException $e) {
-//                $code = $e->getCode();
-//                $error_message = $e->getMessage();
-//                $error = $code . ": " . $error_message . "<br />";
-//                return $error;
-//
-//            }
-//
-//
-//    }
-//}
-
 if (!function_exists('getSASForBlob')) {
 
     function getSASForBlob($accountName, $container, $filename, $permissions, $start, $expiry, $version, $contentType, $key)
@@ -250,7 +188,7 @@ if (!function_exists('numGuards')) {
     }
 }
 
-//a singular check in time in minutes
+//a singular check in time in seconds
 if (!function_exists('checkDuration')) {
 
     function checkDuration($checkInTime, $checkOutTime)
@@ -262,6 +200,86 @@ if (!function_exists('checkDuration')) {
         return $lengthS;
     }
 }
+
+//calculate the total hours (double) spent monitoring a premis from the total check_durations which are in seconds
+if (!function_exists('totalHoursMonitored')) {
+
+    function  totalHoursMonitored($checks)
+    {
+        //calculate the total hours
+        $seconds = $checks->sum('check_duration');//duration is in seconds
+        $mins = $seconds/60;
+        $hours = $mins / 60;
+
+        $totalHours = floor($hours * 100) / 100;//hours to 2 decimal places
+
+        return $totalHours;
+    }
+}
+
+
+/*archived*/
+//$url = 'https://' . config('filesystems.disks.azure.name'). '.blob.core.windows.net/' .
+//    config('filesystems.disks.azure.container') . '/'.$foldername.'/' . $filename;
+//if (!function_exists('changeContentType')) {
+//
+//    function changeContentType($filepath, $filename)
+//    {
+//
+//    // Return MIME type ala mimetype extension
+////        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+//
+//    // Get the MIME type of the file
+////        $file_mime = finfo_file($finfo, $filepath.'/'.$filename);
+////        finfo_close($finfo);
+//
+//        $file_handle = fopen('/'.$filepath.'/'.$filename, 'r');
+//
+//    // Here is the magic. getDriver() allows us to over-ride the default request config
+//        Storage::disk('azure')
+//            ->getDriver()
+//            ->put( $filename,
+//                $file_handle,
+//                [
+//                    'visibility' => 'public',
+//                    'ContentType' => 'image/jpeg'
+//                ]
+//            );
+//    }
+//}
+
+//if (!function_exists('azureContentType')) {
+//    function azureContentType()
+//    {
+//        try {
+//                Storage::extend('azure', function ($app, $config) {
+//
+//                    $endpoint = sprintf(
+//                        'DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s',
+//                        'odinlitestorage',
+//                        'hPL5J+cWfa98ousjU/24eZaCxjpCIFxQlnAIQU9KvbHDWapwMeEUXJ9u5ePBXTebEj8NeW227SXQgk64woPJog=='
+//                    );
+//
+//                    $blobRestProxy = ServicesBuilder::getInstance()->createBlobService($endpoint);
+//
+//                    $blob = $blobRestProxy->getBlob("images", "image1.jpeg");
+//
+//
+//                    $name = $blob->getName();
+//
+//                    return $name;
+//                    });
+//            } catch (ServiceException $e) {
+//                $code = $e->getCode();
+//                $error_message = $e->getMessage();
+//                $error = $code . ": " . $error_message . "<br />";
+//                return $error;
+//
+//            }
+//
+//
+//    }
+//}
 
 
 
