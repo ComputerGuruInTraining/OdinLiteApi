@@ -10,7 +10,8 @@
 return [
 
     /*****company details******/
-    'COMPANY_EMAIL' => 'admin@odinlite.net',
+    'COMPANY_EMAIL' => 'hello@odincasemanagement.com',
+    'COMPANY_EMAIL2' => 'admin@odinlite.net',
     'COMPANY_NAME' => 'ODIN Case Management',
     'CONSOLE_NAME' => 'ODIN Case Management Console',
     'MOBILE_APP_NAME' => 'ODIN Case Management Mobile App',
