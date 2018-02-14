@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 /*notification imports*/
 use App\Recipients\DynamicRecipient;
 use App\Notifications\NewCompanyRegistered;
+use Config;
 
 
 class SendCompanyRegisteredNotification
@@ -33,11 +34,11 @@ class SendCompanyRegisteredNotification
     {
         $company = $event->company;
 
-        $odinTeam = new DynamicRecipient('admin@odinlite.net');
+        $odinTeam = new DynamicRecipient(Config::get('constants.COMPANY_EMAIL2'));
         $odinTeam->notify(new NewCompanyRegistered($company));
 
-//        $odinEmail = new DynamicRecipient('hello@odincasemanagement.com');
-//        $odinEmail->notify(new NewCompanyRegistered($company));
+        $odinEmail = new DynamicRecipient(Config::get('constants.COMPANY_EMAIL'));
+        $odinEmail->notify(new NewCompanyRegistered($company));
 
     }
 }
