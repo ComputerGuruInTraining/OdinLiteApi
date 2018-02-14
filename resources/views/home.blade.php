@@ -12,7 +12,7 @@
                 </div>
 
 
-                {{--<a href="/alert-admin/test">test event listeners</a>--}}
+                <a href="/alert-admin/test">test event listeners</a>
 
                 {{--<a href="/dynamic-notification/test/1374">test Notifications</a>--}}
 
