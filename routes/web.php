@@ -11,19 +11,16 @@
 |
 */
 
-use App\Notifications\RegisterCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Notifications\NewMobileUser;
 use Illuminate\Support\Facades\Storage;
 use MicrosoftAzure\Storage\Common\ServicesBuilder;
 use Carbon\Carbon;
-use Carbon\CarbonInterval;
-use App\Recipients\DynamicRecipient;
-use App\Notifications\ChangeEmailNew;
-use App\Notifications\ChangeEmailOld;
-use App\Company as Company;
 
+/*Notify odin primary email that new company registered*/
+use App\Notifications\RegisterCompany;
+use App\Events\CompanyRegistered;
 
 Route::get('/', function () {
     return view('welcome');
@@ -116,11 +113,13 @@ Route::post('/company', function (Request $request) {
 
         //retrieve saved user for notification
         $newuser = App\User::find($id);
-        //$newcomp = App\Company::find($compId);
 
+        //send email to new company requesting activation of the company which enables login and
+        // validates address belongs to the new user
         $newuser->notify(new RegisterCompany($compId));
 
-        //notify Odin admin that a new company has registered
+        //event to notify Odin admin that a new company has registered
+        event(new CompanyRegistered($comp));
 
         return response()->json([
             'success' => $newuser,
@@ -171,7 +170,6 @@ Route::post('/upload', function (Request $request) {
 
     }
 });
-
 
 //called from update markers() see route in api.php
 Route::get("/dashboard/{compId}/current-positions", function ($compId) {
@@ -248,6 +246,15 @@ Route::get('/download-photo/{filename}', function ($filename) {
 
 /*Test Routes*/
 
+//Route::get("/alert-admin/test", function () {
+//
+//    $comp = App\Company::find(444);
+//
+//    event(new CompanyRegistered($comp));
+//    dd('check emails');
+//
+//});
+
 //Test dynamic notifications
 //1374 user id mailspace77
 //Route::get("/dynamic-notification/test/{id}", function ($id) {
@@ -279,10 +286,6 @@ Route::get('/download-photo/{filename}', function ($filename) {
 //
 //
 //});
-
-//Route::get("/testCheckDuration", 'ReportApiController@testCheckDuration');
-
-//Route::get("/testCaseNotesDeleted", 'ReportApiController@testCaseNotesDeleted');
 
 //Route::get('/uploadtest/{filename}', function ($filename) {
 //    try {
@@ -367,18 +370,7 @@ Route::get('/download-photo/{filename}', function ($filename) {
 //    ]);
 //
 //});
-//
-//Route::get("/individualreport/test/{reportId}", 'ReportApiController@getIndividualReport');
-//
-//Route::get("/post/reports/individual/test/{dateFrom}/{dateTo}/{userId}", 'ReportApiController@postIndividualTest');
-//
-//Route::get("/reports/list/{compId}", 'ReportApiController@getReportList');
-//
-//Route::get("/commencedshiftdetails/test/{assignedid}/{mobileuserid}", 'JobsController@getCommencedShiftDetails');
-//
-//Route::get("/notdeletedcasenotestest/", 'ReportApiController@getShiftCheckCasesTest');
-//
-//Route::get("/putshifttest/{mobileuserid}", 'JobsController@putShift');
+
 
 
 

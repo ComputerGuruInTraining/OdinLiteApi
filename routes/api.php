@@ -19,7 +19,6 @@ use App\Company as Company;
 use App\AssignedShiftEmployee as AssignedEmp;
 use App\AssignedShiftLocation as AssignedLoc;
 use App\LocationCompany as LocationCo;
-use App\ConsoleUser as ConsoleUser;
 use App\Shift as Shift;
 use App\CurrentUserLocation as Position;
 use App\UserRole as Role;
@@ -32,7 +31,6 @@ use App\CaseFile as CaseFile;
 use App\ShiftCheck as ShiftCheck;
 use App\ShiftCheckCases as CheckCases;
 use App\Employee as Employee;
-use App\Recipients\Recipient;
 use App\Recipients\DynamicRecipient;
 
 /*---------------User----------------*/
@@ -1444,11 +1442,6 @@ Route::group(['middleware' => 'auth:api'], function () {
         $location->save();
         //retrieve id of last insert
         $id = $location->id;
-
-        //retrieve company id
-        /*$consoleId = $request->input('consoleUserId');
-
-        $consoleUser = ConsoleUser::find($consoleId);*/
 
         //save location as current users company's location
         $locationCo = new LocationCo;
