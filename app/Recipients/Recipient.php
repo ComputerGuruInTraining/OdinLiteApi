@@ -6,18 +6,16 @@
  * Time: 11:35 AM
  */
 
-namespace App;
+namespace App\Recipients;
 
 use Illuminate\Notifications\Notifiable;
 
-
-class DynamicRecipient extends Recipient
+abstract class Recipient
 {
+
     use Notifiable;
 
-    public function __construct($email)
-    {
-        $this->email = $email;
-    }
+    protected $email;
 
 }
+

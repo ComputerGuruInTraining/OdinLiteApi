@@ -32,8 +32,8 @@ use App\CaseFile as CaseFile;
 use App\ShiftCheck as ShiftCheck;
 use App\ShiftCheckCases as CheckCases;
 use App\Employee as Employee;
-use App\Recipient;
-use App\DynamicRecipient;
+use App\Recipients\Recipient;
+use App\Recipients\DynamicRecipient;
 
 /*---------------User----------------*/
 
