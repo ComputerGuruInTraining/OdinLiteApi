@@ -22,6 +22,8 @@ use Carbon\Carbon;
 use App\Notifications\RegisterCompany;
 use App\Events\CompanyRegistered;
 
+use App\OdinErrorLogging as AppErrors;
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -259,10 +261,22 @@ Route::post("/webhooks/delivered", function (Request $request) {
 
     $recipient = $request->input('recipient');
 
-    session([
-        'event' => $event,
-        'recipient' => $recipient
-        ]);
+    $description = $request->input('description');
+
+    $appErrors = new AppErrors;
+
+    $appErrors->event = $event;
+    $appErrors->recipient = $recipient;
+    $appErrors->description = $description;
+
+    $appErrors->save();
+
+
+
+//    session([
+//        'event' => $event,
+//        'recipient' => $recipient
+//        ]);
 
 //    dd($event, $recipient);
 
@@ -274,9 +288,7 @@ Route::post("/webhooks/delivered", function (Request $request) {
 //    ));
 
 
-    return response()->json([
-        'success' => true
-    ]);
+    return response()->json(['message' => 'post successful']);
 });
 
 //Route::get("/alert-admin/test", function () {
