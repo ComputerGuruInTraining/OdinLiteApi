@@ -246,14 +246,49 @@ Route::get('/download-photo/{filename}', function ($filename) {
 
 /*Test Routes*/
 
-Route::get("/alert-admin/test", function () {
+Route::get("/webhooks", function () {
 
-    $comp = App\Company::find(444);
+    dd(session('event'));
 
-    event(new CompanyRegistered($comp));
-    dd('check emails');
-
+    return view('webhooks');
 });
+
+Route::post("/webhooks/delivered", function (Request $request) {
+
+    $event = $request->input('event');
+
+    $recipient = $request->input('recipient');
+
+    session([
+        'event' => $event,
+        'recipient' => $recipient
+        ]);
+
+//    dd($event, $recipient);
+
+//    return view('webhooks')->with(array(
+//
+//        'event' => $event,
+//        'recipient' => $recipient
+//
+//    ));
+
+
+    return response()->json([
+        'success' => true
+    ]);
+});
+
+//Route::get("/alert-admin/test", function () {
+//
+//    $comp = App\Company::find(444);
+//
+//    event(new CompanyRegistered($comp));
+//    dd('check emails');
+//
+//});
+
+
 
 //Test dynamic notifications
 //1374 user id mailspace77
