@@ -118,8 +118,9 @@ Route::post('/company', function (Request $request) {
         // validates address belongs to the new user
         $newuser->notify(new RegisterCompany($compId));
 
+        $newcompany = App\Company::find($comp->id);
         //event to notify Odin admin that a new company has registered
-        event(new CompanyRegistered($comp));
+        event(new CompanyRegistered($newcompany));
 
         return response()->json([
             'success' => $newuser,
@@ -246,14 +247,14 @@ Route::get('/download-photo/{filename}', function ($filename) {
 
 /*Test Routes*/
 
-//Route::get("/alert-admin/test", function () {
-//
-//    $comp = App\Company::find(444);
-//
-//    event(new CompanyRegistered($comp));
-//    dd('check emails');
-//
-//});
+Route::get("/alert-admin/test", function () {
+
+    $comp = App\Company::find(444);
+
+    event(new CompanyRegistered($comp));
+    dd('check emails');
+
+});
 
 //Test dynamic notifications
 //1374 user id mailspace77
