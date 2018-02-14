@@ -118,9 +118,8 @@ Route::post('/company', function (Request $request) {
         // validates address belongs to the new user
         $newuser->notify(new RegisterCompany($compId));
 
-        $newcompany = App\Company::find($comp->id);
         //event to notify Odin admin that a new company has registered
-        event(new CompanyRegistered($newcompany));
+        event(new CompanyRegistered($comp));
 
         return response()->json([
             'success' => $newuser,
