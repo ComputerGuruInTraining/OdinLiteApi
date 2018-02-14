@@ -10,6 +10,12 @@
                 <div class="panel-body">
                     You are logged in!
                 </div>
+
+
+                {{--<a href="/dynamic-notification/test/1374">test Notifications</a>--}}
+
+
+
                 {{--<a href="/testCaseNotesDeleted">testCaseNotesDeleted</a>--}}
                 {{--<a href="/counttest">counttest</a>--}}
 

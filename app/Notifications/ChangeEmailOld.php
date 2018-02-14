@@ -5,6 +5,7 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
+use Config;
 
 class ChangeEmailOld extends Notification
 {
@@ -44,17 +45,16 @@ class ChangeEmailOld extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Email Change Courtesy Notification')
+            ->subject('Email Removed Courtesy Notification')
 
             ->greeting('Hello!')
 
-            ->line('Just a courtesy notification to advise you that this email address is no longer your login email for
-            Odin Application used by '.$this->compName. '. This is due to your email address 
-            recently being updated in the Management Console to '.$this->emailNew.'.')
+            ->line('Just a courtesy notification to advise you that this email address is no longer your login email 
+            for '.Config::get('constants.CONSOLE_NAME').' used by '.$this->compName. '. This is due to your login email address
+            recently being changed to '.$this->emailNew.'.')
 
-            ->line('If you are not happy about this change, or you do not believe this should have occurred,
-            you can continue using this email address if either yourself or an authenticated user 
-            makes the change in the Management Console.');
+            ->line('If you do not approve of this change, you, or an authenticated user, can revert your login details 
+            back so that you can continue using this preferred email address.');
 
     }
 

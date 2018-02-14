@@ -19,6 +19,10 @@ use Illuminate\Support\Facades\Storage;
 use MicrosoftAzure\Storage\Common\ServicesBuilder;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
+use App\Recipients\DynamicRecipient;
+use App\Notifications\ChangeEmailNew;
+use App\Notifications\ChangeEmailOld;
+use App\Company as Company;
 
 
 Route::get('/', function () {
@@ -198,6 +202,7 @@ Route::get("/dashboard/{compId}/current-positions", function ($compId) {
 
 });
 
+//archived??? used when azure uploads were stored directly to server
 Route::get('/storage/app/public/{file}', function ($file) {
 
     $url = asset('storage/app/public/'.$file);
@@ -242,6 +247,38 @@ Route::get('/download-photo/{filename}', function ($filename) {
 
 
 /*Test Routes*/
+
+//Test dynamic notifications
+//1374 user id mailspace77
+//Route::get("/dynamic-notification/test/{id}", function ($id) {
+//
+//    $user = App\User::find($id);
+//
+//        $emailOld = $user->email;
+//
+//        $emailNew = 'smurfettemum@gmail.com';
+//
+//
+//            //new email address notification mail
+//            $recipientNew = new DynamicRecipient($emailNew);
+//
+////            dd($recipientNew);
+//    $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
+//
+//
+//    $recipientNew->notify(new ChangeEmailNew($compName));
+//
+//
+////
+////            //old email address notification mail
+//            $recipientOld = new DynamicRecipient($emailOld);
+//            $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
+////
+////            $user->email = $emailNew;
+//    dd($recipientNew, $compName, $recipientOld);
+//
+//
+//});
 
 //Route::get("/testCheckDuration", 'ReportApiController@testCheckDuration');
 

@@ -57,7 +57,7 @@ return [
 
     'from' => [
         'address' => 'admin@odinlite.net',
-        'name' => 'Odin Admin Team',
+        'name' => 'ODIN Admin Team',
     ],
 
     /*
