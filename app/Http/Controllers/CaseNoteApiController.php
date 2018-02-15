@@ -188,8 +188,14 @@ class CaseNoteApiController extends Controller
             ->join('case_notes', 'case_notes.id', '=', 'shift_check_cases.case_note_id')
             ->join('shift_checks', 'shift_checks.id', '=', 'shift_check_cases.shift_check_id')
             ->join('locations', 'shift_checks.location_id', '=', 'locations.id')
+            ->select('case_notes.*',
+                'shift_checks.location_id', 'shift_checks.checks', 'shift_checks.check_ins',
+                'shift_checks.check_outs', 'shift_checks.user_loc_check_in_id', 'shift_checks.user_loc_check_out_id',
+                'shift_checks.distance_check_in', 'shift_checks.distance_check_out', 'shift_checks.check_duration',
+                'locations.name', 'locations.address', 'locations.latitude',
+                'locations.longitude',
+                'shift_check_cases.shift_check_id', 'shift_check_cases.case_note_id')
             ->whereIn('shift_check_cases.id', $shiftCheckCasesIds)
-//            ->where('case_notes.deleted_at', '=', null)
             ->get();
 
         return $shiftCheckCaseNotes;
