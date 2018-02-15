@@ -45,13 +45,13 @@ class ChangePW extends Notification
 
             ->greeting('Hello!')
 
-            ->line('You are receiving this email because your password for Odin Mobile App for '.$this->compName.' has 
+            ->line('You are receiving this email because your password for ODIN Case Management Mobile App for '.$this->compName.' has 
             recently been changed.')
 
             ->line('If you made this change, you may delete this message and no further action is required.')
 
             ->line('If you did not change your password, please be advised that your password has been changed using the 
-            Odin Mobile App Change Password Facility and we recommend that you reset your password to protect your security. 
+            ODIN Case Management Mobile App Change Password Facility and we recommend that you reset your password to protect your security. 
             The Forgot Password Facility in the app can be used for this purpose.');
     }
 

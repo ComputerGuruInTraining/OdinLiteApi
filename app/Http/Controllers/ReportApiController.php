@@ -640,11 +640,6 @@ class ReportApiController extends Controller
             ->where('report_checks.report_id', '=', $reportId)
             ->get();
 
-//        $reportShiftCheckIds = DB::table('report_checks')
-//            ->select('shift_check_id')
-//            ->where('report_id', '=', $reportId)
-//            ->get();
-
         return $reportShiftCheckIds;
 
     }
@@ -654,9 +649,6 @@ class ReportApiController extends Controller
         try {
             //report object & report individual object
             $reportInd = $this->getReportIndividualData($reportId);
-
-            /*shift_checks object*/
-//            $reportShiftCheckIds = $this->getReportChecks_ShiftCheckId($reportId);//83
 
             //report_checks for a report_id and join with shift_check_cases on shift_check_id
             $reportShiftCheckCases = $this->getReportChecks_ShiftCheckId($reportId);

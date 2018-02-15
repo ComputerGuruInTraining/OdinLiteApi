@@ -189,7 +189,7 @@ class CaseNoteApiController extends Controller
             ->join('shift_checks', 'shift_checks.id', '=', 'shift_check_cases.shift_check_id')
             ->join('locations', 'shift_checks.location_id', '=', 'locations.id')
             ->whereIn('shift_check_cases.id', $shiftCheckCasesIds)
-            ->where('case_notes.deleted_at', '=', null)
+//            ->where('case_notes.deleted_at', '=', null)
             ->get();
 
         return $shiftCheckCaseNotes;
