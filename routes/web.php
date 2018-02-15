@@ -202,15 +202,6 @@ Route::get("/dashboard/{compId}/current-positions", function ($compId) {
 
 });
 
-//archived??? used when azure uploads were stored directly to server
-Route::get('/storage/app/public/{file}', function ($file) {
-
-    $url = asset('storage/app/public/'.$file);
-
-    return response()->download($url);
-
-});
-
 //route to provide a url to an image stored in azure storage container
 Route::get('/download-photo/{filename}', function ($filename) {
 
@@ -245,51 +236,81 @@ Route::get('/download-photo/{filename}', function ($filename) {
 
 });
 
+//archived??? used when azure uploads were stored directly to server
+Route::get('/storage/app/public/{file}', function ($file) {
+
+    $url = asset('storage/app/public/'.$file);
+
+    return response()->download($url);
+
+});
+
+
+
+
+
 
 /*Test Routes*/
 
-Route::get("/webhooks", function () {
-
-    dd(session('event'));
-
-    return view('webhooks');
-});
-
-Route::post("/webhooks/delivered", function (Request $request) {
-
-    $event = $request->input('event');
-
-    $recipient = $request->input('recipient');
-
-    $description = $request->input('description');
-
-    $appErrors = new AppErrors;
-
-    $appErrors->event = $event;
-    $appErrors->recipient = $recipient;
-    $appErrors->description = $description;
-
-    $appErrors->save();
 
 
-
-//    session([
-//        'event' => $event,
-//        'recipient' => $recipient
-//        ]);
-
-//    dd($event, $recipient);
-
-//    return view('webhooks')->with(array(
+//Route::get("/webhooks", function () {
 //
-//        'event' => $event,
-//        'recipient' => $recipient
+//    dd(session('event'));
 //
-//    ));
+//    return view('webhooks');
+//});
+
+//so have a route in the console which calls the post which stores the data in the db (if we need the data stored in the db??)
+//I started thinking perhaps not so necessary. we really just need the event/nofitication however this relies on the recipient
+//of the alert but so would any list on a page etc. I think a list on a page as well as a notification, and then actions against the logs.
+//also great to view them all at once.
+//actions might not be so necessary if a subsequent event will action the item and archive it, say.
 
 
-    return response()->json(['message' => 'post successful']);
-});
+//possibly problem is not logged in as an authorised user.
+//Route::post("/error-logging", function (Request $request) {
+//
+//    $event = $request->input('event');
+//
+//    $recipient = $request->input('recipient');
+//
+//    $description = $request->input('description');
+//
+//    $appErrors = new AppErrors;
+//
+//    $appErrors->event = $event;
+//    $appErrors->recipient = $recipient;
+//    $appErrors->description = $description;
+//
+//    $appErrors->save();
+//
+//    return response()->json(['message' => 'post successful']);
+//});
+
+//Route::get("/error-logging/test", function () {
+//
+//    $event = 'test event';
+//
+//    $recipient = 'test@test.com.test';
+//
+//    $description = 'test description';
+//
+//    $appErrors = new AppErrors;
+//
+//    $appErrors->event = $event;
+//    $appErrors->recipient = $recipient;
+//    $appErrors->description = $description;
+//
+//    $appErrors->save();
+//
+//    dd('post successful');
+//
+//    return response()->json(['message' => 'post successful']);
+//});
+
+//Route::get("/individualreport/test/{reportId}", 'ReportApiController@getIndividualReport');
+
 
 //Route::get("/alert-admin/test", function () {
 //
