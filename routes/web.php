@@ -311,6 +311,8 @@ Route::get('/storage/app/public/{file}', function ($file) {
 
 //Route::get("/individualreport/test/{reportId}", 'ReportApiController@getIndividualReport');
 
+//Route::get("/testPostReportLocation", 'ReportApiController@testPostReportLocation');
+
 
 //Route::get("/alert-admin/test", function () {
 //
