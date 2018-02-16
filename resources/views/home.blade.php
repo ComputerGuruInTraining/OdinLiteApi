@@ -12,7 +12,7 @@
                 </div>
 
 
-                {{--<a href="/individualreport/test/1714">test get individual report w case notes deleted</a>--}}
+                {{--<a href="/testPostReportLocation">testPostReportLocation</a>--}}
 
                 {{--<a href="/error-logging/test">test webhooks</a>--}}
 
