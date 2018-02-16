@@ -518,7 +518,12 @@ class ReportApiController extends Controller
         //calculate the total hours from the check_duration which is in seconds
         $totalHours = totalHoursMonitored($checks);
 
-        $totalChecks = $checks->count('shiftCheckId');
+        //shift_ids
+        $shiftIds = $shifts->pluck('id');
+
+        $checkouts = $this->queryShiftCheckOuts($shiftIds, $locId);
+
+        $totalChecks = $checkouts->count('check_outs');
 
         //calculate the number of guards
         $numGuards = $shifts->groupBy('mobile_user_id')->count();
@@ -640,11 +645,6 @@ class ReportApiController extends Controller
             ->where('report_checks.report_id', '=', $reportId)
             ->get();
 
-//        $reportShiftCheckIds = DB::table('report_checks')
-//            ->select('shift_check_id')
-//            ->where('report_id', '=', $reportId)
-//            ->get();
-
         return $reportShiftCheckIds;
 
     }
@@ -654,9 +654,6 @@ class ReportApiController extends Controller
         try {
             //report object & report individual object
             $reportInd = $this->getReportIndividualData($reportId);
-
-            /*shift_checks object*/
-//            $reportShiftCheckIds = $this->getReportChecks_ShiftCheckId($reportId);//83
 
             //report_checks for a report_id and join with shift_check_cases on shift_check_id
             $reportShiftCheckCases = $this->getReportChecks_ShiftCheckId($reportId);
@@ -1038,14 +1035,27 @@ class ReportApiController extends Controller
     public function queryShiftCheckDuration($shiftIds, $locId)
     {
 
-        //retrieve from ShiftCheckCases the records for those shift_checks
-        //ie all checks and the case notes created during the checks for the shifts
+        //retrieve from ShiftChecks the records for those shifts
+        //ie all checks created during the checks for the shifts
         $checks = ShiftCheck::whereIn('shift_id', $shiftIds)
             ->where('location_id', '=', $locId)
             ->select('id as shiftCheckId', 'check_duration')
             ->get();
 
         return $checks;
+    }
+
+    public function queryShiftCheckOuts($shiftIds, $locId)
+    {
+        //retrieve from ShiftChecks the records for those shift_checks
+        //ie all checks and the case notes created during the checks for the shifts
+        $checkouts = ShiftCheck::whereIn('shift_id', $shiftIds)
+            ->where('location_id', '=', $locId)
+            ->where('check_outs', '!=', 'null')
+            ->select('id as shiftCheckOutId', 'check_outs')
+            ->get();
+
+        return $checkouts;
     }
 
     //not implemented yet, WIP as may be needed for individuals
@@ -1070,6 +1080,37 @@ class ReportApiController extends Controller
     }
 
     //test route
+
+//    public function testPostReportLocation(){
+//
+//        $shifts = $this->queryReport('2018-01-01 00:00:00', '2018-01-31 23:59:00', 684);
+////shift_ids
+//        $shiftIds = $shifts->pluck('id');
+//
+//        //get the case notes for a report
+//        $caseNoteIds = $this->queryCaseNotes(684, $shiftIds);
+////
+////        //if there are no case notes, we will not generate a report
+////        //as the app structure requires case notes and therefore very rare for this not to be the case
+////        //and presume not enough data
+////
+////
+////
+//            $caseCheckIds = $this->queryShiftCheckCases($caseNoteIds);
+//
+//        $checks = $this->queryShiftCheckDuration($shiftIds, 684);//will hold the shiftCheckCaseIds and check_duration
+//
+//
+////        $checkouts = $this->queryShiftCheckOuts($shiftIds, 684);
+//
+//
+//        $resultCase = $this->storeReportCase(1787878, $shifts, 684, $checks);
+//
+//dd($resultCase);
+//
+//        dd(count($caseNoteIds), count($caseCheckIds), $caseNoteIds, $caseCheckIds, $checks);
+//
+//    }
 
 //    public function testCaseNotesDeleted(){
 //        $caseNoteIds = $this->queryCaseNotes(954, [4234, 4244, 4254]);

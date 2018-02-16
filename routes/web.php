@@ -11,15 +11,18 @@
 |
 */
 
-use App\Notifications\RegisterCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Notifications\NewMobileUser;
 use Illuminate\Support\Facades\Storage;
 use MicrosoftAzure\Storage\Common\ServicesBuilder;
 use Carbon\Carbon;
-use Carbon\CarbonInterval;
 
+/*Notify odin primary email that new company registered*/
+use App\Notifications\RegisterCompany;
+use App\Events\CompanyRegistered;
+
+use App\OdinErrorLogging as AppErrors;
 
 Route::get('/', function () {
     return view('welcome');
@@ -112,11 +115,13 @@ Route::post('/company', function (Request $request) {
 
         //retrieve saved user for notification
         $newuser = App\User::find($id);
-        //$newcomp = App\Company::find($compId);
 
+        //send email to new company requesting activation of the company which enables login and
+        // validates address belongs to the new user
         $newuser->notify(new RegisterCompany($compId));
 
-        //notify Odin admin that a new company has registered
+        //event to notify Odin admin that a new company has registered
+        event(new CompanyRegistered($comp));
 
         return response()->json([
             'success' => $newuser,
@@ -168,7 +173,6 @@ Route::post('/upload', function (Request $request) {
     }
 });
 
-
 //called from update markers() see route in api.php
 Route::get("/dashboard/{compId}/current-positions", function ($compId) {
 
@@ -195,14 +199,6 @@ Route::get("/dashboard/{compId}/current-positions", function ($compId) {
         ->get();
 
     return response()->json($res);
-
-});
-
-Route::get('/storage/app/public/{file}', function ($file) {
-
-    $url = asset('storage/app/public/'.$file);
-
-    return response()->download($url);
 
 });
 
@@ -240,12 +236,126 @@ Route::get('/download-photo/{filename}', function ($filename) {
 
 });
 
+//archived??? used when azure uploads were stored directly to server
+Route::get('/storage/app/public/{file}', function ($file) {
+
+    $url = asset('storage/app/public/'.$file);
+
+    return response()->download($url);
+
+});
+
+
+
+
+
 
 /*Test Routes*/
 
-//Route::get("/testCheckDuration", 'ReportApiController@testCheckDuration');
 
-//Route::get("/testCaseNotesDeleted", 'ReportApiController@testCaseNotesDeleted');
+
+//Route::get("/webhooks", function () {
+//
+//    dd(session('event'));
+//
+//    return view('webhooks');
+//});
+
+//so have a route in the console which calls the post which stores the data in the db (if we need the data stored in the db??)
+//I started thinking perhaps not so necessary. we really just need the event/nofitication however this relies on the recipient
+//of the alert but so would any list on a page etc. I think a list on a page as well as a notification, and then actions against the logs.
+//also great to view them all at once.
+//actions might not be so necessary if a subsequent event will action the item and archive it, say.
+
+
+//possibly problem is not logged in as an authorised user.
+//Route::post("/error-logging", function (Request $request) {
+//
+//    $event = $request->input('event');
+//
+//    $recipient = $request->input('recipient');
+//
+//    $description = $request->input('description');
+//
+//    $appErrors = new AppErrors;
+//
+//    $appErrors->event = $event;
+//    $appErrors->recipient = $recipient;
+//    $appErrors->description = $description;
+//
+//    $appErrors->save();
+//
+//    return response()->json(['message' => 'post successful']);
+//});
+
+//Route::get("/error-logging/test", function () {
+//
+//    $event = 'test event';
+//
+//    $recipient = 'test@test.com.test';
+//
+//    $description = 'test description';
+//
+//    $appErrors = new AppErrors;
+//
+//    $appErrors->event = $event;
+//    $appErrors->recipient = $recipient;
+//    $appErrors->description = $description;
+//
+//    $appErrors->save();
+//
+//    dd('post successful');
+//
+//    return response()->json(['message' => 'post successful']);
+//});
+
+//Route::get("/individualreport/test/{reportId}", 'ReportApiController@getIndividualReport');
+
+//Route::get("/testPostReportLocation", 'ReportApiController@testPostReportLocation');
+
+
+//Route::get("/alert-admin/test", function () {
+//
+//    $comp = App\Company::find(444);
+//
+//    event(new CompanyRegistered($comp));
+//    dd('check emails');
+//
+//});
+
+
+
+//Test dynamic notifications
+//1374 user id mailspace77
+//Route::get("/dynamic-notification/test/{id}", function ($id) {
+//
+//    $user = App\User::find($id);
+//
+//        $emailOld = $user->email;
+//
+//        $emailNew = 'smurfettemum@gmail.com';
+//
+//
+//            //new email address notification mail
+//            $recipientNew = new DynamicRecipient($emailNew);
+//
+////            dd($recipientNew);
+//    $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
+//
+//
+//    $recipientNew->notify(new ChangeEmailNew($compName));
+//
+//
+////
+////            //old email address notification mail
+//            $recipientOld = new DynamicRecipient($emailOld);
+//            $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
+////
+////            $user->email = $emailNew;
+//    dd($recipientNew, $compName, $recipientOld);
+//
+//
+//});
 
 //Route::get('/uploadtest/{filename}', function ($filename) {
 //    try {
@@ -330,18 +440,7 @@ Route::get('/download-photo/{filename}', function ($filename) {
 //    ]);
 //
 //});
-//
-//Route::get("/individualreport/test/{reportId}", 'ReportApiController@getIndividualReport');
-//
-//Route::get("/post/reports/individual/test/{dateFrom}/{dateTo}/{userId}", 'ReportApiController@postIndividualTest');
-//
-//Route::get("/reports/list/{compId}", 'ReportApiController@getReportList');
-//
-//Route::get("/commencedshiftdetails/test/{assignedid}/{mobileuserid}", 'JobsController@getCommencedShiftDetails');
-//
-//Route::get("/notdeletedcasenotestest/", 'ReportApiController@getShiftCheckCasesTest');
-//
-//Route::get("/putshifttest/{mobileuserid}", 'JobsController@putShift');
+
 
 
 

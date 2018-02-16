@@ -35,7 +35,7 @@ class MainController extends Controller
 
         if ($numUpdated == 1) {
             $title = 'Confirmation of Success';
-            $msg = 'The registration process is complete and you may now log into Odin Lite Management Console.';
+            $msg = 'The registration process is complete and you may now log into ODIN Case Management Console.';
         } else {
             $title = 'Notification of Failure';
             $msg = 'The activation did not complete successfully. Possibly the activation has already been completed. 
@@ -45,14 +45,12 @@ class MainController extends Controller
         return view('activated')->with(array('msg' => $msg, 'title' => $title));
 
     }
+
     public function download($filename)
     {
         $file = $filename.'.jpeg';
 
         $pathToFile = 'images\/'.$file;
-
-        //check if file exists
-//        Storage::exists($file);
 
 //        $pathToFile
         return response()->download($pathToFile);

@@ -1,6 +1,5 @@
 @extends('layouts.app_basic')
 
-
 @section('content')
 <img src="{{ asset("/images/ODIN-Logo.png") }}" alt="Odin Logo" height="60px" width="200px"
          style="position: absolute; left:30px; top:30px;"/>

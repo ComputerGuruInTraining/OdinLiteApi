@@ -24,8 +24,6 @@ class CreateUsersTable extends Migration
             $table->string('password');
             $table->integer('company_id')->unsigned();//fk
             $table->rememberToken();
-//            $table->foreign('company_id')
-//                ->references('id')->on('companies');
             $table->timestamps();
             $table->softDeletes();
         });

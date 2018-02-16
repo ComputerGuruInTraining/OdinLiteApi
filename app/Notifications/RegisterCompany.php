@@ -44,7 +44,7 @@ class RegisterCompany extends Notification
     {               
        return (new MailMessage)
        	    ->greeting('Welcome!')
-            ->line('To complete the registration of your Odin Management Console account, please activate the account.')
+            ->line('To complete the registration of your ODIN Case Management Console account, please activate the account.')
             ->action('Activate', url('activate/'.$this->compId));
     }
 

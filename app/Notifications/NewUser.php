@@ -43,7 +43,7 @@ class NewUser extends Notification
     {
         return (new MailMessage)
             ->greeting('Welcome!')
-            ->line('You are receiving this email because you have been added as a new user for Odin Management 
+            ->line('You are receiving this email because you have been added as a new user for ODIN Case Management 
             Console on behalf of '. $this->compName.'.')
             ->line('Please create a password to use with the account using our Password Reset Facility. 
             This facility optimizes the security of our software suite by not 
