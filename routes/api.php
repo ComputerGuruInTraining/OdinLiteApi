@@ -769,7 +769,16 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     //get basic details about a report
     Route::get("/report/{id}", function ($id) {
+
         $report = Report::find($id);
+
+        $verified = verifyCompany($report);
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
+
         return response()->json($report);
     });
 
@@ -914,9 +923,13 @@ Route::group(['middleware' => 'auth:api'], function () {
       * Assigned Shifts
      */
     //retrieve an assigned shift
+    //believe not in use atm, more thorough check required
     Route::get("/assignedshift/{id}", function ($id) {
+
         $assigned = App\AssignedShift::find($id);
+
         return response()->json($assigned);
+
     });
 
     //console
@@ -986,71 +999,6 @@ Route::group(['middleware' => 'auth:api'], function () {
     //that occur within the specified INTERVAL X DAY
     //and for which the shift has not ended
     Route::get("/assignedshifts/{id}", 'JobsController@getAssignedShifts');
-
-//    Route::get("/assignedshifts/{id}", function ($id) {
-//        //the logic is:
-//        //step 1: all assignedShifts for the period. (array1)
-//        //step 2: all assignedShifts that have been started by the mobile user (array2)
-//        // (!Important! > 1 mobile user can be assigned to shift)
-//        //step 3: array1 items that don't appear in array2 have not been started, therefore include in results.(array4)
-//        //step 4: all assignedShifts that have been started, check if they have ended (array3)
-//        //step 5: array2 items that are not in array3 have been started but not completed, therefore include in results.(array5)
-//        //step 6: add (array1-2) to (array2-3) to get the complete set of results (= array6)
-//
-//        //step 1: all assigned shifts
-//        $array1 = DB::table('assigned_shifts')
-//            ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=',
-//                'assigned_shifts.id')
-//            ->select('assigned_shifts.id')
-//            ->where('assigned_shift_employees.mobile_user_id', '=', $id)
-//            ->where('assigned_shifts.end', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 2 DAY)'))
-//            ->where('assigned_shifts.deleted_at', '=', null)
-//            ->where('assigned_shift_employees.deleted_at', '=', null)
-//            ->get();
-//
-//        //all assigned shifts for the period specified
-//        $array1ids = $array1->pluck('id');
-//
-//        //step2 :all shifts that have been started by this mobile_user
-//        $array2ids = DB::table('shifts')
-//            ->whereIn('assigned_shift_id', $array1ids)
-//            ->where('mobile_user_id', '=', $id)
-//            ->pluck('assigned_shift_id');
-//
-//        //step 3: array1 items that don't appear in array2 have not been started, therefore include in results.(array1-2)
-//        //1st set of data
-//        $array4 = $array1ids->diff($array2ids);
-//
-//        //step4: all shifts out of the shifts that have been started and have been completed
-//        $array3ids = DB::table('shifts')
-//            //array of ids
-//            ->whereIn('assigned_shift_id', $array2ids)
-//            ->where('end_time', '!=', null)
-//            ->pluck('assigned_shift_id');
-//
-//        //step 5: array2 items that are not in array3 have been started but not completed, therefore include in results.(array5)
-//        $array5 = $array2ids->diff($array3ids);
-//
-//        //step 6: add (array1-2) to (array2-3) to get the complete set of results (= array6)
-//        $array6ids = $array4->merge($array5);
-//
-//        $myAssigned = DB::table('assigned_shift_employees')
-//            ->join('assigned_shifts', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
-//            ->whereIn('assigned_shifts.id', $array6ids)
-//            ->where('mobile_user_id', '=', $id)
-//            ->where('assigned_shifts.deleted_at', '=', null)
-//            ->where('assigned_shift_employees.deleted_at', '=', null)
-//            ->get();
-//
-//        foreach ($myAssigned as $i => $assigned) {
-//            //convert start and end from a datetime object to timestamps
-//            //and append to the end of all of the assigned objects
-//            $myAssigned[$i]->start_ts = strtotime($assigned->start);
-//            $myAssigned[$i]->end_ts = strtotime($assigned->end);
-//        }
-//
-//        return response()->json($myAssigned);
-//    });
 
     //mobile
     //route to get commenced assigned shifts for a particular mobile_user/employee
@@ -1145,6 +1093,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //edit
+    //with verification
     Route::get("/assignedshifts/{id}/edit", function ($id) {
         $assigned = DB::table('assigned_shifts')
             ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
@@ -1155,6 +1104,15 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->orderBy('start', 'asc')
             ->orderBy('assigned_shift_locations.location_id')
             ->get();
+
+        $verified = verifyCompany($assigned);
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
+
+        //if verified as being the same company, or if no record is returned from the query ie $assigned = {}
 
         foreach ($assigned as $i => $details) {
             $emp = User::find($assigned[$i]->mobile_user_id);
@@ -1194,149 +1152,6 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::put("/assignedshifts/{id}/edit", 'JobsController@putShift');
 
-//        //table: assigned_shifts
-//
-//        //TODO: variable datetimes
-//        $start = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('start'));
-//        $end = Carbon::createFromFormat('Y-m-d H:i:s', $request->input('end'));
-//
-//        $assigned = App\AssignedShift::find($id);
-//
-//        if ($request->has('compid')) {
-//            $assigned->company_id = $request->input('compId');
-//        }
-//
-//        if ($request->has('title')) {
-//            $assigned->shift_title = $request->input('title');
-//        }
-//
-//        if ($request->has('desc')) {
-//            if($request->input('desc') == "none") {
-//                $assigned->shift_description = null;
-//            }
-//        }
-//
-//        if ($request->has('roster_id')) {
-//            $assigned->roster_id = $request->input('roster_id');
-//        }
-//
-//        $assigned->start = $start;
-//        $assigned->end = $end;
-//
-//        $assigned->save();
-//
-//        //assigned_shift_employees
-//        //update the employees assigned to the shift
-//
-//        //new employee values to be used for updating the table
-//        $newEmpArray = $request->input('employees');
-//
-//        $newEmp = collect($newEmpArray);
-//
-//        //current employee values to be replaced with the new edits that haven't already been deleted by way of deleting employee
-//        $oldEmps = DB::table('assigned_shift_employees')
-//            ->where('assigned_shift_id', '=', $id)
-//            ->where('deleted_at', '=', null)
-//            ->pluck('mobile_user_id');
-//
-//        /*
-//        **compare the old employees to the new employees
-//        **in assigned_shift_employees table
-//        */
-//
-//        //create new records for those new employees updated in the view that aren't already in the assigned_shift_employees table
-//        $addEmps = $newEmp->diff($oldEmps);
-//
-//        foreach ($addEmps as $addEmp) {
-//            $employee = new App\AssignedShiftEmployee;
-//            $employee->mobile_user_id = $addEmp;
-//            $employee->assigned_shift_id = $id;
-//            $employee->save();
-//        }
-//
-//        //delete those records that are currently in the assigned_shift_employees table but were not included in the edit
-//        $deleteEmps = $oldEmps->diff($newEmp);
-//
-//        foreach ($deleteEmps as $deleteEmp) {
-//            $assignedEmp = AssignedEmp::where('mobile_user_id', '=', $deleteEmp)
-//                ->where('assigned_shift_id', '=', $id)
-//                ->delete();
-//
-//        }
-//
-//        //might fixme be best to include an object with the location and check, not just an array which is separate
-//        $checksArray = $request->input('checks');
-//        //assigned_shift_locations
-//        //update the locations assigned to the shift
-//
-//        $newLocArray = $request->input('locations');
-//
-//        //for location checks
-//        $array = [];
-//        for($l = 0; $l < sizeof($newLocArray); $l++){
-//
-//            $array = array_add(['location' => $newLocArray[$l], 'checks' => $checksArray[$l]]);
-//            dd($array);
-//        }
-//
-//        $newLoc = collect($newLocArray);
-//
-//        //current old assigned_location values to be edited that have not otherwise been deleted
-//        $oldLocs = DB::table('assigned_shift_locations')
-//            ->where('assigned_shift_id', '=', $id)
-//            ->where('deleted_at', '=', null)
-//            ->pluck('location_id');
-//
-//        //create new records for those new locations updated in the view that aren't already in the assigned_shift_locations table
-//        $addLocs = $newLoc->diff($oldLocs);
-//
-//        foreach ($addLocs as $addLoc) {
-//            $location = new App\AssignedShiftLocation;
-//            $location->location_id = $addLoc;
-//            $location->assigned_shift_id = $id;
-//            $location->checks = $checksArray;
-//            $location->save();
-//        }
-//
-//        //delete those records that are currently in the assigned_shift_locations table but were not included in the edit
-//        $deleteLocs = $oldLocs->diff($newLoc);
-//
-//        //soft delete on model
-//        foreach ($deleteLocs as $deleteLoc) {
-//            $assignedLoc = AssignedLoc::where('location_id', '=', $deleteLoc)
-//                ->where('assigned_shift_id', '=', $id)
-//                ->delete();
-//        }
-//
-//        //update those records that have the same location_id and assigned_shift_id, but a different amount of checks
-//        $sameLocs = $oldLocs->intersect($newLoc);
-//
-//        foreach ($sameLocs as $sameLoc) {
-//            $toUpdateId = DB::table('assigned_shift_locations')
-//                ->where('location_id', '=', $sameLoc)
-//                ->where('assigned_shift_id', '=', $id)
-//                ->where('deleted_at', '=', null)
-//                ->pluck('id');
-//
-//            $location = App\AssignedShiftLocation::find($toUpdateId);
-//            if ($location->checks != $request->input('checks')) {
-//                $location->checks = $request->input('checks');
-//                $location->save();
-//            }
-//        }
-
-//        if ($assigned->save()) {
-//            return response()->json(
-//                ['success' => true]
-//            );
-//        } else {
-//            return response()->json(
-//                ['success' => false]
-//            );
-//        }
-
-//    });
-
     //soft delete from the assigned_shifts_table and the relations where assigned_shift_id is a fk
     Route::delete('/assignedshift/{id}', function ($id) {
 
@@ -1373,6 +1188,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //show
+    //not in use perhaps, need further checking
     Route::get("/location/{id}", function ($id) {
         $location = App\Location::find($id);
         return response()->json($location);
@@ -1393,7 +1209,24 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     //edit
     Route::get("/locations/{id}/edit", function ($id) {
+
         $location = App\Location::find($id);
+
+        $verified = verifyCompany(
+            $location,
+            'locations',
+            'location_companies',
+            'locations.id',
+            'location_companies.location_id'
+        );
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
+
+        //if verified as being the same company, or if no record is returned from the query ie $assigned = {}
+
         return response()->json($location);
     });
 

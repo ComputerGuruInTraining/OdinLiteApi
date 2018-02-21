@@ -254,6 +254,62 @@ Route::get('/storage/app/public/{file}', function ($file) {
 
 
 
+
+//get currently authorized user
+//retrieve an assigned shift
+//Route::get("/assignedshift/{id}/test", function ($id) {
+//
+//    $assigned = App\AssignedShift::find($id);
+//
+//    $verified = verifyCompany($assigned);
+//
+//    if(!$verified){
+//
+//        return response()->json($verified);//value = false
+//    }
+//
+//    //if verified as being the same company, or if no record is returned from the query ie $assigned = {}
+//
+//    return response()->json($assigned);
+//
+//});
+//
+////edit
+//Route::get("/locations/{id}/edit/test", function ($id) {
+//
+//    $location = App\Location::find($id);
+//
+//    $verified = verifyCompany(
+//        $location,
+//        'locations',
+//        'location_companies',
+//        'locations.id',
+//        'location_companies.location_id'
+//    );
+//
+//    if(!$verified){
+//
+//        return response()->json($verified);//value = false
+//    }
+//
+//    //if verified as being the same company, or if no record is returned from the query ie $assigned = {}
+//    return response()->json($location);
+//});
+//
+//Route::get("/report/{id}/test", function ($id) {
+//
+//    $report = App\Report::find($id);
+//
+//    $verified = verifyCompany($report);
+//
+//    if(!$verified){
+//
+//        return response()->json($verified);//value = false
+//    }
+//
+//    return response()->json($report);
+//});
+
 //Route::get("/webhooks", function () {
 //
 //    dd(session('event'));
