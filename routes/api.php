@@ -1095,6 +1095,19 @@ Route::group(['middleware' => 'auth:api'], function () {
     //edit
     //with verification
     Route::get("/assignedshifts/{id}/edit", function ($id) {
+
+        //verify company first
+        $assignedObject = App\AssignedShift::find($id);
+
+        $verified = verifyCompany($assignedObject);
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
+
+        //if verified as being the same company, or if no record is returned from the query ie $assigned = {}
+
         $assigned = DB::table('assigned_shifts')
             ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
             ->join('assigned_shift_locations', 'assigned_shift_locations.assigned_shift_id', '=', 'assigned_shifts.id')
@@ -1104,15 +1117,6 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->orderBy('start', 'asc')
             ->orderBy('assigned_shift_locations.location_id')
             ->get();
-
-        $verified = verifyCompany($assigned);
-
-        if(!$verified){
-
-            return response()->json($verified);//value = false
-        }
-
-        //if verified as being the same company, or if no record is returned from the query ie $assigned = {}
 
         foreach ($assigned as $i => $details) {
             $emp = User::find($assigned[$i]->mobile_user_id);
@@ -1129,7 +1133,6 @@ Route::group(['middleware' => 'auth:api'], function () {
             //store location name in the object
             $assigned[$i]->employee = $name;
         }
-
 
         foreach ($assigned as $i => $item) {
 

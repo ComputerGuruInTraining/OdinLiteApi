@@ -244,6 +244,7 @@ if (!function_exists('verifyCompany')) {
         //need to check the user's company
         if ($user->company_id == $model->company_id) {
 
+//            dd($model->company_id);
             return true;
         }
 
