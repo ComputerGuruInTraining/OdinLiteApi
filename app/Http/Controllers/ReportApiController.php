@@ -663,7 +663,6 @@ class ReportApiController extends Controller
             //return all case_note details for the related shift_check_ids
             $shiftCheckCaseNotes = app('App\Http\Controllers\CaseNoteApiController')->getShiftCheckCaseNotes($shiftCheckCasesIds);
 
-
             foreach ($shiftCheckCaseNotes as $x => $item) {
 
                 //functions.php

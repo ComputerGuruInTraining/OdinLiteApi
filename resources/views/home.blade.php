@@ -12,6 +12,15 @@
                 </div>
 
 
+                {{--<a href="/assignedshift/384/test">Verify shift</a>--}}
+
+
+                {{--<a href="/locations/914/edit/test">Verify location</a>--}}
+
+
+                {{--<a href="/report/1284/test">Verify Report</a>--}}
+
+
                 {{--<a href="/testPostReportLocation">testPostReportLocation</a>--}}
 
                 {{--<a href="/error-logging/test">test webhooks</a>--}}
