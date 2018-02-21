@@ -12,7 +12,7 @@
                 </div>
 
 
-                {{--<a href="/assignedshifts/634/edit/test">Verify shift</a>--}}
+                {{--<a href="/locations//test">Verify location delete</a>--}}
 
 
                 {{--<a href="/locations/914/edit/test">Verify location</a>--}}

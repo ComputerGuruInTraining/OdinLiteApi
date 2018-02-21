@@ -800,6 +800,13 @@ Route::group(['middleware' => 'auth:api'], function () {
             //find report item
             $report = Report::find($id);
 
+            $verified = verifyCompany($report);
+
+            if(!$verified){
+
+                return response()->json($verified);//value = false
+            }
+
             if ($report->type == "Case Notes") {
 
                 $reportCase = ReportCase::where('report_id', '=', $id)->first();//potentially more than 1???
@@ -1160,6 +1167,14 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         $assigned = Assigned::find($id);
 
+        //verify company first
+        $verified = verifyCompany($assigned);
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
+
         $assigned->delete();
 
         AssignedEmp::where('assigned_shift_id', '=', $id)->delete();
@@ -1299,13 +1314,26 @@ Route::group(['middleware' => 'auth:api'], function () {
     //soft delete
     Route::delete('/locations/{id}', function ($id) {
 
+        $location = Location::find($id);
+
+        $verified = verifyCompany(
+            $location,
+            'locations',
+            'location_companies',
+            'locations.id',
+            'location_companies.location_id'
+        );
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
+
         //Assigned_shift_locations table
         AssignedLoc::where('location_id', $id)->delete();
 
         //Location_Companies table
         LocationCo::where('location_id', $id)->delete();
-
-        $location = Location::find($id);
 
         //locations table
         $location->delete();
