@@ -226,7 +226,8 @@ if (!function_exists('currentYear')) {
     }
 }
 
-//Usage: when model either has a company_id or need to go via another table to get company_id
+//Usage: when model either has a company_id
+// or need to go via another table to get company_id (if can use the $model->id in the where clause)
 //Purpose: ensure the current user belongs to the same company of the model/object
 // that the route returns to the user
 //returns true, false or null
@@ -243,8 +244,6 @@ if (!function_exists('verifyCompany')) {
 
         //need to check the user's company
         if ($user->company_id == $model->company_id) {
-
-//            dd($model->company_id);
             return true;
         }
 
