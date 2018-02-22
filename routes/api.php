@@ -92,10 +92,17 @@ Route::group(['middleware' => 'auth:api'], function () {
         }
     });
 
-
     //edit
     Route::get("/user/{id}/edit", function ($id) {
         $user = App\User::find($id);
+
+        $verified = verifyCompany($user);
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
+
         return response()->json($user);
     });
 
@@ -103,6 +110,13 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::put("/user/{id}/edit", function (Request $request, $id) {
 
         $user = App\User::find($id);
+
+        $verified = verifyCompany($user);
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
 
         if ($request->has('first_name')) {
             $user->first_name = $request->input('first_name');
@@ -210,6 +224,15 @@ Route::group(['middleware' => 'auth:api'], function () {
     //soft delete
     Route::delete('/user/{id}', function ($id) {
 
+        $user = App\User::find($id);
+
+        $verified = verifyCompany($user);
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
+
         User::where('id', $id)->delete();
 
         Role::where('user_id', $id)->delete();
@@ -277,8 +300,6 @@ Route::group(['middleware' => 'auth:api'], function () {
         $role = Role::where('user_id', '=', $id)->pluck('role');
         return response()->json($role);
     });
-
-//get all users/employees/mobile_users  --> sql raw select * from users  left outer join user_roles on users.id = user_roles.user_id  where company_id= 1 and  user_roles.user_id is null;
 
     /*------------Company Status-----------*/
     Route::get('/status/{compId}', function ($compId) {
@@ -375,8 +396,19 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //Edit Employees (ie mobile users)
+    //pm = userId
     Route::get("/employees/{id}/edit", function ($id) {
-        //not sure if it;s a good way to get a record. Might get multiple record in future but we only need one to show up in the Edit Page of employee
+
+        //verify company
+        $user = User::find($id);
+
+        $verified = verifyCompany($user);
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
+
         $employees = DB::table('users')
             ->join('employees', 'users.id', '=', 'employees.user_id')
             ->where('users.id', '=', $id)
@@ -388,6 +420,17 @@ Route::group(['middleware' => 'auth:api'], function () {
     //update record of employees (mobile users)
     Route::put("/employees/{id}/update", function (Request $request, $id) {
         try {
+
+            //verify company
+            $user = User::find($id);
+
+            $verified = verifyCompany($user);
+
+            if(!$verified){
+
+                return response()->json($verified);//value = false
+            }
+
             //update employee
             $employee = App\Employee::where('user_id', $id)->first();
 
@@ -465,10 +508,17 @@ Route::group(['middleware' => 'auth:api'], function () {
         }
     });
 
-
     //Employees(mobile users) Soft Delete From Console
-    //TODO: better implement test of delete here and throughout app
     Route::delete('/employees/{id}', function ($id) {
+
+        $user = User::find($id);
+
+        $verified = verifyCompany($user);
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
 
         $user = User::where('id', $id)->delete();
 
@@ -497,7 +547,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     /*-----------Dashboard-----------*/
-    //called upon dashboard intial load see route in web.php
+    //called upon dashboard initial load see route in web.php
     Route::get("/dashboard/{compId}/current-location", function ($compId) {
 
         $res = DB::table('current_user_locations')
@@ -521,8 +571,6 @@ Route::group(['middleware' => 'auth:api'], function () {
             ->where('shifts.start_time', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 DAY)'))
             ->distinct()
             ->get();
-
-//        $res = $res->groupBy('mobile_user_id');
 
         return response()->json($res);
 
@@ -703,6 +751,18 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get("/casenote/{id}/edit", function ($id) {
         $caseNote = App\CaseNote::find($id);
 
+        //verify company
+        $user = User::withTrashed()
+            ->where('id', '=', $caseNote->user_id)
+            ->first();
+
+        $verified = verifyCompany($user);
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
+
         //retrieve employee details even if employee has been deleted since making the case note
         //details required are in the User table
         $employee = App\User::withTrashed()
@@ -721,6 +781,18 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::put("/casenote/{id}/edit", function (Request $request, $id) {
         $casenote = CaseNote::find($id);
+
+        //verify company
+        $user = User::withTrashed()
+            ->where('id', '=', $casenote->user_id)
+            ->first();
+
+        $verified = verifyCompany($user);
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
 
         if ($request->has('title')) {
             $casenote->title = $request->input('title');
@@ -741,14 +813,21 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //delete case note via console
-    //TODO?? need to soft delete from:
-    //case_notes table
-    //report_case_notes table
-
     Route::delete('/casenote/{id}', function ($id) {
 
-        //report_case_notes table
-//        ReportCaseNote::where('case_note_id', $id)->delete();
+        $casenote = CaseNote::find($id);
+
+        //verify company
+        $user = User::withTrashed()
+            ->where('id', '=', $casenote->user_id)
+            ->first();
+
+        $verified = verifyCompany($user);
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
 
         //case_notes table
         $deleted = CaseNote::find($id)->delete();
@@ -795,8 +874,6 @@ Route::group(['middleware' => 'auth:api'], function () {
     //soft delete a report and relevant tables by report_id
     Route::delete('/reports/{id}', function ($id) {
         try {
-            //soft delete from reports table and report_cases and report_case_notes tables
-
             //find report item
             $report = Report::find($id);
 
@@ -881,7 +958,6 @@ Route::group(['middleware' => 'auth:api'], function () {
                 ->select('case_notes.*', 'report_case_notes.report_case_id')
                 ->orderBy('case_notes.created_at', 'desc')
                 ->get();
-
 
             $caseUsers = $reportCaseNotes->pluck('user_id');
 
@@ -1187,10 +1263,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         ]);
     });
 
-
-    //    /**
-//     * Location
-//     */
+    /**
+    * Location
+     */
 
     Route::get("/locations/list/{compId}", function ($compId) {
 
@@ -1250,6 +1325,20 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::put("/locations/{id}/edit", function (Request $request, $id) {
         $location = App\Location::find($id);
+
+        //verify company first
+        $verified = verifyCompany(
+            $location,
+            'locations',
+            'location_companies',
+            'locations.id',
+            'location_companies.location_id'
+        );
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
 
         if ($request->has('name')) {
             $location->name = $request->input('name');
@@ -1485,59 +1574,11 @@ Route::group(['middleware' => 'auth:api'], function () {
         ]);
 
     });
-//
-//        //use posId to get the latitude and the longitude of the geoLocation
-//        //and compare with the location of the shiftCheck to determine if withinRange
-//        $posId = $request->input('posId');
-//        $locId = $request->input('locId');
-//
-//        //gets the geoLongitude, geoLatitude for the current_user_location_id
-//        $currLocData = getGeoData($posId);
-//
-//        $geoLat = $currLocData->get('lat');
-//        $geoLong = $currLocData->get('long');
-//
-//        $locData = app('App\Http\Controllers\LocationController')->getLocationData($locId);
-//
-//        $locLat = $locData->latitude;
-//        $locLong = $locData->longitude;
-//
-//        $withinRange = app('App\Http\Controllers\LocationController')->withinRangeApi($geoLat, $geoLong, $locLat, $locLong);
-//
-//        $shift = new ShiftCheck;
-//
-//        //$shift->check_ins will take the default current_timestamp
-//        $shift->shift_id = $request->input('shiftId');
-//        $shift->user_loc_check_in_id = $posId;
-//        $shift->location_id = $locId;//note: ts is in UTC time
-//        $shift->checks = $request->input('checks');
-//        $shift->within_range_check_in = $withinRange;
-//        $shift->save();
-//
-//        $createdAt = $shift->created_at;
-//
-//        //retrieve id of the saved shift
-//        $id = $shift->id;
-
-
 
     //called to log the shift check out
     Route::put('/shift/checkouts', function (Request $request) {
 
         $id = app('App\Http\Controllers\JobsController')->storeCheckOut($request);
-
-//
-//        //retrieve current shift's record for update
-//        //using shift_id and location_id where check_outs null
-//
-//
-//        $checkId = $request->input('shiftChecksId');
-//        $check = ShiftCheck::find($checkId);
-//
-//        $checkOut = Carbon::now();
-//
-//        $check->user_loc_check_out_id = $request->input('posId');
-//        $check->check_outs = $checkOut;
 
         if ($id == 'success') {
             return response()->json([

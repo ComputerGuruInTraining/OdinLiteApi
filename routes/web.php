@@ -252,58 +252,6 @@ Route::get('/storage/app/public/{file}', function ($file) {
 
 /*Test Routes*/
 
-//Route::get('/locations/{id}/test', function ($id) {
-//
-//    $location = App\Location::find($id);
-//
-//    $verified = verifyCompany(
-//        $location,
-//        'locations',
-//        'location_companies',
-//        'locations.id',
-//        'location_companies.location_id'
-//    );
-//
-//    if(!$verified){
-//
-//        return response()->json($verified);//value = false
-//    }
-//
-//
-////    //Assigned_shift_locations table
-////    AssignedLoc::where('location_id', $id)->delete();
-////
-////    //Location_Companies table
-////    LocationCo::where('location_id', $id)->delete();
-////
-////    //locations table
-////    $location->delete();
-////
-////    AssignedLoc::where('location_id', $id)->delete();
-////
-////    //for current_user_locations, if a location is deleted, make the location_id 0 for the deleted location
-////    $positions = Position::where('location_id', $id)->get();
-////
-////    foreach ($positions as $position) {
-////        $position->location_id = 0;
-////        $position->save();
-////    }
-////
-////    //for report_cases, if a location is deleted, make the location_id 0 for the deleted location
-////    $reportCases = ReportCase::where('location_id', $id)->get();
-////
-////    foreach ($reportCases as $reportCase) {
-////        $reportCase->location_id = 0;
-////        $reportCase->save();
-////
-////    }
-////
-////    //TODO: ensure record destroyed before returning success true
-////    return response()->json([
-////        'success' => true
-////    ]);
-//});
-
 
 //Route::get("/assignedshifts/{id}/edit/test", function ($id) {
 //

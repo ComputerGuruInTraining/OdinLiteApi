@@ -11,22 +11,7 @@
                     You are logged in!
                 </div>
 
-
-                {{--<a href="/locations//test">Verify location delete</a>--}}
-
-
                 {{--<a href="/locations/914/edit/test">Verify location</a>--}}
-
-
-                {{--<a href="/report/1284/test">Verify Report</a>--}}
-
-
-                {{--<a href="/testPostReportLocation">testPostReportLocation</a>--}}
-
-                {{--<a href="/error-logging/test">test webhooks</a>--}}
-
-                {{--<a href="/dynamic-notification/test/1374">test Notifications</a>--}}
-
 
             </div>
         </div>
