@@ -226,5 +226,45 @@ if (!function_exists('currentYear')) {
     }
 }
 
+//Usage: when model either has a company_id
+// or need to go via another table to get company_id (if can use the $model->id in the where clause)
+//Purpose: ensure the current user belongs to the same company of the model/object
+// that the route returns to the user
+//returns true, false or null
+if (!function_exists('verifyCompany')) {
+
+    function verifyCompany($model, $table1 = null, $table2 = null, $table1col = null, $table2col = null)
+    {
+        //if empty model ie {}, $model instance == null
+        if($model == null) {
+            return "empty";
+        }
+
+        $user = Auth::user();
+
+        //need to check the user's company
+        if ($user->company_id == $model->company_id) {
+            return true;
+        }
+
+        //model doesn't have a company_id property and must go via another table
+        if($model->company_id == null){
+
+            $record = DB::table($table1)
+                ->join($table2, $table1col, '=', $table2col)
+                ->where($table1col, '=', $model->id)
+                ->first();
+
+            if ($user->company_id == $record->company_id) {
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
+
 
 

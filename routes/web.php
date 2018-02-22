@@ -253,6 +253,121 @@ Route::get('/storage/app/public/{file}', function ($file) {
 /*Test Routes*/
 
 
+//Route::get("/assignedshifts/{id}/edit/test", function ($id) {
+//
+//    //verify company first
+//    $assignedObject = App\AssignedShift::find($id);
+//
+//    $verified = verifyCompany($assignedObject);
+//
+//    if(!$verified){
+//
+//        return response()->json($verified);//value = false
+//    }
+//
+//
+//    //if verified as being the same company, or if no record is returned from the query ie $assigned = {}
+//    $assigned = DB::table('assigned_shifts')
+//        ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
+//        ->join('assigned_shift_locations', 'assigned_shift_locations.assigned_shift_id', '=', 'assigned_shifts.id')
+//        ->where('assigned_shifts.id', '=', $id)
+//        ->where('assigned_shift_locations.deleted_at', '=', null)
+//        ->where('assigned_shift_employees.deleted_at', '=', null)
+//        ->orderBy('start', 'asc')
+//        ->orderBy('assigned_shift_locations.location_id')
+//        ->get();
+//
+//
+//    foreach ($assigned as $i => $details) {
+//        $emp = App\User::find($assigned[$i]->mobile_user_id);
+//
+//        //ensure the assigned_shift_employee record exists in the users table
+//        if ($emp != null) {
+//            $first_name = $emp->first_name;
+//            $last_name = $emp->last_name;
+//            $name = $first_name . ' ' . $last_name;
+//        } //mobile_user_id does not exist in locations table
+//        else {
+//            $name = "Employee not in database";
+//        }
+//        //store location name in the object
+//        $assigned[$i]->employee = $name;
+//    }
+//
+//    foreach ($assigned as $i => $item) {
+//
+//        //find the location_id name if a location exists for that id in the locations table
+//        $location = App\Location::find($assigned[$i]->location_id);
+//
+//        if ($location != null) {
+//            $name = $location->name;
+//        } //location_id does not exist in locations table
+//        else {
+//            $name = "Location not in database";
+//            $assigned[$i]->checks = 0;
+//        }
+//        //store location name in the object
+//        $assigned[$i]->location = $name;
+//    }
+//
+//    return response()->json($assigned);
+//});
+
+
+//get currently authorized user
+//retrieve an assigned shift
+//Route::get("/assignedshift/{id}/test", function ($id) {
+//
+//    $assigned = App\AssignedShift::find($id);
+//
+//    $verified = verifyCompany($assigned);
+//
+//    if(!$verified){
+//
+//        return response()->json($verified);//value = false
+//    }
+//
+//    //if verified as being the same company, or if no record is returned from the query ie $assigned = {}
+//
+//    return response()->json($assigned);
+//
+//});
+//
+////edit
+//Route::get("/locations/{id}/edit/test", function ($id) {
+//
+//    $location = App\Location::find($id);
+//
+//    $verified = verifyCompany(
+//        $location,
+//        'locations',
+//        'location_companies',
+//        'locations.id',
+//        'location_companies.location_id'
+//    );
+//
+//    if(!$verified){
+//
+//        return response()->json($verified);//value = false
+//    }
+//
+//    //if verified as being the same company, or if no record is returned from the query ie $assigned = {}
+//    return response()->json($location);
+//});
+//
+//Route::get("/report/{id}/test", function ($id) {
+//
+//    $report = App\Report::find($id);
+//
+//    $verified = verifyCompany($report);
+//
+//    if(!$verified){
+//
+//        return response()->json($verified);//value = false
+//    }
+//
+//    return response()->json($report);
+//});
 
 //Route::get("/webhooks", function () {
 //
