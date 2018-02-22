@@ -870,7 +870,6 @@ Route::group(['middleware' => 'auth:api'], function () {
     //insert a report of type = "Individual"
     Route::post("/reports/individual/{userId}", 'ReportApiController@postIndividual');
 
-
     //soft delete a report and relevant tables by report_id
     Route::delete('/reports/{id}', function ($id) {
         try {
