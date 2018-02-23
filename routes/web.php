@@ -257,7 +257,6 @@ Route::post("/error-logging", function (Request $request) {
 
     $appErrors->save();
 
-    //event to notify Odin admin that a new company has registered
     event(new EmailDropped($appErrors));
 
     return response()->json(['message' => 'post successful']);
@@ -271,6 +270,28 @@ Route::get('/storage/app/public/{file}', function ($file) {
     return response()->download($url);
 
 });
+
+//Route::get('/test/webhook/event', function () {
+//
+//    $appErrors = new AppErrors;
+//
+//    //required fields
+//    $appErrors->event = 'testing the event';
+//    $appErrors->recipient = 'email@whatever.com';
+//
+//    //nullable field
+////    if($request->has('description')) {
+//
+//        $appErrors->description = 'none';
+////    }
+//
+//    $appErrors->save();
+//
+//    event(new EmailDropped($appErrors));
+//
+//    return response()->json(['message' => 'post successful']);
+//
+//});
 
 
 

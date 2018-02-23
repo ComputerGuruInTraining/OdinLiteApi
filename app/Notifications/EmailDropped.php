@@ -6,12 +6,17 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use App\User as User;
+use App\Company as Company;
 
 class EmailDropped extends Notification
 {
     use Queueable;
 
     public $appErrors;
+    public $company;
+    public $user;
+    public $primaryContact;
 
     /**
      * Create a new notification instance.
@@ -22,9 +27,20 @@ class EmailDropped extends Notification
     {
         $this->appErrors = $appErrors;
 
-        //todo: use email to find company_id from users table and retrieve primary_contact
-        //todo: perhaps also send throught the name of the company Yes.
-//        $this->contact = User::find($this->comp->primary_contact);
+        $this->user = User::withTrashed()
+            ->where('email', '=', $appErrors->recipient)
+            ->select('id', 'first_name', 'last_name')
+            ->first();//could be null
+
+        if($this->user != null) {
+            $this->company = Company::where('id', '=', $this->user->company_id)->select('name', 'primary_contact')->first();
+
+            if($this->company != null) {
+                $this->primaryContact = User::withTrashed()
+                    ->where('id', '=', $this->company->primary_contact)
+                    ->select('first_name', 'last_name')->first();
+            }
+        }
     }
 
     /**
@@ -46,12 +62,39 @@ class EmailDropped extends Notification
      */
     public function toMail($notifiable)
     {
-        return (new MailMessage)
-            ->subject('Notification: auto-generated email to user dropped')
-            ->greeting('Uh Oh!')
-            ->line('An email did not arrive at the intended recipient:')
-//            ->line('An email did not arrive at the intended recipient:')
-            ->line('Please follow up on this issue!');
+        if(($this->user != null)&&($this->primaryContact != null)&&($this->company != null)) {
+            if ($this->appErrors->description != null) {
+                return (new MailMessage)
+                    ->subject('Notification: auto-generated email to user dropped')
+                    ->greeting('Uh Oh!')
+                    ->line('An email did not arrive at the intended recipient:')
+                    ->line('Subject of Email: ' . $this->appErrors->description)
+                    ->line('Recipient: ' . $this->user->first_name . ' ' . $this->user->last_name)
+                    ->line('Email address of recipient: ' . $this->appErrors->recipient)
+                    ->line('Company of Recipient: ' . $this->company->name)
+                    ->line('Company Contact: ' . $this->primaryContact->first_name . ' ' . $this->primaryContact->last_name)
+                    ->line('Please follow up on this issue!');
+            } else {
+                return (new MailMessage)
+                    ->subject('Notification: auto-generated email to user dropped')
+                    ->greeting('Uh Oh!')
+                    ->line('An email did not arrive at the intended recipient:')
+                    ->line('Recipient: ' . $this->user->first_name . ' ' . $this->user->last_name)
+                    ->line('Email address of recipient: ' . $this->appErrors->recipient)
+                    ->line('Company of Recipient: ' . $this->company->name)
+                    ->line('Company Contact: ' . $this->primaryContact->first_name . ' ' . $this->primaryContact->last_name)
+                    ->line('Please follow up on this issue!');
+            }
+        }else{
+            return (new MailMessage)
+                ->subject('Notification: auto-generated email to user dropped')
+                ->greeting('Uh Oh!')
+                ->line('An email did not arrive at the intended recipient:')
+                ->line('Email address of recipient: ' . $this->appErrors->recipient)
+                ->line('Unfortunately, we were unable to match the email address to a user.')
+                ->line('Please follow up on this issue!');
+
+        }
     }
 
     /**
