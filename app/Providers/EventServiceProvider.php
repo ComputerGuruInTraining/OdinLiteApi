@@ -21,6 +21,9 @@ class EventServiceProvider extends ServiceProvider
         'App\Events\CompanyRegistered' => [
             'App\Listeners\SendCompanyRegisteredNotification',
         ],
+        'App\Events\EmailDropped' => [
+            'App\Listeners\SendEmailDroppedNotification',
+        ],
     ];
 
     /**
