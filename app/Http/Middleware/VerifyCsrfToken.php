@@ -15,6 +15,7 @@ class VerifyCsrfToken extends BaseVerifier
         '/user/new/pw',
         '/company',
         '/upload',
-        '/dashboard/{compId}/current-positions'
+        '/dashboard/{compId}/current-positions',
+        '/error-logging'
     ];
 }
