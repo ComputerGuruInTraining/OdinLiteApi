@@ -11,7 +11,7 @@
                     You are logged in!
                 </div>
 
-                {{--<a href="/locations/914/edit/test">Verify location</a>--}}
+                {{--<a href="/error-logging/test">Error Log</a>--}}
 
             </div>
         </div>

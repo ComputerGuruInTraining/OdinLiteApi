@@ -236,6 +236,27 @@ Route::get('/download-photo/{filename}', function ($filename) {
 
 });
 
+//WIP
+//possibly problem is not logged in as an authorised user.
+Route::post("/error-logging", function (Request $request) {
+
+    $event = $request->input('event');
+
+    $recipient = $request->input('recipient');
+
+    $description = $request->input('description');
+
+    $appErrors = new AppErrors;
+
+    $appErrors->event = $event;
+    $appErrors->recipient = $recipient;
+    $appErrors->description = $description;
+
+    $appErrors->save();
+
+    return response()->json(['message' => 'post successful']);
+});
+
 //archived??? used when azure uploads were stored directly to server
 Route::get('/storage/app/public/{file}', function ($file) {
 
@@ -383,25 +404,7 @@ Route::get('/storage/app/public/{file}', function ($file) {
 //actions might not be so necessary if a subsequent event will action the item and archive it, say.
 
 
-//possibly problem is not logged in as an authorised user.
-//Route::post("/error-logging", function (Request $request) {
-//
-//    $event = $request->input('event');
-//
-//    $recipient = $request->input('recipient');
-//
-//    $description = $request->input('description');
-//
-//    $appErrors = new AppErrors;
-//
-//    $appErrors->event = $event;
-//    $appErrors->recipient = $recipient;
-//    $appErrors->description = $description;
-//
-//    $appErrors->save();
-//
-//    return response()->json(['message' => 'post successful']);
-//});
+
 
 //Route::get("/error-logging/test", function () {
 //
@@ -418,8 +421,6 @@ Route::get('/storage/app/public/{file}', function ($file) {
 //    $appErrors->description = $description;
 //
 //    $appErrors->save();
-//
-//    dd('post successful');
 //
 //    return response()->json(['message' => 'post successful']);
 //});
