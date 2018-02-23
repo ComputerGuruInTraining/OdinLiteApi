@@ -14,8 +14,6 @@ class CreateOdinErrorLoggingsTable extends Migration
     public function up()
     {
         Schema::create('odin_error_loggings', function (Blueprint $table) {
-
-
             //we will need the recipient and then perhaps find the recipient email address in the users table
             //and extract the user_id and insert this (in case the email changes or whatnot, we still know which user it relates to)
             //other than that, simply details related to the log

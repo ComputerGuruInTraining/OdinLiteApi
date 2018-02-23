@@ -240,19 +240,22 @@ Route::get('/download-photo/{filename}', function ($filename) {
 //possibly problem is not logged in as an authorised user.
 Route::post("/error-logging", function (Request $request) {
 
-    $event = $request->input('event');
-
-    $recipient = $request->input('recipient');
-
-    $description = $request->input('description');
-
     $appErrors = new AppErrors;
 
-    $appErrors->event = $event;
-    $appErrors->recipient = $recipient;
-    $appErrors->description = $description;
+    //required fields
+    $appErrors->event = $request->input('event');
+    $appErrors->recipient = $request->input('recipient');
+
+    //nullable field
+    if($request->has('description')) {
+
+        $appErrors->description = $request->input('description');
+    }
 
     $appErrors->save();
+
+    //event to notify Odin admin that a new company has registered
+    event(new EmailDropped($appErrors));
 
     return response()->json(['message' => 'post successful']);
 });
@@ -265,9 +268,6 @@ Route::get('/storage/app/public/{file}', function ($file) {
     return response()->download($url);
 
 });
-
-
-
 
 
 
