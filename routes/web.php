@@ -22,7 +22,10 @@ use Carbon\Carbon;
 use App\Notifications\RegisterCompany;
 use App\Events\CompanyRegistered;
 
+/*webhooks post and event*/
+use App\Events\EmailDropped;
 use App\OdinErrorLogging as AppErrors;
+
 
 Route::get('/', function () {
     return view('welcome');

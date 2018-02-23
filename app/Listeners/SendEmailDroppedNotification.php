@@ -6,6 +6,11 @@ use App\Events\EmailDropped;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
+/*notification imports*/
+use App\Recipients\DynamicRecipient;
+use App\Notifications\EmailDropped as EmailAlert;
+use Config;
+
 class SendEmailDroppedNotification
 {
     /**
@@ -29,6 +34,6 @@ class SendEmailDroppedNotification
         $appErrors = $event->appErrors;
 
         $odinTeam = new DynamicRecipient(Config::get('constants.COMPANY_EMAIL2'));
-        $odinTeam->notify(new EmailDropped($appErrors));
+        $odinTeam->notify(new EmailAlert($appErrors));
     }
 }
