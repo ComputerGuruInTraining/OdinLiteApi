@@ -187,6 +187,10 @@ return [
         /*Azure Storage*/
         Matthewbdaly\LaravelAzureStorage\AzureStorageServiceProvider::class,
 
+        /*Intervention Images;
+        Usage: resize uploaded images to thumbnails*/
+        Intervention\Image\ImageServiceProvider::class,
+
     ],
 
     /*
@@ -239,6 +243,7 @@ return [
 
         'Passport' => Laravel\Passport\Passport::class,
 
+        'Image' => Intervention\Image\Facades\Image::class,
 
     ],
 

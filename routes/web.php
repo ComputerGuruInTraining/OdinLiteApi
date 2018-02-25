@@ -17,6 +17,7 @@ use App\Notifications\NewMobileUser;
 use Illuminate\Support\Facades\Storage;
 use MicrosoftAzure\Storage\Common\ServicesBuilder;
 use Carbon\Carbon;
+Use Image;
 
 /*Notify odin primary email that new company registered*/
 use App\Notifications\RegisterCompany;
@@ -156,6 +157,12 @@ Route::post('/upload', function (Request $request) {
             if($exists != true) {
 
                 $path = $request->file('file')->storeAs('/', $filename);
+
+                $thumb = Image::make($request->file('file'))->resize(300, 200);
+
+                $thumbPath = $thumb->storeAs('/', 'thumb'.$filename);
+
+
             }else{
                 $path = 'file already exists';
             }
@@ -239,8 +246,7 @@ Route::get('/download-photo/{filename}', function ($filename) {
 
 });
 
-//WIP
-//possibly problem is not logged in as an authorised user.
+//CSRF_Token excluded route
 Route::post("/error-logging", function (Request $request) {
 
     $appErrors = new AppErrors;
