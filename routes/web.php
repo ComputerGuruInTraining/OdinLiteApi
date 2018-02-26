@@ -305,19 +305,25 @@ Route::get('/storage/app/public/{file}', function ($file) {
 
 //Route::get("/thumb/test", function () {
 //
-////    $path = public_path("images/ODIN-LogoTest.png");
-////    dd($path);
+//    $filename = '125.png';
 //
-//    //make a thumbnail and store in azure storage
-//    $img = resizeToThumb(public_path("images/ODIN-LogoTest.png"));
+//    $img = resizeToThumb(public_path("images/Screen Shot 2018-02-08 at 1.11.35 pm.png"));
 //
-//    Storage::put('/test2.png', (string) $img->encode());
+//    Storage::put('thumb2'.$filename, (string) $img->encode());
 //
-//
-////    dd($thumb);
-//
-////    $thumbPath = $thumb->storeAs('/', 'thumbtestthis.png');
-//
+//////    $path = public_path("images/ODIN-LogoTest.png");
+//////    dd($path);
+////
+////    //make a thumbnail and store in azure storage
+////    $img = resizeToThumb(public_path("images/ODIN-LogoTest.png"));
+////
+////    Storage::put('/test2.png', (string) $img->encode());
+////
+////
+//////    dd($thumb);
+////
+//////    $thumbPath = $thumb->storeAs('/', 'thumbtestthis.png');
+////
 //    dd('true');
 //});
 

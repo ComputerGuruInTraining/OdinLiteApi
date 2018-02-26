@@ -272,7 +272,9 @@ if (!function_exists('resizeToThumb')) {
         $img = Image::make($file);
 
         // resize image
-        $img->resize(150, 150);
+        $img->resize(250, 250, function ($constraint) {
+            $constraint->aspectRatio();
+        });
 
         return $img;
     }

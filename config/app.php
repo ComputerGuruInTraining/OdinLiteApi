@@ -38,7 +38,9 @@ return [
     |
     */
 
+//    'debug' => env('APP_DEBUG', true),
     'debug' => env('APP_DEBUG', false),
+
 
     /*
     |--------------------------------------------------------------------------
@@ -51,8 +53,8 @@ return [
     |
     */
 
-//    'url' => env('APP_URL', 'https://odinliteapi.azurewebsites.net'),
-    'url' => env('APP_URL', 'https://odinliteapitest.azurewebsites.net'),
+    'url' => env('APP_URL', 'https://odinliteapi.azurewebsites.net'),
+//    'url' => env('APP_URL', 'https://odinliteapitest.azurewebsites.net'),
 
 
     /*
