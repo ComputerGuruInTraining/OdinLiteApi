@@ -11,7 +11,7 @@
                     You are logged in!
                 </div>
 
-                <a href="/test/webhook/event">Event Test</a>
+                {{--<a href="/thumb/test">Thumb Test</a>--}}
 
             </div>
         </div>
