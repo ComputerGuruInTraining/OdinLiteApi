@@ -280,6 +280,22 @@ if (!function_exists('resizeToThumb')) {
     }
 }
 
+//Purpose: change email to include the words "OdinDeleted" before soft deleting the user.
+//this allows the user to be readded by the company should they wish
+// and ensures the user cannot login once deleted
+if (!function_exists('markEmailAsDeleted')) {
+
+    function markEmailAsDeleted($user)
+    {
+
+        $email = $user->email;
+
+        $user->email = ($email.'.OdinDeleted');
+
+        $user->save();
+    }
+}
+
 
 
 
