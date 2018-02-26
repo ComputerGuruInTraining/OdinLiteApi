@@ -11,7 +11,7 @@
                     You are logged in!
                 </div>
 
-                {{--<a href="/thumb/test">Thumb Test</a>--}}
+                {{--<a href="/markdeleted/test/1734">Mark as Deleted User Test</a>--}}
 
             </div>
         </div>

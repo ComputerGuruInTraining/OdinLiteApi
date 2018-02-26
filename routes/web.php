@@ -281,6 +281,15 @@ Route::get('/storage/app/public/{file}', function ($file) {
 
 /*Test Routes*/
 
+//Route::get("/markdeleted/test/{id}", function ($id) {
+//
+//    $user = App\User::find($id);
+//
+//    markEmailAsDeleted($user);
+//
+//    dd($user->email);
+//});
+
 //Route::get('/test/webhook/event', function () {
 //
 //    $appErrors = new AppErrors;

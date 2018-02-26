@@ -233,10 +233,12 @@ Route::group(['middleware' => 'auth:api'], function () {
             return response()->json($verified);//value = false
         }
 
+        //change email to include the words "OdinDeleted" before soft deleting the user.
+        markEmailAsDeleted($user);
+
         User::where('id', $id)->delete();
 
         Role::where('user_id', $id)->delete();
-
 
         return response()->json([
             'success' => true
@@ -519,6 +521,9 @@ Route::group(['middleware' => 'auth:api'], function () {
 
             return response()->json($verified);//value = false
         }
+
+        //change email to include the words "OdinDeleted" before soft deleting the user.
+        markEmailAsDeleted($user);
 
         $user = User::where('id', $id)->delete();
 
