@@ -61,6 +61,7 @@ return [
             'region' => 'your-region',
             'bucket' => 'your-bucket',
         ],
+
         'azure' => [
             'driver'    => 'azure',
             'name'      => 'odinlitestorage',

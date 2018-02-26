@@ -265,6 +265,19 @@ if (!function_exists('verifyCompany')) {
     }
 }
 
+if (!function_exists('resizeToThumb')) {
+
+    function resizeToThumb($file)
+    {
+        $img = Image::make($file);
+
+        // resize image
+        $img->resize(150, 150);
+
+        return $img;
+    }
+}
+
 
 
 

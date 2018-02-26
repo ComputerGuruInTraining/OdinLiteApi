@@ -17,7 +17,6 @@ use App\Notifications\NewMobileUser;
 use Illuminate\Support\Facades\Storage;
 use MicrosoftAzure\Storage\Common\ServicesBuilder;
 use Carbon\Carbon;
-Use Image;
 
 /*Notify odin primary email that new company registered*/
 use App\Notifications\RegisterCompany;
@@ -26,7 +25,6 @@ use App\Events\CompanyRegistered;
 /*webhooks post and event*/
 use App\Events\EmailDropped;
 use App\OdinErrorLogging as AppErrors;
-
 
 Route::get('/', function () {
     return view('welcome');
@@ -156,12 +154,14 @@ Route::post('/upload', function (Request $request) {
 
             if($exists != true) {
 
-                $path = $request->file('file')->storeAs('/', $filename);
+                $file = $request->file('file');
 
-                $thumb = Image::make($request->file('file'))->resize(300, 200);
+                $path = $file->storeAs('/', $filename);
 
-                $thumbPath = $thumb->storeAs('/', 'thumb'.$filename);
+                //make a thumbnail and store in azure storage
+                $img = resizeToThumb($file);
 
+                Storage::put('thumb'.$filename, (string) $img->encode());
 
             }else{
                 $path = 'file already exists';
@@ -219,6 +219,7 @@ Route::get('/download-photo/{filename}', function ($filename) {
     $exists = Storage::disk('azure')->exists($filename);
 
     if($exists) {
+
         $accountName = config('filesystems.disks.azure.name');
         $container = config('filesystems.disks.azure.container');
         $permissions = 'r';
@@ -277,6 +278,9 @@ Route::get('/storage/app/public/{file}', function ($file) {
 
 });
 
+
+/*Test Routes*/
+
 //Route::get('/test/webhook/event', function () {
 //
 //    $appErrors = new AppErrors;
@@ -299,10 +303,23 @@ Route::get('/storage/app/public/{file}', function ($file) {
 //
 //});
 
-
-
-/*Test Routes*/
-
+//Route::get("/thumb/test", function () {
+//
+////    $path = public_path("images/ODIN-LogoTest.png");
+////    dd($path);
+//
+//    //make a thumbnail and store in azure storage
+//    $img = resizeToThumb(public_path("images/ODIN-LogoTest.png"));
+//
+//    Storage::put('/test2.png', (string) $img->encode());
+//
+//
+////    dd($thumb);
+//
+////    $thumbPath = $thumb->storeAs('/', 'thumbtestthis.png');
+//
+//    dd('true');
+//});
 
 //Route::get("/assignedshifts/{id}/edit/test", function ($id) {
 //
