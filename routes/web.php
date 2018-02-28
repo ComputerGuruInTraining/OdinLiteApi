@@ -125,6 +125,12 @@ Route::post('/company', function (Request $request) {
         //event to notify Odin admin that a new company has registered
         event(new CompanyRegistered($comp));
 
+        //add primary contact to active campaign contacts and add the trial tag to contact
+        $tag1 = Config::get('constants.TRIAL_TAG');
+
+        addUpdateContactActiveCampaign($newuser, $tag1, $comp, 'New Company Registration',
+            'Attempted to add contact with tag: '.$tag1);
+
         return response()->json([
             'success' => $newuser,
             'checkEmail' => $checkEmail,
@@ -238,7 +244,8 @@ Route::get('/download-photo/{filename}', function ($filename) {
         $signature = getSASForBlob($accountName, $container, $filename, $permissions,
             $start, $expiry, $version, $contentType, $key);
 
-        $url = getBlobUrl($accountName, $container, $filename, $permissions, $resourceType, $start, $expiry, $version, $contentType, $signature);
+        $url = getBlobUrl($accountName, $container, $filename, $permissions, $resourceType, $start,
+            $expiry, $version, $contentType, $signature);
 
         return response()->json($url);
     }else{
@@ -278,348 +285,61 @@ Route::get('/storage/app/public/{file}', function ($file) {
 
 });
 
+//
+///active/test/1374/404
+Route::get("/active/test/{id}/{compId}", function ($id, $compId) {
+    $tag1 = Config::get('constants.TRIAL_TAG');
+
+    $newuser = App\User::find($id);
+
+    $comp = App\Company::find($compId);
+    $comp->name = 'Testing Active Campaign';
+    $comp->save();
+
+    $tagUpperCase = ucwords($tag1);
+
+    addUpdateContactActiveCampaign($newuser, $tag1, $comp, 'New Company Registration',
+        'Attempted to add contact with tag: '.$tagUpperCase, 'Succeeded in adding contact with tag: '.$tagUpperCase);
+
+});
+
+Route::get("/active/test/start-paid-subscription", function () {
+
+    $user = App\User::find(1374);
+
+    $comp = App\Company::find(404);
+
+    $removeTag = Config::get('constants.TRIAL_TAG');
+
+    $removeTagUpperCase = ucwords($removeTag);
+
+    removeTag($user, $removeTag, $comp, 'Start of Paid Subscription',
+        'Attempted to remove tag: '. $removeTagUpperCase,
+        'Succeeded in removing tag: '.$removeTagUpperCase);
+
+    $addTag = Config::get('constants.PAID_CUSTOMER_TAG');
+
+    $addTagUpperCase = ucwords($addTag);
+
+    addTag($user, $addTag, $comp, 'Start of Paid Subscription',
+        'Attempted to add tag: '. $addTagUpperCase,
+        'Succeeded in adding tag: '.$addTagUpperCase
+    );
+
+});
 
 /*Test Routes*/
+//todo: remove by end of March
+Route::get("/test/runtimes", function(){
 
-//Route::get("/markdeleted/test/{id}", function ($id) {
-//
-//    $user = App\User::find($id);
-//
-//    markEmailAsDeleted($user);
-//
-//    dd($user->email);
-//});
+    $ds = time();
 
-//Route::get('/test/webhook/event', function () {
-//
-//    $appErrors = new AppErrors;
-//
-//    //required fields
-//    $appErrors->event = 'testing the event';
-//    $appErrors->recipient = 'email@whatever.com';
-//
-//    //nullable field
-////    if($request->has('description')) {
-//
-//        $appErrors->description = 'none';
-////    }
-//
-//    $appErrors->save();
-//
-//    event(new EmailDropped($appErrors));
-//
-//    return response()->json(['message' => 'post successful']);
-//
-//});
+    $result = app('App\Http\Controllers\JobsController')->getAssignedShiftsList(404);
 
-//Route::get("/thumb/test", function () {
-//
-//    $filename = '125.png';
-//
-//    $img = resizeToThumb(public_path("images/Screen Shot 2018-02-08 at 1.11.35 pm.png"));
-//
-//    Storage::put('thumb2'.$filename, (string) $img->encode());
-//
-//////    $path = public_path("images/ODIN-LogoTest.png");
-//////    dd($path);
-////
-////    //make a thumbnail and store in azure storage
-////    $img = resizeToThumb(public_path("images/ODIN-LogoTest.png"));
-////
-////    Storage::put('/test2.png', (string) $img->encode());
-////
-////
-//////    dd($thumb);
-////
-//////    $thumbPath = $thumb->storeAs('/', 'thumbtestthis.png');
-////
-//    dd('true');
-//});
+    $de = time();
 
-//Route::get("/assignedshifts/{id}/edit/test", function ($id) {
-//
-//    //verify company first
-//    $assignedObject = App\AssignedShift::find($id);
-//
-//    $verified = verifyCompany($assignedObject);
-//
-//    if(!$verified){
-//
-//        return response()->json($verified);//value = false
-//    }
-//
-//
-//    //if verified as being the same company, or if no record is returned from the query ie $assigned = {}
-//    $assigned = DB::table('assigned_shifts')
-//        ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
-//        ->join('assigned_shift_locations', 'assigned_shift_locations.assigned_shift_id', '=', 'assigned_shifts.id')
-//        ->where('assigned_shifts.id', '=', $id)
-//        ->where('assigned_shift_locations.deleted_at', '=', null)
-//        ->where('assigned_shift_employees.deleted_at', '=', null)
-//        ->orderBy('start', 'asc')
-//        ->orderBy('assigned_shift_locations.location_id')
-//        ->get();
-//
-//
-//    foreach ($assigned as $i => $details) {
-//        $emp = App\User::find($assigned[$i]->mobile_user_id);
-//
-//        //ensure the assigned_shift_employee record exists in the users table
-//        if ($emp != null) {
-//            $first_name = $emp->first_name;
-//            $last_name = $emp->last_name;
-//            $name = $first_name . ' ' . $last_name;
-//        } //mobile_user_id does not exist in locations table
-//        else {
-//            $name = "Employee not in database";
-//        }
-//        //store location name in the object
-//        $assigned[$i]->employee = $name;
-//    }
-//
-//    foreach ($assigned as $i => $item) {
-//
-//        //find the location_id name if a location exists for that id in the locations table
-//        $location = App\Location::find($assigned[$i]->location_id);
-//
-//        if ($location != null) {
-//            $name = $location->name;
-//        } //location_id does not exist in locations table
-//        else {
-//            $name = "Location not in database";
-//            $assigned[$i]->checks = 0;
-//        }
-//        //store location name in the object
-//        $assigned[$i]->location = $name;
-//    }
-//
-//    return response()->json($assigned);
-//});
+    $diff = $ds - $de;
 
+    dd($diff);
 
-//get currently authorized user
-//retrieve an assigned shift
-//Route::get("/assignedshift/{id}/test", function ($id) {
-//
-//    $assigned = App\AssignedShift::find($id);
-//
-//    $verified = verifyCompany($assigned);
-//
-//    if(!$verified){
-//
-//        return response()->json($verified);//value = false
-//    }
-//
-//    //if verified as being the same company, or if no record is returned from the query ie $assigned = {}
-//
-//    return response()->json($assigned);
-//
-//});
-//
-////edit
-//Route::get("/locations/{id}/edit/test", function ($id) {
-//
-//    $location = App\Location::find($id);
-//
-//    $verified = verifyCompany(
-//        $location,
-//        'locations',
-//        'location_companies',
-//        'locations.id',
-//        'location_companies.location_id'
-//    );
-//
-//    if(!$verified){
-//
-//        return response()->json($verified);//value = false
-//    }
-//
-//    //if verified as being the same company, or if no record is returned from the query ie $assigned = {}
-//    return response()->json($location);
-//});
-//
-//Route::get("/report/{id}/test", function ($id) {
-//
-//    $report = App\Report::find($id);
-//
-//    $verified = verifyCompany($report);
-//
-//    if(!$verified){
-//
-//        return response()->json($verified);//value = false
-//    }
-//
-//    return response()->json($report);
-//});
-
-//Route::get("/webhooks", function () {
-//
-//    dd(session('event'));
-//
-//    return view('webhooks');
-//});
-
-//so have a route in the console which calls the post which stores the data in the db (if we need the data stored in the db??)
-//I started thinking perhaps not so necessary. we really just need the event/nofitication however this relies on the recipient
-//of the alert but so would any list on a page etc. I think a list on a page as well as a notification, and then actions against the logs.
-//also great to view them all at once.
-//actions might not be so necessary if a subsequent event will action the item and archive it, say.
-
-
-
-
-//Route::get("/error-logging/test", function () {
-//
-//    $event = 'test event';
-//
-//    $recipient = 'test@test.com.test';
-//
-//    $description = 'test description';
-//
-//    $appErrors = new AppErrors;
-//
-//    $appErrors->event = $event;
-//    $appErrors->recipient = $recipient;
-//    $appErrors->description = $description;
-//
-//    $appErrors->save();
-//
-//    return response()->json(['message' => 'post successful']);
-//});
-
-//Route::get("/individualreport/test/{reportId}", 'ReportApiController@getIndividualReport');
-
-//Route::get("/testPostReportLocation", 'ReportApiController@testPostReportLocation');
-
-
-//Route::get("/alert-admin/test", function () {
-//
-//    $comp = App\Company::find(444);
-//
-//    event(new CompanyRegistered($comp));
-//    dd('check emails');
-//
-//});
-
-
-
-//Test dynamic notifications
-//1374 user id mailspace77
-//Route::get("/dynamic-notification/test/{id}", function ($id) {
-//
-//    $user = App\User::find($id);
-//
-//        $emailOld = $user->email;
-//
-//        $emailNew = 'smurfettemum@gmail.com';
-//
-//
-//            //new email address notification mail
-//            $recipientNew = new DynamicRecipient($emailNew);
-//
-////            dd($recipientNew);
-//    $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
-//
-//
-//    $recipientNew->notify(new ChangeEmailNew($compName));
-//
-//
-////
-////            //old email address notification mail
-//            $recipientOld = new DynamicRecipient($emailOld);
-//            $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
-////
-////            $user->email = $emailNew;
-//    dd($recipientNew, $compName, $recipientOld);
-//
-//
-//});
-
-//Route::get('/uploadtest/{filename}', function ($filename) {
-//    try {
-//
-////        if ($request->hasFile('file')) {
-//
-////            $filename = $request->input('fileName');
-//
-//
-//            //prior to storing the file, check if file with that filename exists
-//            $exists = Storage::disk('azure')->exists($filename);
-//
-//            if($exists != true) {
-//                $path = "store";
-//
-////                $path = $request->file('file')->storeAs('/', $filename);
-//            }else{
-//                $path = 'file already exists';
-//            }
-//
-////        } else {
-////            $path = "";
-////        }
-//dd($path);
-//        return response()->json($path);
-//
-//    }catch(Exception $e){
-//
-//        return response()->json('exception');
-//
-//
-//    }catch(ErrorException $err){
-//        return response()->json('error exception');
-//
-//    }
-//});
-//Route::get('/counttest', function () {
-//
-//    $checks = DB::table('shift_checks')
-//        ->where('location_id', '=', 954)
-//        ->select('id as shiftCheckId', 'check_duration')
-//        ->get();
-//
-//    $totalChecks = $checks->count('shiftCheckId');
-//dd($totalChecks);
-//
-//});
-
-//Route::get('/testing/filename/exists', function () {
-//
-//    $filenameWithExt = '1518141908273.jpeg';
-//
-////    $exists = Storage::disk('azure')->exists('1518141908273'.'a'.$fileNameExt);
-//
-//    $filename = substr($filenameWithExt, 0, (strlen ($filenameWithExt)) - (strlen (strrchr($filenameWithExt,'.'))));
-//    $fileNameExt = substr($filenameWithExt, -(strlen (strrchr($filenameWithExt,'.'))));
-//
-//    //prior to storing the file, check if file with that filename exists
-//    $exists = Storage::disk('azure')->exists($filename.'a');
-//
-//    if($exists != true){
-//        dd($exists);
-//
-//    } else{
-////        dd($exists);
-//        dd($filename.'a'.$fileNameExt);
-//
-//    }
-//
-//});
-
-//Route::get('/testing/nofitication/fail', function () {
-//
-////    $newUser = App\User::find(974);//dds a bit of info
-//    $newUser = App\User::find(974);//if user doesn't exist, fatal error
-//
-//    $newUser->notify(new NewMobileUser('test notification'));
-//
-////    dd($response);
-//    return response()->json([
-//        'success' => true
-//    ]);
-//
-//});
-
-
-
-
-
+});

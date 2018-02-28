@@ -8,7 +8,7 @@
     <!-- Default to the left -->
     <center>
         <strong>Copyright © {{currentYear()}}
-            <a href="http://www.odincasemanagement.com/" style="color:#663974;" target="_blank">Odin Case Management Pty Ltd </a>
+            <a href="http://www.odincasemanagement.com/" style="color:#663974;" target="_blank">ODIN Case Management</a>
         </strong>  All rights reserved.
         <a href="http://www.odincasemanagement.com/privacy-policy" style="color:#663974;" target="_blank">  Privacy Policy</a>
     </center>
