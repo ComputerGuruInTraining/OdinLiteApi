@@ -331,8 +331,6 @@ if (!function_exists('addUpdateContactActiveCampaign')) {
             notifyActiveCampaign($result->result_message, 'Failed', $newuser, $comp, $feature,
                 'This event did not complete successfully.', $attempting);
         }
-
-        dd($result->result_message);
     }
 }
 
@@ -373,7 +371,6 @@ if (!function_exists('removeTag')) {
                     'This event did not complete successfully.', $attempting);
 
         }
-//        dd($result);//Contact tags deleted
     }
 }
 
@@ -415,8 +412,6 @@ if (!function_exists('addTag')) {
                 'This event did not complete successfully.', $attempting);
 
         }
-
-        dd($result);
     }
 }
 
