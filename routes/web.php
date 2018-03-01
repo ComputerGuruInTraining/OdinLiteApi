@@ -26,6 +26,10 @@ use App\Events\CompanyRegistered;
 use App\Events\EmailDropped;
 use App\OdinErrorLogging as AppErrors;
 
+//Test Route Imports
+use App\User as User;
+use App\Company as Company;
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -276,16 +280,7 @@ Route::post("/error-logging", function (Request $request) {
     return response()->json(['message' => 'post successful']);
 });
 
-//archived??? used when azure uploads were stored directly to server
-Route::get('/storage/app/public/{file}', function ($file) {
-
-    $url = asset('storage/app/public/'.$file);
-
-    return response()->download($url);
-
-});
-
-//
+//Ready to implement once billing set up
 ///active/test/1374/404
 Route::get("/active/test/{id}/{compId}", function ($id, $compId) {
     $tag1 = Config::get('constants.TRIAL_TAG');
@@ -300,6 +295,8 @@ Route::get("/active/test/{id}/{compId}", function ($id, $compId) {
 
     addUpdateContactActiveCampaign($newuser, $tag1, $comp, 'New Company Registration',
         'Attempted to add contact with tag: '.$tagUpperCase, 'Succeeded in adding contact with tag: '.$tagUpperCase);
+
+    return response()->json(['success' => true]);
 
 });
 
@@ -326,6 +323,17 @@ Route::get("/active/test/start-paid-subscription", function () {
         'Succeeded in adding tag: '.$addTagUpperCase
     );
 
+    return response()->json(['success' => true]);
+
+});
+
+//archived??? used when azure uploads were stored directly to server
+Route::get('/storage/app/public/{file}', function ($file) {
+
+    $url = asset('storage/app/public/'.$file);
+
+    return response()->download($url);
+
 });
 
 /*Test Routes*/
@@ -343,3 +351,8 @@ Route::get("/test/runtimes", function(){
     dd($diff);
 
 });
+
+//Route::get("/misc/test", function () {
+//
+//});
+

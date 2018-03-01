@@ -29,16 +29,18 @@ class EmailDropped extends Notification
 
         $this->user = User::withTrashed()
             ->where('email', '=', $appErrors->recipient)
-            ->select('id', 'first_name', 'last_name')
+            ->select('id', 'first_name', 'last_name', 'company_id')
             ->first();//could be null
 
         if($this->user != null) {
-            $this->company = Company::where('id', '=', $this->user->company_id)->select('name', 'primary_contact')->first();
+            $this->company = Company::where('id', '=', $this->user->company_id)
+                ->select('name', 'primary_contact')
+                ->first();
 
             if($this->company != null) {
                 $this->primaryContact = User::withTrashed()
                     ->where('id', '=', $this->company->primary_contact)
-                    ->select('first_name', 'last_name')->first();
+                    ->select('first_name', 'last_name', 'email')->first();
             }
         }
     }
@@ -73,6 +75,7 @@ class EmailDropped extends Notification
                     ->line('Email address of recipient: ' . $this->appErrors->recipient)
                     ->line('Company of Recipient: ' . $this->company->name)
                     ->line('Company Contact: ' . $this->primaryContact->first_name . ' ' . $this->primaryContact->last_name)
+                    ->line('Email address of company contact: ' . $this->primaryContact->email)
                     ->line('Please follow up on this issue!');
             } else {
                 return (new MailMessage)
@@ -83,6 +86,7 @@ class EmailDropped extends Notification
                     ->line('Email address of recipient: ' . $this->appErrors->recipient)
                     ->line('Company of Recipient: ' . $this->company->name)
                     ->line('Company Contact: ' . $this->primaryContact->first_name . ' ' . $this->primaryContact->last_name)
+                    ->line('Email address of company contact: ' . $this->primaryContact->email)
                     ->line('Please follow up on this issue!');
             }
         }else{

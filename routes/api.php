@@ -1191,29 +1191,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::put("/assignedshifts/{id}/edit", 'JobsController@putShift');
 
     //soft delete from the assigned_shifts_table and the relations where assigned_shift_id is a fk
-    Route::delete('/assignedshift/{id}', function ($id) {
-
-        $assigned = Assigned::find($id);
-
-        //verify company first
-        $verified = verifyCompany($assigned);
-
-        if(!$verified){
-
-            return response()->json($verified);//value = false
-        }
-
-        $assigned->delete();
-
-        AssignedEmp::where('assigned_shift_id', '=', $id)->delete();
-
-        AssignedLoc::where('assigned_shift_id', '=', $id)->delete();
-
-        //TODO: ensure record destroyed before returning success true
-        return response()->json([
-            'success' => true
-        ]);
-    });
+    Route::delete('/assignedshift/{id}', 'JobsController@deleteAssignedShift');
 
     /**
     * Location

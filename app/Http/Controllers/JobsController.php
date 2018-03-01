@@ -595,8 +595,6 @@ class JobsController extends Controller
             $colLocCheck->push($array);
         }
 
-//        dd($colLocCheck);
-
         $newLoc = collect($newLocArray);
 
         //current old assigned_location values to be edited that have not otherwise been deleted
@@ -667,6 +665,30 @@ class JobsController extends Controller
             ]);
         }
 
+    }
+
+    public function deleteAssignedShift($id){
+
+        $assigned = Assigned::find($id);
+
+        //verify company first
+        $verified = verifyCompany($assigned);
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
+
+        $assigned->delete();
+
+        AssignedEmp::where('assigned_shift_id', '=', $id)->delete();
+
+        AssignedLoc::where('assigned_shift_id', '=', $id)->delete();
+
+        //TODO: ensure record destroyed before returning success true
+        return response()->json([
+            'success' => true
+        ]);
     }
 
 }
