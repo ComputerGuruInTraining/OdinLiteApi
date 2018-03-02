@@ -233,6 +233,14 @@ Route::group(['middleware' => 'auth:api'], function () {
             return response()->json($verified);//value = false
         }
 
+        //verify the employee is not the primary contact of the company (note: users can be employees)
+        $checkPrimaryContact = checkPrimaryContact($user);
+
+        //if true ie user is the company primary contact
+        if($checkPrimaryContact){
+            return response()->json("This user is the primary contact for the company and as such cannot be deleted.");
+        }
+
         //change email to include the words "OdinDeleted" before soft deleting the user.
         markEmailAsDeleted($user);
 
@@ -511,6 +519,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //Employees(mobile users) Soft Delete From Console
+    //pm is user_id
     Route::delete('/employees/{id}', function ($id) {
 
         $user = User::find($id);
@@ -520,6 +529,14 @@ Route::group(['middleware' => 'auth:api'], function () {
         if(!$verified){
 
             return response()->json($verified);//value = false
+        }
+
+        //verify the employee is not the primary contact of the company (note: users can be employees)
+        $checkPrimaryContact = checkPrimaryContact($user);
+
+        //if true ie user is the company primary contact
+        if($checkPrimaryContact){
+            return response()->json("This employee is also a console user and the primary contact for the company and as such cannot be deleted.");
         }
 
         //change email to include the words "OdinDeleted" before soft deleting the user.
@@ -602,6 +619,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         ]);
 
     });
+
+    Route::put("/company/contact/{userId}", 'CompanyAndUsersApiController@updateContact');
 
     /*---------------Case Notes----------------*/
 
