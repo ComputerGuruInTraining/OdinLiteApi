@@ -264,6 +264,25 @@ if (!function_exists('verifyCompany')) {
     }
 }
 
+//Purpose: to check the user is not the primary contact for the company
+if (!function_exists('checkPrimaryContact')) {
+    function checkPrimaryContact($user)
+    {
+        if($user == null) {
+            return false;
+        }
+
+        $comp = App\Company::find($user->company_id);
+
+        if ($user->id == $comp->primary_contact) {
+            return true;//ie they are the primary contact and do not proceed
+        }
+
+        //ie not the primary contact
+        return false;
+    }
+}
+
 if (!function_exists('resizeToThumb')) {
 
     function resizeToThumb($file)
