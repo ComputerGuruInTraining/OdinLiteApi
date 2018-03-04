@@ -238,7 +238,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         //if true ie user is the company primary contact
         if($checkPrimaryContact){
-            return response()->json(['primaryContact' => "This user is the primary contact for the company and as such cannot be deleted."]);
+            return response()->json(['primaryContact' => "This user is the primary contact for the company and as such cannot be deleted at this stage."]);
         }
 
         //change email to include the words "OdinDeleted" before soft deleting the user.
@@ -536,7 +536,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         //if true ie user is the company primary contact
         if($checkPrimaryContact){
-            return response()->json(['primaryContact' => 'This employee is also a console user and the primary contact for the company and as such cannot be deleted.']);
+            return response()->json(['primaryContact' => 'This employee is also a console user and the primary contact for the company and as such cannot be deleted at this stage.']);
         }
 
         //change email to include the words "OdinDeleted" before soft deleting the user.
