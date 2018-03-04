@@ -669,7 +669,7 @@ class JobsController extends Controller
 
     public function deleteAssignedShift($id){
 
-        $assigned = Assigned::find($id);
+        $assigned = AssignedShift::find($id);
 
         //verify company first
         $verified = verifyCompany($assigned);
@@ -677,6 +677,20 @@ class JobsController extends Controller
         if(!$verified){
 
             return response()->json($verified);//value = false
+        }
+
+        //find whether this assigned_shift has an entry in the shifts table, and retrieve the user_id of those shifts
+        $commenced = DB::table('shifts')
+            ->join('assigned_shifts', 'assigned_shifts.id', '=', 'shifts.assigned_shift_id')
+            ->join('users', 'users.id', '=', 'shifts.mobile_user_id')
+            ->where('assigned_shifts.id', '=', $assigned->id)
+            ->select('shifts.mobile_user_id')
+            ->get();
+
+        //shift has been commenced, so return to the console without deleting record
+        if (count($commenced) > 0){
+
+            return response()->json(['commenced' => 'commenced']);
         }
 
         $assigned->delete();
