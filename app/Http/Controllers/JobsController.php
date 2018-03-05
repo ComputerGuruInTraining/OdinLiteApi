@@ -10,11 +10,94 @@ use Carbon\Carbon;
 use App\AssignedShift as AssignedShift;
 use App\AssignedShiftEmployee as AssignedEmp;
 use App\AssignedShiftLocation as AssignedLoc;
+use App\Location as Location;
+use App\User as User;
 
 
 class JobsController extends Controller
 {
 
+    //note, in return collection $id = assigned_location_id
+    public function getAssignedShiftsList($compId){
+
+        $assigned = DB::table('assigned_shifts')
+            ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
+            ->join('assigned_shift_locations', 'assigned_shift_locations.assigned_shift_id', '=', 'assigned_shifts.id')
+            ->where('assigned_shifts.company_id', '=', $compId)
+            ->where('assigned_shifts.deleted_at', '=', null)
+            ->where('assigned_shift_employees.deleted_at', '=', null)
+            ->where('assigned_shift_locations.deleted_at', '=', null)
+            ->orderBy('start', 'asc')
+            ->orderBy('assigned_shift_locations.location_id')
+            ->get();
+
+        foreach ($assigned as $i => $item) {
+
+            //find the location_id name if a location exists for that id in the locations table
+            $location = Location::find($assigned[$i]->location_id);
+
+            if ($location != null) {
+
+                $name = $location->name;
+
+                //store location name in the object
+                $assigned[$i]->location = $name;
+            }
+        }
+
+        foreach ($assigned as $i => $details) {
+            //get the employee's name from the employees table for all employees assigned a shift
+            $emp = User::find($assigned[$i]->mobile_user_id);
+            //ensure the assigned_shift_employee record exists in the users table else errors could occur
+            if ($emp != null) {
+
+                $first_name = $emp->first_name;
+                $last_name = $emp->last_name;
+                $name = $first_name . ' ' . $last_name;
+
+                //store location name in the object
+                $assigned[$i]->employee = $name;
+            } else {
+                //$emp == null meaning it must have been deleted from the employees table
+                //Step: soft delete the record from assigned_shift_employees table for the employee's user_id
+                //to ensure there are no shifts assigned to a user that has been deleted
+                //first, find the array of records that have the mobile_user_id in question
+                $assignedEmps = AssignedEmp::where('mobile_user_id', '=', $assigned[$i]->mobile_user_id)->get();
+                //then loop through those records, soft deleting each model
+                foreach ($assignedEmps as $assignedEmp) {
+                    $assignedEmp->delete();
+                }
+
+                //Step: having deleted it from the table, we now need to remove the object from the $assigned array
+                $assigned->pull($i);
+            }
+        }
+
+        //find the assigned_shifts that have an entry in the shifts table, and retrieve the user_id of those shifts
+        foreach ($assigned as $i => $assignedShift) {
+
+            $commenced = DB::table('shifts')
+                ->join('assigned_shifts', 'assigned_shifts.id', '=', 'shifts.assigned_shift_id')
+                ->join('users', 'users.id', '=', 'shifts.mobile_user_id')
+                ->where('assigned_shifts.id', '=', $assignedShift->assigned_shift_id)
+                ->select('shifts.mobile_user_id')
+                ->get();
+
+            if(count($commenced) == 0){
+                $assigned[$i]->commenced = 'not commenced';
+            }else if (count($commenced) > 0){
+
+                $assigned[$i]->commenced = 'commenced';
+            }
+        }
+
+        //Step: reset the keys on the collection, else datatype is std::class
+        $assigned = $assigned->values();
+
+        return response()->json($assigned);
+    }
+
+    //
     public function getAssignedShifts($id){
         //the logic is:
         //step 1: all assignedShifts for the period. (array1)
@@ -195,100 +278,6 @@ class JobsController extends Controller
         }//end else several locations
     }
 
-
-//    public function getCommencedShiftDetails($assignedid, $mobileUserId){
-//
-//        //Step 1: get the shift_locations
-//        //each assigned object will have:
-//        //location_id, name, address, latitude, longitude, notes, [required] checks
-//        //result set is a collection, whether 1 or many
-//        //Data Requirement 1
-//        $assignedLoc = $this->getShiftLocations($assignedid);
-//
-//        //Step 2: get the shift_id that corresponds to the assigned_shift_id
-//        //each assigned_shift_id will only have 1 shift_id for a particular user
-//        //but retrieve first, because technically possible to have more than 1 from db query point of view
-//        //result is an array even though only one.
-//        $shiftId = $this->getShiftId($assignedid, $mobileUserId);
-//
-//        //single locations
-//        //data required is: location details, has a case note been submitted,
-//        if(count($assignedLoc) == 1){
-//
-//            $notes = app('App\Http\Controllers\CaseNoteApiController')->getShiftCaseNotes($shiftId->id);
-//
-//            if(count($notes) > 0){
-//                $singleCaseNote = true;
-//
-//            }else{
-//                $singleCaseNote = false;
-//            }
-//
-//            return response()->json([
-//                'locations' => $assignedLoc,
-//                'shiftId' => $shiftId,
-//                'caseCheck' => $singleCaseNote,
-//                ]);
-//
-//        }else{
-//            //several locations
-//            //data required is: 1.location details, 2.number of checks completed at each location,
-//            // 3.the current check in (if there is one),
-//            // 4.has a case note been submitted?
-//
-//            //Note: Data Requirement 2 ie number of checks:
-//            //can be deciphered from the number of shift_check entries that
-//            //correspond to the shift_id and the location_id and that have a check_outs entry
-//            //unfortunately, if the put_check_out fails, the check will not be recorded as complete.
-//            //one of those imperfections. But success rate is high thankfully.
-//
-//            foreach ($assignedLoc as $i => $location) {
-//
-//                //Data Requirement 2. number of checks completed
-//                $numChecks =  $this->countShiftChecks($shiftId->id, $location->location_id);
-//
-//                $assignedLoc[$i]->checked = $numChecks;
-//
-////todo: implement at a later date as needs to be thorough or there will be errors
-//                //returns the shiftCheckId for each location
-////                $checkId = $this->getCurrentCheckIn($shiftId->id, $location->location_id);
-//
-//                //Data Requirement 3. if a shift check is still to be completed
-//                //only possibly for 1 location per shift
-////                if(count($checkId) > 0){
-////                    //assign this location to the locationCheckedIn Variable in mobile
-////                    $assignedLoc[$i]->checkedIn  = true;
-////
-////                    //Data Requirement 4:
-////                    $casePerCheck = $this->caseNoteSbmtd($checkId->id);
-////
-////                    //if a case note exists for the current check in
-////                    if(count($casePerCheck) > 0){
-////                        $assignedLoc[$i]->casePerCheck = true;
-////                        $caseCheck = true;
-////
-////                    }else if(count($casePerCheck) == 0){
-////                        //case note not submitted
-////                        $assignedLoc[$i]->casePerCheck = false;
-////                        $caseCheck = false;
-////                    }
-////
-////                }else if(count($checkId) == 0){
-////                    //location not checked in
-////                    $assignedLoc[$i]->checkedIn  = false;
-////                    $assignedLoc[$i]->casePerCheck = false;
-////                    $caseCheck = false;
-////                }
-//            }
-//
-//            return response()->json([
-//                'locations' => $assignedLoc,
-//                'shiftId' => $shiftId
-//            ]);
-//
-//        }//end else several locations
-//    }
-
     public function getShiftLocations($asgnshftid){
 
         $assigned = DB::table('assigned_shift_locations')
@@ -432,6 +421,85 @@ class JobsController extends Controller
         }
     }
 
+    //returns a single record or an array of records as the assigned shift may have multiple entries in the
+    // assigned_shift_locations and/or assigned_shift_employees tables
+    public function getAssignedShift($id){
+
+        //verify company first
+        $assignedObject = AssignedShift::find($id);
+
+        $verified = verifyCompany($assignedObject);
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
+
+        //if verified as being the same company, or if no record is returned from the query ie $assigned = {}
+        $assigned = DB::table('assigned_shifts')
+            ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
+            ->join('assigned_shift_locations', 'assigned_shift_locations.assigned_shift_id', '=', 'assigned_shifts.id')
+            ->where('assigned_shifts.id', '=', $id)
+            ->where('assigned_shift_locations.deleted_at', '=', null)
+            ->where('assigned_shift_employees.deleted_at', '=', null)
+            ->orderBy('start', 'asc')
+            ->orderBy('assigned_shift_locations.location_id')
+            ->get();
+
+        foreach ($assigned as $i => $details) {
+            $emp = User::find($assigned[$i]->mobile_user_id);
+
+            //ensure the assigned_shift_employee record exists in the users table
+            if ($emp != null) {
+                $first_name = $emp->first_name;
+                $last_name = $emp->last_name;
+                $name = $first_name . ' ' . $last_name;
+            } //mobile_user_id does not exist in locations table
+            else {
+                $name = "Employee not in database";
+            }
+            //store location name in the object
+            $assigned[$i]->employee = $name;
+        }
+
+        foreach ($assigned as $i => $item) {
+
+            //find the location_id name if a location exists for that id in the locations table
+            $location = Location::find($assigned[$i]->location_id);
+
+            if ($location != null) {
+                $name = $location->name;
+            } //location_id does not exist in locations table
+            else {
+                $name = "Location not in database";
+                $assigned[$i]->checks = 0;
+            }
+            //store location name in the object
+            $assigned[$i]->location = $name;
+        }
+
+        //find whether this assigned_shift has an entry in the shifts table, and retrieve the user_id of those shifts
+        foreach ($assigned as $i => $assignedShift) {
+
+            $commenced = DB::table('shifts')
+                ->join('assigned_shifts', 'assigned_shifts.id', '=', 'shifts.assigned_shift_id')
+                ->join('users', 'users.id', '=', 'shifts.mobile_user_id')
+                ->where('assigned_shifts.id', '=', $assignedShift->assigned_shift_id)
+                ->select('shifts.mobile_user_id')
+                ->get();
+
+            if(count($commenced) == 0){
+                $assigned[$i]->commenced = 'not commenced';
+
+            }else if (count($commenced) > 0){
+
+                $assigned[$i]->commenced = 'commenced';
+            }
+        }
+
+        return response()->json($assigned);
+    }
+
     public function putShift(Request $request, $id){
         //table: assigned_shifts
 
@@ -527,8 +595,6 @@ class JobsController extends Controller
             $colLocCheck->push($array);
         }
 
-//        dd($colLocCheck);
-
         $newLoc = collect($newLocArray);
 
         //current old assigned_location values to be edited that have not otherwise been deleted
@@ -600,4 +666,43 @@ class JobsController extends Controller
         }
 
     }
+
+    public function deleteAssignedShift($id){
+
+        $assigned = AssignedShift::find($id);
+
+        //verify company first
+        $verified = verifyCompany($assigned);
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
+
+        //find whether this assigned_shift has an entry in the shifts table, and retrieve the user_id of those shifts
+        $commenced = DB::table('shifts')
+            ->join('assigned_shifts', 'assigned_shifts.id', '=', 'shifts.assigned_shift_id')
+            ->join('users', 'users.id', '=', 'shifts.mobile_user_id')
+            ->where('assigned_shifts.id', '=', $assigned->id)
+            ->select('shifts.mobile_user_id')
+            ->get();
+
+        //shift has been commenced, so return to the console without deleting record
+        if (count($commenced) > 0){
+
+            return response()->json(['commenced' => 'commenced']);
+        }
+
+        $assigned->delete();
+
+        AssignedEmp::where('assigned_shift_id', '=', $id)->delete();
+
+        AssignedLoc::where('assigned_shift_id', '=', $id)->delete();
+
+        //TODO: ensure record destroyed before returning success true
+        return response()->json([
+            'success' => true
+        ]);
+    }
+
 }

@@ -151,7 +151,6 @@ if (!function_exists('getBlobUrl')) {
         $_parts[] = 'rsct=' . $contentType;
         $_parts[] = 'sig=' . urlencode($signature);
 
-
         /* Create the signed blob URL */
         $url = 'https://'
             . $accountName . '.blob.core.windows.net/'
@@ -264,6 +263,221 @@ if (!function_exists('verifyCompany')) {
         return false;
     }
 }
+
+//Purpose: to check the user is not the primary contact for the company
+if (!function_exists('checkPrimaryContact')) {
+    function checkPrimaryContact($user)
+    {
+        if($user == null) {
+            return false;
+        }
+
+        $comp = App\Company::find($user->company_id);
+
+        if ($user->id == $comp->primary_contact) {
+            return true;//ie they are the primary contact and do not proceed
+        }
+
+        //ie not the primary contact
+        return false;
+    }
+}
+
+if (!function_exists('resizeToThumb')) {
+
+    function resizeToThumb($file)
+    {
+        $img = Image::make($file);
+
+        // resize image
+        $img->resize(250, 250, function ($constraint) {
+            $constraint->aspectRatio();
+        });
+
+        return $img;
+    }
+}
+
+//Purpose: change email to include the words "OdinDeleted" before soft deleting the user.
+//this allows the user to be readded by the company should they wish
+// and ensures the user cannot login once deleted
+if (!function_exists('markEmailAsDeleted')) {
+
+    function markEmailAsDeleted($user)
+    {
+
+        $email = $user->email;
+
+        //concat the word 'DELETED' plus the userId to the user's email in the users table
+        $user->email = ($email.'.DELETED.'.$user->id);
+
+        $user->save();
+    }
+}
+
+//active campaign: adds a contact or updates an existing contact
+//scope for more updates as required
+//$result->message = "Contact added" or "contact updated" if successfully added
+if (!function_exists('addUpdateContactActiveCampaign')) {
+
+    function addUpdateContactActiveCampaign($newuser, $tag1, $comp, $feature, $attempting, $succeeded)
+    {
+        $url = Config::get('constants.ACTIVE_URL');
+
+        $request = 'api_action=contact_sync&api_output=json&api_key='.Config::get('constants.ACTIVE_API_KEY');
+
+        //url_encode the body, especially in case a user input of first_name contains spaces
+        $body = urlEncodeBody($newuser->email, $newuser->first_name, $newuser->last_name, $tag1);
+
+        $client = new GuzzleHttp\Client;
+
+        $response = $client->post($url.$request,
+            array(
+                'headers' => array(
+                    'Content-Type' => 'application/x-www-form-urlencoded',
+                ),
+                'body' => $body
+            )
+        );
+
+        $result = json_decode((string)$response->getBody());
+
+        //works, just need to implement sending of email
+        if(($result->result_message == "Contact added")||($result->result_message == "Contact updated")) {
+
+            notifyActiveCampaign($result->result_message, 'Success', $newuser, $comp, $feature, null, null, $succeeded);
+
+        }else {
+            notifyActiveCampaign($result->result_message, 'Failed', $newuser, $comp, $feature,
+                'This event did not complete successfully.', $attempting);
+        }
+    }
+}
+
+//$result->message = "Contact tags deleted" if successfully deleted,
+//$result->message = "Contact tags deleted"  if tag never existed
+// and therefore not actually deleted but request operates successfully
+//fails: $result->message = "Contact does not exist" if that is the case
+if (!function_exists('removeTag')) {
+
+    function removeTag($user, $removeTag, $comp, $feature, $attempting, $succeeded)
+    {
+
+        $url = Config::get('constants.ACTIVE_URL');
+
+        $request = Config::get('constants.REMOVE_TAG_REQUEST').Config::get('constants.ACTIVE_API_KEY');
+
+        //url_encode the body, especially in case a user input of first_name contains spaces
+        $body = urlEncodeBody('mailspace70@testfail.com', null, null, $removeTag);
+
+        $client = new GuzzleHttp\Client;
+
+        $response = $client->post($url.$request,
+            array(
+                'headers' => array(
+                    'Content-Type' => 'application/x-www-form-urlencoded',
+                ),
+                'body' => $body
+            )
+        );
+
+        $result = json_decode((string)$response->getBody());
+
+        if($result->result_message == "Contact tags deleted"){
+            notifyActiveCampaign($result->result_message, 'Success', $user, $comp, $feature, null, null, $succeeded);
+
+        } else{
+                notifyActiveCampaign($result->result_message, 'Failed', $user, $comp, $feature,
+                    'This event did not complete successfully.', $attempting);
+
+        }
+    }
+}
+
+//$result->message = "Contact tags added" if successfully added
+//IMPORTANT! will create a tag if doesn't exist, or add an existing tag.
+//format: all lowercase and exact same as existing tag (including spaces)
+// or a new tag will be created.
+//fails: $result->message = "Contact does not exist" if that is the case
+if (!function_exists('addTag')) {
+
+    function addTag($user, $addTag, $comp, $feature, $attempting, $succeeded)
+    {
+
+        $url = Config::get('constants.ACTIVE_URL');
+
+        $request = Config::get('constants.ADD_TAG_REQUEST').Config::get('constants.ACTIVE_API_KEY');
+
+        //url_encode the body, especially in case a user input of first_name contains spaces
+        $body = urlEncodeBody($user->email, null, null, $addTag);
+
+        $client = new GuzzleHttp\Client;
+
+        $response = $client->post($url.$request,
+            array(
+                'headers' => array(
+                    'Content-Type' => 'application/x-www-form-urlencoded',
+                ),
+                'body' => $body
+            )
+        );
+
+        $result = json_decode((string)$response->getBody());
+
+        if($result->result_message == "Contact tags added"){
+            notifyActiveCampaign($result->result_message, 'Success', $user, $comp, $feature, null, null, $succeeded);
+
+        } else{
+            notifyActiveCampaign($result->result_message, 'Failed', $user, $comp, $feature,
+                'This event did not complete successfully.', $attempting);
+
+        }
+    }
+}
+
+if (!function_exists('urlEncodeBody')) {
+
+    function urlEncodeBody($email, $firstName = null, $lastName = null, $tag1 = null)
+    {
+        $parts = array();
+
+        $parts[] = 'email=' . $email;
+
+        if($firstName != null) {
+            $parts[] = 'first_name=' . urlencode($firstName);
+        }
+
+        if($lastName != null) {
+
+            $parts[] = 'last_name=' . urlencode($lastName);
+        }
+
+        if($tag1 != null) {
+
+            $parts[] = 'tags=' . urlencode($tag1);
+        }
+
+        $body = implode('&', $parts);
+
+        return $body;
+    }
+}
+
+if (!function_exists('notifySuccessActiveCampaign')) {
+
+    function notifyActiveCampaign($msg, $result, $contact, $comp, $feature, $failedmsg = null, $attempting = null, $succeeded = null)
+    {
+
+        $odinTeam = new App\Recipients\DynamicRecipient(Config::get('constants.COMPANY_EMAIL2'));
+        $odinTeam->notify(new App\Notifications\ActiveCampaign($msg, $result, $contact, $comp, $feature, $failedmsg, $attempting, $succeeded));
+
+        $odinEmail = new App\Recipients\DynamicRecipient(Config::get('constants.COMPANY_EMAIL'));
+        $odinEmail->notify(new App\Notifications\ActiveCampaign($msg, $result, $contact, $comp, $feature, $failedmsg, $attempting));
+
+    }
+}
+
+
 
 
 

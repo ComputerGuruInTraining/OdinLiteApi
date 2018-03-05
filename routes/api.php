@@ -233,10 +233,20 @@ Route::group(['middleware' => 'auth:api'], function () {
             return response()->json($verified);//value = false
         }
 
+        //verify the employee is not the primary contact of the company (note: users can be employees)
+        $checkPrimaryContact = checkPrimaryContact($user);
+
+        //if true ie user is the company primary contact
+        if($checkPrimaryContact){
+            return response()->json(['primaryContact' => "This user is the primary contact for the company and as such cannot be deleted at this stage."]);
+        }
+
+        //change email to include the words "OdinDeleted" before soft deleting the user.
+        markEmailAsDeleted($user);
+
         User::where('id', $id)->delete();
 
         Role::where('user_id', $id)->delete();
-
 
         return response()->json([
             'success' => true
@@ -509,6 +519,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //Employees(mobile users) Soft Delete From Console
+    //pm is user_id
     Route::delete('/employees/{id}', function ($id) {
 
         $user = User::find($id);
@@ -519,6 +530,17 @@ Route::group(['middleware' => 'auth:api'], function () {
 
             return response()->json($verified);//value = false
         }
+
+        //verify the employee is not the primary contact of the company (note: users can be employees)
+        $checkPrimaryContact = checkPrimaryContact($user);
+
+        //if true ie user is the company primary contact
+        if($checkPrimaryContact){
+            return response()->json(['primaryContact' => 'This employee is also a console user and the primary contact for the company and as such cannot be deleted at this stage.']);
+        }
+
+        //change email to include the words "OdinDeleted" before soft deleting the user.
+        markEmailAsDeleted($user);
 
         $user = User::where('id', $id)->delete();
 
@@ -597,6 +619,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         ]);
 
     });
+
+    Route::put("/company/contact/{userId}", 'CompanyAndUsersApiController@updateContact');
 
     /*---------------Case Notes----------------*/
 
@@ -1016,65 +1040,70 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     //console
     //retrieve a list of assigned shifts for a particular company for roster page
-    Route::get("/assignedshifts/list/{compId}", function ($compId) {
-
-        $assigned = DB::table('assigned_shifts')
-            ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
-            ->join('assigned_shift_locations', 'assigned_shift_locations.assigned_shift_id', '=', 'assigned_shifts.id')
-            ->where('assigned_shifts.company_id', '=', $compId)
-            ->where('assigned_shifts.deleted_at', '=', null)
-            ->where('assigned_shift_employees.deleted_at', '=', null)
-            ->where('assigned_shift_locations.deleted_at', '=', null)
-            ->orderBy('start', 'asc')
-            ->orderBy('assigned_shift_locations.location_id')
-            ->get();
-
-            foreach ($assigned as $i => $item) {
-
-                //find the location_id name if a location exists for that id in the locations table
-                $location = App\Location::find($assigned[$i]->location_id);
-
-                if ($location != null) {
-
-                    $name = $location->name;
-
-                    //store location name in the object
-                    $assigned[$i]->location = $name;
-                }
-            }
 
 
-            foreach ($assigned as $i => $details) {
-                //get the employee's name from the employees table for all employees assigned a shift
-                $emp = App\User::find($assigned[$i]->mobile_user_id);
-                //ensure the assigned_shift_employee record exists in the users table else errors could occur
-                if ($emp != null) {
+    Route::get("/assignedshifts/list/{compId}", 'JobsController@getAssignedShiftsList');
 
-                    $first_name = $emp->first_name;
-                    $last_name = $emp->last_name;
-                    $name = $first_name . ' ' . $last_name;
-
-                    //store location name in the object
-                    $assigned[$i]->employee = $name;
-                } else {
-                    //$emp == null meaning it must have been deleted from the employees table
-                    //Step: soft delete the record from assigned_shift_employees table for the employee's user_id
-                    //to ensure there are no shifts assigned to a user that has been deleted
-                    //first, find the array of records that have the mobile_user_id in question
-                    $assignedEmps = App\AssignedShiftEmployee::where('mobile_user_id', '=', $assigned[$i]->mobile_user_id)->get();
-                    //then loop through those records, soft deleting each model
-                    foreach ($assignedEmps as $assignedEmp) {
-                        $assignedEmp->delete();
-                    }
-                    //Step: having deleted it from the table, we now need to remove the object from the $assigned array
-                    $assigned->pull($i);
-                }
-            }
-            //Step: reset the keys on the collection, else datatype is std::class
-            $assigned = $assigned->values();
-
-        return response()->json($assigned);
-    });
+    //Archived: replaced by controller function
+//    Route::get("/assignedshifts/list/{compId}", function ($compId) {
+//
+//        $assigned = DB::table('assigned_shifts')
+//            ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
+//            ->join('assigned_shift_locations', 'assigned_shift_locations.assigned_shift_id', '=', 'assigned_shifts.id')
+//            ->where('assigned_shifts.company_id', '=', $compId)
+//            ->where('assigned_shifts.deleted_at', '=', null)
+//            ->where('assigned_shift_employees.deleted_at', '=', null)
+//            ->where('assigned_shift_locations.deleted_at', '=', null)
+//            ->orderBy('start', 'asc')
+//            ->orderBy('assigned_shift_locations.location_id')
+//            ->get();
+//
+//            foreach ($assigned as $i => $item) {
+//
+//                //find the location_id name if a location exists for that id in the locations table
+//                $location = App\Location::find($assigned[$i]->location_id);
+//
+//                if ($location != null) {
+//
+//                    $name = $location->name;
+//
+//                    //store location name in the object
+//                    $assigned[$i]->location = $name;
+//                }
+//            }
+//
+//
+//            foreach ($assigned as $i => $details) {
+//                //get the employee's name from the employees table for all employees assigned a shift
+//                $emp = App\User::find($assigned[$i]->mobile_user_id);
+//                //ensure the assigned_shift_employee record exists in the users table else errors could occur
+//                if ($emp != null) {
+//
+//                    $first_name = $emp->first_name;
+//                    $last_name = $emp->last_name;
+//                    $name = $first_name . ' ' . $last_name;
+//
+//                    //store location name in the object
+//                    $assigned[$i]->employee = $name;
+//                } else {
+//                    //$emp == null meaning it must have been deleted from the employees table
+//                    //Step: soft delete the record from assigned_shift_employees table for the employee's user_id
+//                    //to ensure there are no shifts assigned to a user that has been deleted
+//                    //first, find the array of records that have the mobile_user_id in question
+//                    $assignedEmps = App\AssignedShiftEmployee::where('mobile_user_id', '=', $assigned[$i]->mobile_user_id)->get();
+//                    //then loop through those records, soft deleting each model
+//                    foreach ($assignedEmps as $assignedEmp) {
+//                        $assignedEmp->delete();
+//                    }
+//                    //Step: having deleted it from the table, we now need to remove the object from the $assigned array
+//                    $assigned->pull($i);
+//                }
+//            }
+//            //Step: reset the keys on the collection, else datatype is std::class
+//            $assigned = $assigned->values();
+//
+//        return response()->json($assigned);
+//    });
 
     //mobile
     //route to get assigned shifts (ie complete roster) for a particular mobile_user/employee
@@ -1175,92 +1204,13 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //edit
-    //with verification
-    Route::get("/assignedshifts/{id}/edit", function ($id) {
+    Route::get("/assignedshifts/{id}/edit", 'JobsController@getAssignedShift');
 
-        //verify company first
-        $assignedObject = App\AssignedShift::find($id);
-
-        $verified = verifyCompany($assignedObject);
-
-        if(!$verified){
-
-            return response()->json($verified);//value = false
-        }
-
-        //if verified as being the same company, or if no record is returned from the query ie $assigned = {}
-
-        $assigned = DB::table('assigned_shifts')
-            ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
-            ->join('assigned_shift_locations', 'assigned_shift_locations.assigned_shift_id', '=', 'assigned_shifts.id')
-            ->where('assigned_shifts.id', '=', $id)
-            ->where('assigned_shift_locations.deleted_at', '=', null)
-            ->where('assigned_shift_employees.deleted_at', '=', null)
-            ->orderBy('start', 'asc')
-            ->orderBy('assigned_shift_locations.location_id')
-            ->get();
-
-        foreach ($assigned as $i => $details) {
-            $emp = User::find($assigned[$i]->mobile_user_id);
-
-            //ensure the assigned_shift_employee record exists in the users table
-            if ($emp != null) {
-                $first_name = $emp->first_name;
-                $last_name = $emp->last_name;
-                $name = $first_name . ' ' . $last_name;
-            } //mobile_user_id does not exist in locations table
-            else {
-                $name = "Employee not in database";
-            }
-            //store location name in the object
-            $assigned[$i]->employee = $name;
-        }
-
-        foreach ($assigned as $i => $item) {
-
-            //find the location_id name if a location exists for that id in the locations table
-            $location = App\Location::find($assigned[$i]->location_id);
-
-            if ($location != null) {
-                $name = $location->name;
-            } //location_id does not exist in locations table
-            else {
-                $name = "Location not in database";
-                $assigned[$i]->checks = 0;
-            }
-            //store location name in the object
-            $assigned[$i]->location = $name;
-        }
-
-        return response()->json($assigned);
-    });
-
+    //update
     Route::put("/assignedshifts/{id}/edit", 'JobsController@putShift');
 
     //soft delete from the assigned_shifts_table and the relations where assigned_shift_id is a fk
-    Route::delete('/assignedshift/{id}', function ($id) {
-
-        $assigned = Assigned::find($id);
-
-        //verify company first
-        $verified = verifyCompany($assigned);
-
-        if(!$verified){
-
-            return response()->json($verified);//value = false
-        }
-
-        $assigned->delete();
-
-        AssignedEmp::where('assigned_shift_id', '=', $id)->delete();
-
-        AssignedLoc::where('assigned_shift_id', '=', $id)->delete();
-
-        //TODO: ensure record destroyed before returning success true
-        return response()->json([
-            'success' => true
-        ]);
-    });
+    Route::delete('/assignedshift/{id}', 'JobsController@deleteAssignedShift');
 
     /**
     * Location
