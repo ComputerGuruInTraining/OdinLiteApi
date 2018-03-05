@@ -308,7 +308,8 @@ if (!function_exists('markEmailAsDeleted')) {
 
         $email = $user->email;
 
-        $user->email = ($email.'.OdinDeleted');
+        //concat the word 'DELETED' plus the userId to the user's email in the users table
+        $user->email = ($email.'.DELETED.'.$user->id);
 
         $user->save();
     }

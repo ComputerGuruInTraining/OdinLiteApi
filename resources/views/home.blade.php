@@ -11,8 +11,6 @@
                     You are logged in!
                 </div>
 
-                {{--<a href="/markdeleted/test/1734">Mark as Deleted User Test</a>--}}
-
             </div>
         </div>
     </div>
