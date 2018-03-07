@@ -317,6 +317,13 @@ Route::group(['middleware' => 'auth:api'], function () {
         return response()->json($status);
     });
 
+    /*
+     * subscription/' . $compId
+     */
+    /*------------Subscriptions-----------*/
+    Route::get('/subscription/{compId}', 'CompanyAndUsersApiController@getSubscription');
+
+
     /*---------------------Employees(Mobile Users)---------------*/
     Route::get("/employees/list/{compId}", function ($compId) {
 
