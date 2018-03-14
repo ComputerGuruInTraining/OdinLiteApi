@@ -57,7 +57,7 @@ Route::get('/password/confirm', function () {
 });
 
 //register new user and company for console
-//CSRF_Token excluded route
+//todo: check CSRF_Token excluded route??
 Route::post('/company', function (Request $request) {
 
     $emailRegister = $request->input('email_user');
@@ -81,7 +81,7 @@ Route::post('/company', function (Request $request) {
         $company = new App\Company;
 
         $company->name = $request->input('company');
-        $company->owner = $request->input('owner');
+        $company->owner = $request->input('owner');//either will hold a value or will be null
         $company->primary_contact = 0;//awaiting creation of user
         $company->status = 'incomplete';
 
@@ -102,6 +102,10 @@ Route::post('/company', function (Request $request) {
 
         $user->company_id = $compId;
         $user->remember_token = str_random(10);
+
+        //start trial period, nothing else required at this stage
+        $user->trial_ends_at = Carbon::now()->addDays(90);
+
         $user->save();
 
         //retrieve id of last insert
@@ -122,18 +126,20 @@ Route::post('/company', function (Request $request) {
         //retrieve saved user for notification
         $newuser = App\User::find($id);
 
-        //send email to new company requesting activation of the company which enables login and
-        // validates address belongs to the new user
+        /****send email to new company requesting activation of the company which enables login****/
+        //and validates address belongs to the new user
         $newuser->notify(new RegisterCompany($compId));
 
-        //event to notify Odin admin that a new company has registered
+        /****event to notify Odin admin that a new company has registered****/
         event(new CompanyRegistered($comp));
 
-        //add primary contact to active campaign contacts and add the trial tag to contact
+        /****add primary contact to active campaign contacts and add the trial tag to contact****/
         $tag1 = Config::get('constants.TRIAL_TAG');
 
+        $tagUpperCase = ucwords($tag1);
+
         addUpdateContactActiveCampaign($newuser, $tag1, $comp, 'New Company Registration',
-            'Attempted to add contact with tag: '.$tag1);
+            'Attempted to add contact with tag: '.$tagUpperCase, 'Succeeded in adding contact with tag: '.$tagUpperCase);
 
         return response()->json([
             'success' => $newuser,
@@ -336,6 +342,11 @@ Route::get('/storage/app/public/{file}', function ($file) {
 
 });
 
+
+//WIP - will soft delete some aspects of company account, but incomplete
+//fixme: change to delete method
+//Route::get('/company/account/remove/{compId}/{userId}', 'CompanyAndUsersApiController@removeAccount');
+
 /*Test Routes*/
 //todo: remove by end of March
 Route::get("/test/runtimes", function(){
@@ -352,13 +363,10 @@ Route::get("/test/runtimes", function(){
 
 });
 
-//Route::get("/misc/test", function () {
+//Route::get("/misc/test/{compId}", function ($compId) {
 //
-//    $user = User::withTrashed()
-//        ->where('id', '=', 1134)
-//        ->first();
-//
-//    markEmailAsDeleted($user);
+//    $result = app('App\Http\Controllers\CompanyAndUsersApiController')->deleteUser($compId);
+//    dd($result);
 //
 //});
 

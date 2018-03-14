@@ -222,36 +222,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     //delete user
     //soft delete
-    Route::delete('/user/{id}', function ($id) {
-
-        $user = App\User::find($id);
-
-        $verified = verifyCompany($user);
-
-        if(!$verified){
-
-            return response()->json($verified);//value = false
-        }
-
-        //verify the employee is not the primary contact of the company (note: users can be employees)
-        $checkPrimaryContact = checkPrimaryContact($user);
-
-        //if true ie user is the company primary contact
-        if($checkPrimaryContact){
-            return response()->json(['primaryContact' => "This user is the primary contact for the company and as such cannot be deleted at this stage."]);
-        }
-
-        //change email to include the words "OdinDeleted" before soft deleting the user.
-        markEmailAsDeleted($user);
-
-        User::where('id', $id)->delete();
-
-        Role::where('user_id', $id)->delete();
-
-        return response()->json([
-            'success' => true
-        ]);
-    });
+    Route::delete('/user/{id}', 'CompanyAndUsersApiController@deleteUser');
 
     Route::get("/user/list/{compId}", function ($compId) {
 
@@ -316,6 +287,14 @@ Route::group(['middleware' => 'auth:api'], function () {
         $status = Company::where('id', '=', $compId)->pluck('status')->first();
         return response()->json($status);
     });
+
+    /*
+     *
+     */
+    /*------------Subscriptions-----------*/
+    Route::get('/subscription/{compId}', 'CompanyAndUsersApiController@getSubscription');
+
+//    Route::post('/subscription/upgrade', 'CompanyAndUsersApiController@upgradeSubscription');
 
     /*---------------------Employees(Mobile Users)---------------*/
     Route::get("/employees/list/{compId}", function ($compId) {

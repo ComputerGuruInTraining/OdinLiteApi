@@ -10,6 +10,7 @@
         "barryvdh/laravel-debugbar": "^2.3",
         "doctrine/dbal": "v2.5.12",
         "intervention/image": "^2.4",
+        "laravel/cashier": "~7.0",
         "laravel/framework": "5.3.*",
         "laravel/passport": "^1.0",
         "league/oauth2-server": "v5.1.5",
