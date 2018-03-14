@@ -108,13 +108,6 @@ Route::post('/company', function (Request $request) {
 
         $user->save();
 
-        $stripeToken = $request->stripeToken;//either will hold a value or will be null
-
-        //for if have scenarios where register company with no trial period
-//        $user->newSubscription('main', 'monthly')
-//            ->trialDays(90)
-//            ->create($stripeToken);
-
         //retrieve id of last insert
         $id = $user->id;
 
@@ -350,6 +343,9 @@ Route::get('/storage/app/public/{file}', function ($file) {
 });
 
 
+//WIP - will soft delete some aspects of company account, but incomplete
+//fixme: change to delete method
+//Route::get('/company/account/remove/{compId}/{userId}', 'CompanyAndUsersApiController@removeAccount');
 
 /*Test Routes*/
 //todo: remove by end of March
@@ -367,9 +363,10 @@ Route::get("/test/runtimes", function(){
 
 });
 
-Route::get("/misc/test/{compId}", function ($compId) {
-
-    app('App\Http\Controllers\CompanyAndUsersApiController')->getSubscription($compId);
-
-});
+//Route::get("/misc/test/{compId}", function ($compId) {
+//
+//    $result = app('App\Http\Controllers\CompanyAndUsersApiController')->deleteUser($compId);
+//    dd($result);
+//
+//});
 
