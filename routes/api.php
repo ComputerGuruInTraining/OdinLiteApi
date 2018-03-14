@@ -289,11 +289,12 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     /*
-     * subscription/' . $compId
+     *
      */
     /*------------Subscriptions-----------*/
     Route::get('/subscription/{compId}', 'CompanyAndUsersApiController@getSubscription');
 
+//    Route::post('/subscription/upgrade', 'CompanyAndUsersApiController@upgradeSubscription');
 
     /*---------------------Employees(Mobile Users)---------------*/
     Route::get("/employees/list/{compId}", function ($compId) {

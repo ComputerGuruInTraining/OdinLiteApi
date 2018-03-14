@@ -53,7 +53,7 @@ class CompanyAndUsersApiController extends Controller
     }
 
     //return subscription if it has begun,
-    //or returns inTrial false or true and trial_ends_at null or date
+    //or returns inTrial false or true and trial_ends_at date
     public function getSubscription($compId){
 
         //find a user that belongs to the company to verify the compId and the current user belong to the same company
@@ -75,21 +75,21 @@ class CompanyAndUsersApiController extends Controller
 
         //the primary contact starts the free trial
         //but another user may have started the subscription, depending on our policy here.
-        $subscription = DB::table('subscriptions')
+        $subscriptions = DB::table('subscriptions')
             ->whereIn('user_id', $userIds)
             ->orderBy('updated_at')
             ->get();
 
         //subscription has begun
-        if(count($subscription) > 0){
+        if(count($subscriptions) > 0){
 
             //todo: check details such as end date of subscription before returning subscription details
-            return response()->json(['subscriptions' => $compUsers]);
+            return response()->json(['subscriptions' => $subscriptions]);
 
-        }else if(count($subscription) == 0){
+        }else if(count($subscriptions) == 0){
             //none of the company user's have started a subscription, check if in trial period
             $inTrial = false;
-            $trialEnds = null;
+//            $trialEnds = null;
 
             foreach($compUsers as $compUser){
                 if ($compUser->onGenericTrial()) {
@@ -98,10 +98,16 @@ class CompanyAndUsersApiController extends Controller
                 }
             }
 
-            return response()->json([
-                'trial' => $inTrial,//true if inTrial period and subscription has not begun for any of the users, or false if not
-                'trial_ends_at' => $trialEnds//either null or a date
-            ]);
+            if($inTrial == true) {
+                return response()->json([
+                    'trial' => $inTrial,//true if inTrial period and subscription has not begun for any of the users, or false if not
+                    'trial_ends_at' => $trialEnds//either null or a date
+                ]);
+            }else{
+                return response()->json([
+                    'trial' => $inTrial,//true if inTrial period and subscription has not begun for any of the users, or false if not
+                ]);
+            }
         }
 
     }
@@ -197,5 +203,34 @@ class CompanyAndUsersApiController extends Controller
         Role::where('user_id', $userId)->delete();
 
     }
+
+//    public function upgradeSubscription(Request $request){
+//
+//        $user = User::find($request->userId);
+//
+//        //verify company
+//        $verified = verifyCompany($user);
+//
+//        if(!$verified){
+//
+//            return response()->json($verified);//value = false
+//        }
+//
+//        $stripeToken = $request->stripeToken;//either will hold a value or will be null
+//
+//        //todo: primary contact only can do this or particular role or who??
+//        //if particular role:
+//        //retrieve user from Auth::user and then can see if their role is suitable
+//        //or can send through the user id with the api route of course. even send through the role as have this on hand.
+//
+//
+//
+//        //todo: once have plan amounts decided upon and created in stripe
+////        $user->newSubscription('main', 'monthly')
+////            ->trialDays(90)
+////            ->create($stripeToken);
+//
+//
+//    }
 
 }
