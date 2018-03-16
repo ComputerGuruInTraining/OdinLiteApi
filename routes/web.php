@@ -363,10 +363,10 @@ Route::get("/test/runtimes", function(){
 
 });
 
-//Route::get("/misc/test/{compId}", function ($compId) {
-//
-//    $result = app('App\Http\Controllers\CompanyAndUsersApiController')->deleteUser($compId);
+Route::get("/misc/test", function () {
+
+    echo url()->current();
 //    dd($result);
-//
-//});
+
+});
 
