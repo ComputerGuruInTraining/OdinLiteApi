@@ -99,7 +99,8 @@ if (!function_exists('getGeoData')) {
 
 if (!function_exists('getSASForBlob')) {
 
-    function getSASForBlob($accountName, $container, $filename, $permissions, $start, $expiry, $version, $contentType, $key)
+    function getSASForBlob($accountName, $container, $filename, $permissions, $start, $expiry, $version,
+                           $contentType, $key, $counter = 2)
     {
 
             $signedpermissions = $permissions;
@@ -131,9 +132,30 @@ if (!function_exists('getSASForBlob')) {
             $rscl . "\n" .
             $rsct;
 
-        return base64_encode(
+        $signature =  base64_encode(
             hash_hmac('sha256', urldecode(utf8_encode($StringToSign)), base64_decode($key), true)
         );
+        
+        if(strpos($signature, '+') !== false){
+
+            //calculate a  new date to try and form a signature without a + sign
+            // as the + symbol causes the pdf image to not render
+
+            $counter++;
+
+            $todayTS = Carbon\Carbon::now();//format eg 2018-02-06 12:00:44.000000
+            $subStrYesterday = substr($todayTS->subDay(), 0, 10);
+            $subStrTomorrow = substr($todayTS->addDays($counter), 0, 10);//add 2 days for tomorrow as date mutated to yesterday
+
+            $start = $subStrYesterday.'T23:59:00Z';//from moments before midnight yesterday
+            $expiry = $subStrTomorrow.'T08:00:00Z';//til 8am tomorrow
+
+            //will run until + not found.
+            getSASForBlob($accountName, $container, $filename, $permissions, $start,
+                $expiry, $version, $contentType, $key, $counter);
+        }
+
+        return $signature;
     }
 }
 
