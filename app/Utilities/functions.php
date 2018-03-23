@@ -99,7 +99,8 @@ if (!function_exists('getGeoData')) {
 
 if (!function_exists('getSASForBlob')) {
 
-    function getSASForBlob($accountName, $container, $filename, $permissions, $start, $expiry, $version, $contentType, $key)
+    function getSASForBlob($accountName, $container, $filename, $permissions, $start, $expiry, $version,
+                           $contentType, $key)
     {
 
             $signedpermissions = $permissions;
@@ -115,7 +116,6 @@ if (!function_exists('getSASForBlob')) {
             $rsce = "";
             $rscl = "";
             $rsct = $contentType;
-
 
         $StringToSign = $signedpermissions . "\n" .
             $signedstart . "\n" .
@@ -134,6 +134,7 @@ if (!function_exists('getSASForBlob')) {
         return base64_encode(
             hash_hmac('sha256', urldecode(utf8_encode($StringToSign)), base64_decode($key), true)
         );
+
     }
 }
 

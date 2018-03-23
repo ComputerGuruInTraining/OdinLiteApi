@@ -251,8 +251,34 @@ Route::get('/download-photo/{filename}', function ($filename) {
         $resourceType = 'b';
         $contentType = 'image/jpeg';
 
+        //used to change the date for the sas signature in the case of a + symbol being in the signature which causes error
+        $counter = 2;
+
         $signature = getSASForBlob($accountName, $container, $filename, $permissions,
             $start, $expiry, $version, $contentType, $key);
+
+        for($i = 0; $i < 20; $i++) {
+
+            if (strpos($signature, '+') !== false) {
+
+                //calculate a  new date to try and form a signature without a + sign
+                // as the + symbol causes the pdf image to not render
+                $counter++;
+
+                $todayTS = Carbon::now();//format eg 2018-02-06 12:00:44.000000
+                $subStrYesterday = substr($todayTS->subDay(), 0, 10);
+                $subStrTomorrow = substr($todayTS->addDays($counter), 0, 10);//add 2 days for tomorrow as date mutated to yesterday
+
+                $start = $subStrYesterday . 'T23:59:00Z';//from moments before midnight yesterday
+                $expiry = $subStrTomorrow . 'T08:00:00Z';//til 8am tomorrow
+
+                //will run until + not found.
+                $signature = getSASForBlob($accountName, $container, $filename, $permissions, $start,
+                    $expiry, $version, $contentType, $key);
+            }else{
+                break;
+            }
+        }
 
         $url = getBlobUrl($accountName, $container, $filename, $permissions, $resourceType, $start,
             $expiry, $version, $contentType, $signature);
@@ -363,10 +389,10 @@ Route::get("/test/runtimes", function(){
 
 });
 
-//Route::get("/misc/test/{compId}", function ($compId) {
-//
-//    $result = app('App\Http\Controllers\CompanyAndUsersApiController')->deleteUser($compId);
+Route::get("/misc/test", function () {
+
+    echo url()->current();
 //    dd($result);
-//
-//});
+
+});
 
