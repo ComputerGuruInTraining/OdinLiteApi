@@ -694,15 +694,14 @@ class ReportApiController extends Controller
         }
     }
 
-    //fixme: report_shifts table necessary?? single location shifts as is would dictate yes, if single location shifts change to have shift_checks, not so necessary,
     public function getReportIndividualData($reportId)
     {
         $reportInd = DB::table('report_individuals')
             ->join('users', 'users.id', '=', 'report_individuals.mobile_user_id')
             ->select('report_individuals.*', 'users.first_name', 'users.last_name')
             ->where('report_individuals.report_id', '=', $reportId)
-            ->where('users.deleted_at', '=', null)
-            ->where('report_individuals.deleted_at', '=', null)
+//            ->where('users.deleted_at', '=', null)
+//            ->where('report_individuals.deleted_at', '=', null)
             ->get();
 
         return $reportInd;
