@@ -42,6 +42,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         return Auth::user();
     });
 
+    //@login, get all sessionDetails
+    Route::get('/session', 'CompanyAndUsersApiController@getSession');
+
     //get a user by id //todo: except pw
     Route::get("/user/{id}", function ($id) {
         $user = App\User::find($id);

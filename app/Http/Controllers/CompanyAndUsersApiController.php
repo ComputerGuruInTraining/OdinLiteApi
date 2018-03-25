@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 use App\Company as Company;
 use App\User as User;
@@ -150,6 +151,25 @@ class CompanyAndUsersApiController extends Controller
         return response()->json([
             'success' => true
         ]);
+    }
+
+    public function getSession(){
+
+        $user = Auth::user();
+
+        $session = DB::table('users')
+            ->join('companies', 'users.company_id', 'companies.id')
+            ->join('user_roles', 'users.id', 'user_roles.user_id')
+            ->where('users.id', '=', $user->id)
+            ->select('users.id', 'users.first_name', 'users.last_name', 'users.trial_ends_at',
+                'companies.id', 'companies.name', 'companies.primary_contact', 'companies.status',
+                'user_roles.role')
+            ->get();
+
+        return response()->json([
+            'session' => $session
+        ]);
+
     }
 
     //pm is userId
