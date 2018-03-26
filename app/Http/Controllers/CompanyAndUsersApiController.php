@@ -161,8 +161,8 @@ class CompanyAndUsersApiController extends Controller
             ->join('companies', 'users.company_id', 'companies.id')
             ->join('user_roles', 'users.id', 'user_roles.user_id')
             ->where('users.id', '=', $user->id)
-            ->select('users.id', 'users.first_name', 'users.last_name', 'users.trial_ends_at',
-                'companies.id', 'companies.name', 'companies.primary_contact', 'companies.status',
+            ->select('users.id as userId', 'users.first_name', 'users.last_name', 'users.trial_ends_at',
+                'companies.id as compId', 'companies.name', 'companies.primary_contact', 'companies.status',
                 'user_roles.role')
             ->get();
 
