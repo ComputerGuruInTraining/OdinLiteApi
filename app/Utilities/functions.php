@@ -478,7 +478,152 @@ if (!function_exists('notifySuccessActiveCampaign')) {
     }
 }
 
+if (!function_exists('stripePlanName')) {
 
+    function stripePlanName($plan, $term)
+    {
+        $stripePlan = '';
+//        $dbPlan = $plan.'_'.$term;
+//        $numUsers = '';
+
+        $stripeKey = Config::get('services.stripe.key');
+
+        if (strpos($stripeKey, 'test')) {
+//            if($plan == 'plan1') {
+
+//                $numUsers = "up to 5";
+
+            if ($term == 'monthly') {
+                $stripePlan = Config::get('constants.TEST_PLAN_M1');
+
+            } else {
+                //term == 'yearly'
+                $stripePlan = Config::get('constants.TEST_PLAN_Y1');
+            }
+//            }
+        } else {
+
+            if ($plan == 'plan1') {
+
+//                $numUsers = "up to 5";
+
+                if ($term == 'monthly') {
+                    $stripePlan = Config::get('constants.PLAN_M1');
+
+                } else {
+                    //term == 'quarterly'
+                    $stripePlan = Config::get('constants.PLAN_Y1');
+                }
+
+            } else if ($plan == 'plan2') {
+
+//                $numUsers = "6 - 10";
+
+                if ($term == 'monthly') {
+                    $stripePlan = Config::get('constants.PLAN_M2');
+
+                } else {
+                    //term == 'quarterly'
+                    $stripePlan = Config::get('constants.PLAN_Y2');
+                }
+            } else if ($plan == 'plan3') {
+
+//                $numUsers = "11 - 20";
+
+                if ($term == 'monthly') {
+                    $stripePlan = Config::get('constants.PLAN_M3');
+
+                } else {
+                    //term == 'quarterly'
+                    $stripePlan = Config::get('constants.PLAN_Y3');
+                }
+            }
+        }
+
+        return $stripePlan;
+    }
+
+}
+
+//eg format input = 5th June 2018 returns 2018-06-05 02:42:27
+if (!function_exists('trialDays')) {
+
+    function trialDays($trialEndsAt)
+    {
+        $dateTrialEndsAt = Carbon\Carbon::createFromFormat('jS F Y', $trialEndsAt); // 1975-05-21 22:00:00
+        $now = Carbon\Carbon::now();
+        $trialDays = $now->diffInDays($dateTrialEndsAt);
+
+        return $trialDays;
+    }
+}
+
+//if (!function_exists('stripePlanName')) {
+//
+//    function stripePlanName($plan, $term)
+//    {
+//        $stripePlan = '';
+//        $dbPlan = $plan.'_'.$term;
+////        $numUsers = '';
+//
+//        $stripeKey = Config::get('services.stripe.key');
+//
+//        if(strpos($stripeKey, 'test')) {
+////            if($plan == 'plan1') {
+//
+////                $numUsers = "up to 5";
+//
+//            if ($term == 'monthly') {
+//                $stripePlan = Config::get('constants.TEST_PLAN_M1');
+//
+//            } else {
+//                //term == 'yearly'
+//                $stripePlan = Config::get('constants.TEST_PLAN_Y1');
+//            }
+////            }
+//        }else {
+//
+//            if ($plan == 'plan1') {
+//
+////                $numUsers = "up to 5";
+//
+//                if ($term == 'monthly') {
+//                    $stripePlan = Config::get('constants.PLAN_M1');
+//
+//                } else {
+//                    //term == 'quarterly'
+//                    $stripePlan = Config::get('constants.PLAN_Y1');
+//                }
+//
+//            } else if ($plan == 'plan2') {
+//
+////                $numUsers = "6 - 10";
+//
+//                if ($term == 'monthly') {
+//                    $stripePlan = Config::get('constants.PLAN_M2');
+//
+//                } else {
+//                    //term == 'quarterly'
+//                    $stripePlan = Config::get('constants.PLAN_Y2');
+//                }
+//            } else if ($plan == 'plan3') {
+//
+////                $numUsers = "11 - 20";
+//
+//                if ($term == 'monthly') {
+//                    $stripePlan = Config::get('constants.PLAN_M3');
+//
+//                } else {
+//                    //term == 'quarterly'
+//                    $stripePlan = Config::get('constants.PLAN_Y3');
+//                }
+//            }
+//        }
+//
+//        return collect(['stripePlan' => $stripePlan, 'dbPlan' => $dbPlan]);
+//    }
+//
+//}
 
 
 
