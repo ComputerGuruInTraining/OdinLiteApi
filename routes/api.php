@@ -295,9 +295,17 @@ Route::group(['middleware' => 'auth:api'], function () {
      *
      */
     /*------------Subscriptions-----------*/
+    //get subscriptions or trial ends at date if still on free trial
     Route::get('/subscription/{compId}', 'CompanyAndUsersApiController@getSubscription');
 
-//    Route::post('/subscription/upgrade', 'CompanyAndUsersApiController@upgradeSubscription');
+    //create first subscription no trial period
+    Route::post('/subscription/create', 'CompanyAndUsersApiController@createSubscription');
+
+    //todo: cancel subscription
+//    Route::post('/subscription/cancel', 'CompanyAndUsersApiController@cancelSubscription');
+
+    //todo: swap subscription
+
 
     /*---------------------Employees(Mobile Users)---------------*/
     Route::get("/employees/list/{compId}", function ($compId) {
