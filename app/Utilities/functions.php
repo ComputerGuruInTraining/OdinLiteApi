@@ -558,17 +558,21 @@ if (!function_exists('trialDays')) {
     }
 }
 
-//if (!function_exists('stripePlanName')) {
+
+//if (!function_exists('stripePlanNumTerm')) {
 //
-//    function stripePlanName($plan, $term)
+//    function stripePlanNumTerm($planId)
 //    {
-//        $stripePlan = '';
-//        $dbPlan = $plan.'_'.$term;
+//        $planNum = '';
+//        $term = '';
+//        $numUsers = '';
+//
+////        $dbPlan = $plan.'_'.$term;
 ////        $numUsers = '';
 //
 //        $stripeKey = Config::get('services.stripe.key');
 //
-//        if(strpos($stripeKey, 'test')) {
+//        if (strpos($stripeKey, 'test')) {
 ////            if($plan == 'plan1') {
 //
 ////                $numUsers = "up to 5";
@@ -581,7 +585,7 @@ if (!function_exists('trialDays')) {
 //                $stripePlan = Config::get('constants.TEST_PLAN_Y1');
 //            }
 ////            }
-//        }else {
+//        } else {
 //
 //            if ($plan == 'plan1') {
 //
@@ -620,10 +624,11 @@ if (!function_exists('trialDays')) {
 //            }
 //        }
 //
-//        return collect(['stripePlan' => $stripePlan, 'dbPlan' => $dbPlan]);
+//        return $stripePlan;
 //    }
 //
 //}
+
 
 
 

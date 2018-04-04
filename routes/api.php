@@ -302,7 +302,9 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('/subscription/create', 'CompanyAndUsersApiController@createSubscription');
 
     //todo: cancel subscription
-//    Route::post('/subscription/cancel', 'CompanyAndUsersApiController@cancelSubscription');
+    Route::post('/subscription/cancel', 'CompanyAndUsersApiController@cancelMySubscription');
+
+
 
     //todo: swap subscription
 
