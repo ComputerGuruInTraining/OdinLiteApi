@@ -26,6 +26,28 @@ return [
     'REMOVE_TAG_REQUEST' => 'api_action=contact_tag_remove&api_output=json&api_key=',
     'ADD_TAG_REQUEST' => 'api_action=contact_tag_add&api_output=json&api_key=',
 
+    /*****Stripe Plan Ids with amounts in  USD*******/
+
+    /*test monthly*/
+    'TEST_PLAN_M1' => 'plan_CXk0vEO3OII8ZU',
+
+    /*test yearly*/
+    'TEST_PLAN_Y1' => 'plan_CXk0hfbFwLLvVd',
+
+    /*monthly*/
+    'PLAN_M1' => 'plan_CXjmOc1d4APdQ1',//$29/mth
+    'PLAN_M2' => 'plan_CXjnfBY2GonO8J',//$59/mth
+    'PLAN_M3' => 'plan_CXjnJMfqW8hTnH',//$99/mth
+    'PLAN_M4' => '',
+
+    /*yearly*/
+    'PLAN_Y1' => 'plan_CXjqEb6lGsQXcU',//$228/yr
+    'PLAN_Y2' => 'plan_CXjqkgBvAAikFU',//$468/yr
+    'PLAN_Y3' => 'plan_CXjrylVJoFY2It',//$828/yr
+    'PLAN_Y4' => '',
+
+
+
     /*****error msgs******/
 
 //    'ERROR_UPDATE' => 'Unexpected error updating details',

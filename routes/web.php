@@ -17,6 +17,7 @@ use App\Notifications\NewMobileUser;
 use Illuminate\Support\Facades\Storage;
 use MicrosoftAzure\Storage\Common\ServicesBuilder;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 /*Notify odin primary email that new company registered*/
 use App\Notifications\RegisterCompany;
@@ -29,6 +30,8 @@ use App\OdinErrorLogging as AppErrors;
 //Test Route Imports
 use App\User as User;
 use App\Company as Company;
+use App\Subscription as Subscription;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -389,10 +392,65 @@ Route::get("/test/runtimes", function(){
 
 });
 
-Route::get("/misc/test", function () {
-
-    echo url()->current();
-//    dd($result);
-
-});
+//Route::get("/misc/test", function () {
+//
+//
+//        $user = Auth::user();
+//
+//        //check primary contact and authorised to cancel the subscription
+//        // (safeguard even though the console btn will not be accessible to non primary contacts)
+//        $contact = checkPrimaryContact($user);
+//
+//        if (!$contact) {
+//            return response()->json([
+//                'success' => false,
+//                'result' => "This user is not the primary contact for the company and as such cannot cancel the subscription."
+//            ]);
+//        }
+//
+//        //else... user is primary contact...
+//
+//        $subscriptionId = 54;
+//
+//        //get subscription
+//        $subscription = Subscription::find($subscriptionId);
+//
+//        //find the user associated with subscription
+//        $userSubscription = User::find($subscription->user_id);
+//
+//        //as a safeguard, check the userSubscription belongs to the same company as the logged in user
+//        if ($user->company_id == $userSubscription->company_id) {
+//
+//            $user->subscription($subscription->name)->cancel();
+//
+//            if ($user->subscription($subscription->name)->onGracePeriod()) {
+//
+//                //get the subscription model to access the updated ends_at field
+//                $cancelledSub = Subscription::find($subscriptionId);
+//
+//                $endsAt = $cancelledSub->ends_at;
+//
+//                return response()->json([
+//                    'success' => true,
+//                    'result' => "The subscription has been cancelled, with a grace period ending on: " . $endsAt//tested :)
+//                ]);
+//            } else {
+//
+//                return response()->json([
+//                    'success' => true,
+//                    'result' => "The subscription has been cancelled."
+//                ]);
+//
+//            }
+//
+//        } else {
+//            return response()->json([
+//                'success' => false,
+//                'result' => "The user is not authorized to cancel this company's subscription."//tested :)
+//            ]);
+//
+//        }
+//
+//
+//});
 
