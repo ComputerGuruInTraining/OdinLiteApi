@@ -33,12 +33,12 @@ return [
         'model' => App\User::class,
 
         //test data
-        'key' => 'pk_test_u5hJw0nEAL2kgix2Za91d3cV',
-        'secret' => 'sk_test_WmGxgDGLP3M9MRJ2oWLJCxlc'
+//        'key' => 'pk_test_u5hJw0nEAL2kgix2Za91d3cV',
+//        'secret' => 'sk_test_WmGxgDGLP3M9MRJ2oWLJCxlc'
 
         //live data
-//        'key' => 'pk_live_oQQ02SuVrn0UHTOnYIKsizcV',
-//        'secret' => 'sk_live_To9x3WX6NSHvrto3FpH760V1',
+        'key' => 'pk_live_oQQ02SuVrn0UHTOnYIKsizcV',
+        'secret' => 'sk_live_To9x3WX6NSHvrto3FpH760V1',
     ],
 
 ];

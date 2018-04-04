@@ -9,12 +9,14 @@ use Illuminate\Support\Facades\Auth;
 use App\Company as Company;
 use App\User as User;
 use App\UserRole as Role;
+use App\Subscription as Subscription;
 
 class CompanyAndUsersApiController extends Controller
 {
 
     //receives the userId of the user that will now be the company contact
-    public function updateContact($userId){
+    public function updateContact($userId)
+    {
 
         //verify company
         $user = User::withTrashed()
@@ -23,7 +25,7 @@ class CompanyAndUsersApiController extends Controller
 
         $verified = verifyCompany($user);
 
-        if(!$verified){
+        if (!$verified) {
 
             return response()->json($verified);//value = false
         }
@@ -34,7 +36,7 @@ class CompanyAndUsersApiController extends Controller
         $contact = User::find($userId);
 
         //if contact exists and is not deleted
-        if($contact != null){
+        if ($contact != null) {
 
             $company = Company::find($contact->company_id);
 
@@ -55,7 +57,8 @@ class CompanyAndUsersApiController extends Controller
 
     //return subscription if it has begun,
     //or returns inTrial false or inTrial true and trial_ends_at date
-    public function getSubscription($compId){
+    public function getSubscription($compId)
+    {
 
         //find a user that belongs to the company to verify the compId and the current user belong to the same company
         $user = User::where('company_id', '=', $compId)->first();
@@ -63,7 +66,7 @@ class CompanyAndUsersApiController extends Controller
         //verify company
         $verified = verifyCompany($user);
 
-        if(!$verified){
+        if (!$verified) {
 
             return response()->json($verified);//value = false
         }
@@ -75,7 +78,7 @@ class CompanyAndUsersApiController extends Controller
         //so how will this work???
 
         $compUsers = User::where('company_id', '=', $compId)
-                        ->get();
+            ->get();
 
         //array of userIds that belong to the company
         $userIds = $compUsers->pluck('id');
@@ -88,28 +91,31 @@ class CompanyAndUsersApiController extends Controller
             ->get();
 
         //subscription has begun
-        if(count($subscriptions) > 0){
+        if (count($subscriptions) > 0) {
 
             //todo: check details such as end date of subscription before returning subscription details
-            return response()->json(['subscriptions' => $subscriptions]);
+            return response()->json([
+                'subscriptions' => $subscriptions,
 
-        }else if(count($subscriptions) == 0){
+            ]);
+
+        } else if (count($subscriptions) == 0) {
             //none of the company user's have started a subscription, check if in trial period
             $inTrial = false;
 
-            foreach($compUsers as $compUser){
+            foreach ($compUsers as $compUser) {
                 if ($compUser->onGenericTrial()) {
                     $inTrial = true;
                     $trialEnds = $compUser->trial_ends_at;
                 }
             }
 
-            if($inTrial == true) {
+            if ($inTrial == true) {
                 return response()->json([
                     'trial' => $inTrial,//true if inTrial period and subscription has not begun for any of the users, or false if not
                     'trial_ends_at' => $trialEnds//either null or a date
                 ]);
-            }else{
+            } else {
                 return response()->json([
                     'trial' => $inTrial,//true if inTrial period and subscription has not begun for any of the users, or false if not
                 ]);
@@ -119,7 +125,8 @@ class CompanyAndUsersApiController extends Controller
     }
 
     //wip, atm deletes company, primary contact from user and user roles
-    public function removeAccount($compId, $userId){
+    public function removeAccount($compId, $userId)
+    {
 
         //verify user
 //        $user = User::find($userId);
@@ -146,7 +153,7 @@ class CompanyAndUsersApiController extends Controller
 
         $comp = Company::find($compId);
 
-        if($comp->status == "incomplete"){
+        if ($comp->status == "incomplete") {
             $comp->delete();
 
             $this->deletePrimaryContact($userId);
@@ -158,7 +165,9 @@ class CompanyAndUsersApiController extends Controller
         ]);
     }
 
-    public function getSession(){
+    //called during login
+    public function getSession()
+    {
 
         $user = Auth::user();
 
@@ -178,13 +187,14 @@ class CompanyAndUsersApiController extends Controller
     }
 
     //pm is userId
-    public function deleteUser($id){
+    public function deleteUser($id)
+    {
 
         $user = User::find($id);
 
         $verified = verifyCompany($user);
 
-        if(!$verified){
+        if (!$verified) {
 
             return response()->json($verified);//value = false
         }
@@ -193,7 +203,7 @@ class CompanyAndUsersApiController extends Controller
         $checkPrimaryContact = checkPrimaryContact($user);
 
         //if true ie user is the company primary contact
-        if($checkPrimaryContact){
+        if ($checkPrimaryContact) {
             return response()->json(['primaryContact' => "This user is the primary contact for the company and as such cannot be deleted at this stage."]);
         }
 
@@ -209,7 +219,8 @@ class CompanyAndUsersApiController extends Controller
         ]);
     }
 
-    public function deletePrimaryContact($userId){
+    public function deletePrimaryContact($userId)
+    {
 
         $user = User::find($userId);
 //
@@ -300,23 +311,24 @@ class CompanyAndUsersApiController extends Controller
     //usage 2: when the primary contact for a company changes, the old subscription is cancelled
     //and when the billing cycle is near ended (1 week for monthly billing, 2 weeks for yearly)
     //the new primary contact is notified that they need to enter credit card details and
-    public function createSubscription(Request $request){
-
+    public function createSubscription(Request $request)
+    {
+//
         $user = Auth::user();
-
-        //verify company
-        $verified = verifyCompany($user);
-
-        if(!$verified){
-
-            return response()->json($verified);//value = false
-        }
+//
+//        //verify company
+//        $verified = verifyCompany($user);
+//
+//        if (!$verified) {
+//
+//            return response()->json($verified);//value = false
+//        }
 
         //verify user is the primary contact
         $checkPrimaryContact = checkPrimaryContact($user);
 
         //if true ie user is the company primary contact
-        if(!$checkPrimaryContact){
+        if (!$checkPrimaryContact) {
             return response()->json([
                 'primaryContact' => false,
                 'success' => false
@@ -330,7 +342,7 @@ class CompanyAndUsersApiController extends Controller
 
         $stripePlan = stripePlanName($plan, $term);
 
-        if(isset($trialEndsAt)){
+        if (isset($trialEndsAt)) {
 
             $trialDays = trialDays($trialEndsAt);
             //The first argument passed to the newSubscription method should be the name of the subscription.
@@ -339,7 +351,7 @@ class CompanyAndUsersApiController extends Controller
             $user->newSubscription('main', $stripePlan)
                 ->trialDays($trialDays)
                 ->create($stripeToken);
-        }else{
+        } else {
             //The first argument passed to the newSubscription method should be the name of the subscription.
             // If your application only offers a single subscription, you might call this main or  primary.
             // The second argument is the specific Stripe / Braintree plan the user is subscribing to.
@@ -353,7 +365,7 @@ class CompanyAndUsersApiController extends Controller
                 'success' => true
             ]);
 
-        }else{
+        } else {
             return response()->json([
                 'success' => false
             ]);
@@ -367,26 +379,67 @@ class CompanyAndUsersApiController extends Controller
     //Usage: 2) the primary contact opts to cancel the subscription altogether
     //NOTE: change subscription is not a cancel it is a swap
     //this scenario will be instigated by primary contact only
-//    public function cancelSubscription(Request $request){
-//
-//        $user = Auth::user();
-//
-//        //verify company
-//        $verified = verifyCompany($user);
-//
-//        if(!$verified){
-//
-//            return response()->json($verified);//value = false
-//        }
-//
-//        //need to find the current subscription of the company
-//        //we can
-//
-//
-//
-//        $user->subscription('main')->cancel();
-//
-//
-//    }
+
+    //Cancel btn pressed on console, pass through subscription id in request
+    //Primary Contact must make the request
+    public function cancelMySubscription(Request $request)
+    {
+
+        $user = Auth::user();
+
+        //check primary contact and authorised to cancel the subscription
+        // (safeguard even though the console btn will not be accessible to non primary contacts)
+        $contact = checkPrimaryContact($user);
+
+        if (!$contact) {
+            return response()->json([
+                'success' => false,
+                'result' => "This user is not the primary contact for the company and as such cannot cancel the subscription."
+            ]);
+        }
+
+        //else... user is primary contact...
+
+        $subscriptionId = $request->subId;
+
+        //get subscription
+        $subscription = Subscription::find($subscriptionId);
+
+        //find the user associated with subscription
+        $userSubscription = User::find($subscription->user_id);
+
+        //as a safeguard, check the userSubscription belongs to the same company as the logged in user
+        if ($user->company_id == $userSubscription->company_id) {
+
+            $user->subscription($subscription->name)->cancel();
+
+            if ($user->subscription($subscription->name)->onGracePeriod()) {
+
+                //get the subscription model to access the updated ends_at field
+                $cancelledSub = Subscription::find($subscriptionId);
+
+                $endsAt = $cancelledSub->ends_at;
+
+                return response()->json([
+                    'success' => true,
+                    'result' => "The subscription has been cancelled, with a grace period ending on: " . $endsAt//tested :)
+                ]);
+            } else {
+
+                return response()->json([
+                    'success' => true,
+                    'result' => "The subscription has been cancelled."
+                ]);
+
+            }
+
+        } else {
+            return response()->json([
+                'success' => false,
+                'result' => "The user is not authorized to cancel this company's subscription."//tested :)
+            ]);
+
+        }
+    }
 
 }
