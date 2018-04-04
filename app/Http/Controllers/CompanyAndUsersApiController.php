@@ -104,7 +104,7 @@ class CompanyAndUsersApiController extends Controller
             $inTrial = false;
 
             foreach ($compUsers as $compUser) {
-                if ($compUser->onGenericTrial()) {
+                if ($compUser->onTrial()) {
                     $inTrial = true;
                     $trialEnds = $compUser->trial_ends_at;
                 }
