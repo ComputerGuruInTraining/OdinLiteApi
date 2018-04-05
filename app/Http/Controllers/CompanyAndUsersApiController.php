@@ -75,7 +75,6 @@ class CompanyAndUsersApiController extends Controller
         //only primary contacts can update subscriptions but the primary contact could change, so subscription
         //could be attached to old primary contact.
         //TODO: when edit the primary contact, copy in the subscription (except it is associated with a different customer)
-        //so how will this work???
 
         $compUsers = User::where('company_id', '=', $compId)
             ->get();
@@ -87,41 +86,140 @@ class CompanyAndUsersApiController extends Controller
         //but another user may have started the subscription, depending on our policy here.
         $subscriptions = DB::table('subscriptions')
             ->whereIn('user_id', $userIds)
-            ->orderBy('updated_at')
+            ->orderBy('ends_at', 'desc')
             ->get();
+
 
         //subscription has begun
         if (count($subscriptions) > 0) {
 
-            //todo: check details such as end date of subscription before returning subscription details
-            return response()->json([
-                'subscriptions' => $subscriptions,
+            //check if there is an active subscription (without an ends_at date)
+            $active = false;
+            $activeSub = null;
+        //todo: console deal with in trial subscriptions
+            foreach ($subscriptions as $sub) {
 
-            ]);
+                //if any of the subscriptions have not been cancelled
+                //the non cancelled subscription will be the active subscription, there should only be 1 of these.
+                if ($sub->ends_at == null) {
+
+                    $activeSub = $sub;
+                    $active = true;
+
+                }
+            }
+
+            if ($active == true) {
+
+                return response()->json([
+                    'subscriptions' => $activeSub,//worked for ends_at = null, only 1 subscription. check on console if has a trial period.
+
+                ]);
+
+            } else {
+                //no active subscription, need to retrieve cancelled subscription
+
+                $graceCheck = false;
+                $graceSub = null;
+                $graceSubscription = null;
+                $graceCollect = collect();
+
+
+                //find whether any are onGracePeriod still
+                //according to design, could be 2 on grace period considering edit primary contact design
+                //if edit primary contact, and cancel first subscription, create 2nd, user cancels 2nd,
+                //then have 2 trial ends at dates the same, 2 cancelled subscriptions, but the most recent one needs to be returned to console.
+                //the latest ends_at date would be the subscription we require.
+                foreach ($compUsers as $compUser) {
+
+                    //if the user has a subscription that is on Grace Period, it will return true and following will return all subscriptions
+                    if ($compUser->subscription('main')->onGracePeriod()) {
+
+                        $graceSub = Subscription::where('user_id', $compUser->id)
+                            ->where('trial_ends_at', '!=', null)
+                            ->orderBy('trial_ends_at', 'desc')
+                            ->first();
+
+                        $graceCollect->push($graceSub);
+
+                        $graceCheck = true;
+
+                    }
+                }
+                if ($graceCheck == true) {
+
+                    $graceCollect->sortBy('trial_ends_at');
+
+                    $graceSubscription = $graceCollect->first();
+
+                    return response()->json([
+                        'graceSub' => $graceSubscription,
+
+                    ]);
+                }
+                else{
+                    //user has cancelled and not on grace period
+
+                    $cancelSubscription = null;
+                    $cancelCollect = collect();
+                    $cancelSub = null;
+
+                    foreach ($compUsers as $compUser) {
+
+                        if ($compUser->subscription('main')->cancelled()) {
+                            $cancelSub = Subscription::where('user_id', $compUser->id)
+                                ->where('ends_at', '!=', null)
+                                ->orderBy('ends_at', 'desc')
+                                ->first();
+
+                            $cancelCollect->push($cancelSub);
+                        }
+                    }
+
+                    $cancelCollect->sortBy('ends_at');//5th june then the april
+
+                    $cancelSubscription = $cancelCollect->first();
+
+                    return response()->json([
+                        'cancelSub' => $cancelSubscription,
+
+                    ]);
+                }
+            }
 
         } else if (count($subscriptions) == 0) {
             //none of the company user's have started a subscription, check if in trial period
             $inTrial = false;
+            $trialEnds = null;
 
             foreach ($compUsers as $compUser) {
+                //check if trial_ends_at date is after current date, if so true.
                 if ($compUser->onTrial()) {
                     $inTrial = true;
-                    $trialEnds = $compUser->trial_ends_at;
+                    $trialEndsAt = $compUser->trial_ends_at;
+
                 }
             }
 
-            if ($inTrial == true) {
-                return response()->json([
-                    'trial' => $inTrial,//true if inTrial period and subscription has not begun for any of the users, or false if not
-                    'trial_ends_at' => $trialEnds//either null or a date
-                ]);
-            } else {
-                return response()->json([
-                    'trial' => $inTrial,//true if inTrial period and subscription has not begun for any of the users, or false if not
-                ]);
-            }
-        }
+            if($inTrial == false){
 
+                //could there be 2 trial_ends_at dates that differ?
+                // If say a company cancels account when on trial, and then reinstates account
+                //                with a trial (once we bring in remove account, and reinstate account, and if we provide a 2nd trial in this instance),
+                //so,to be safe, we'll presume there could be 2 trial_ends_at dates.
+
+                $compUsers->sortBy('trial_ends_at');
+
+                $outOfDate = $compUsers->first();
+
+                $trialEndsAt = $outOfDate->trial_ends_at;
+            }
+
+            return response()->json([
+                'trial' => $inTrial,//true if inTrial period and subscription has not begun for any of the users, or false if not
+                'trial_ends_at' => $trialEndsAt//could be a past date if trial == false, or a future date if trial = true
+            ]);
+        }
     }
 
     //wip, atm deletes company, primary contact from user and user roles
