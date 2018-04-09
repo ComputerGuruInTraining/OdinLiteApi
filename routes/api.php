@@ -307,6 +307,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 
     //todo: swap subscription
+    Route::post('/subscription/swap', 'CompanyAndUsersApiController@createSubscription');
 
 
     /*---------------------Employees(Mobile Users)---------------*/
