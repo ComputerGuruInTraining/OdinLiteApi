@@ -357,23 +357,53 @@ class CompanyAndUsersApiController extends Controller
             ]);
         }
 
-        $plan = $request->plan;
-        $term = $request->term;
-
-        $stripePlan = stripePlanName($plan, $term);
-
-        $user->subscription('main')->swap($stripePlan);
-
+        /*the subscribed method returns true if the user has an active subscription,
+        even if the subscription is currently within its trial period*/
         if ($user->subscribed('main')) {
 
-            return response()->json([
-                'success' => true
-            ]);
+            $plan = $request->plan;
+            $term = $request->term;
 
-        } else {
-            return response()->json([
-                'success' => false
-            ]);
+            $stripePlan = stripePlanName($plan, $term);
+
+            $user->subscription('main')->swap($stripePlan);
+
+            if ($user->subscribed('main')) {
+
+                return response()->json([
+                    'success' => true
+                ]);
+
+            } else {
+                return response()->json([
+                    'success' => false
+                ]);
+            }
+        }else {
+            /*
+             * To determine if the user was once an active subscriber,
+             * but has cancelled their subscription, you may use the cancelled method
+             */
+            if ($user->subscription('main')->cancelled()) {
+
+                if ($user->subscription('main')->onGracePeriod()) {
+                    return response()->json([
+                        'success' => false,
+                        'subscriptionStatus' => "cancelled but on grace period"
+                    ]);
+
+                }else {
+                    return response()->json([
+                        'success' => false,
+                        'subscriptionStatus' => "cancelled"
+                    ]);
+                }
+            }else {
+                return response()->json([
+                    'success' => false,
+                    'subscriptionStatus' => "not subscribed"
+                ]);
+            }
         }
     }
 
