@@ -55,8 +55,11 @@ class CompanyAndUsersApiController extends Controller
         ]);
     }
 
-    //return subscription if it has begun,
-    //or returns inTrial false or inTrial true and trial_ends_at date
+    //return subscriptions == 1 active subscription (will only be one based on design);
+    //or return , graceSub if in trialPeriod but cancelled (with the latest trial_ends_at date,
+    ///////// as could be 2 if edit primary contact, and cancel first subscription, create 2nd, then user cancels 2nd;
+    //or return cancelSub if not in trial period but cancelled (with the latest trial_ends_at date, as with gracePeriod, could be 2.)
+    //or returns inTrial false or inTrial true and trial_ends_at date if no subscription created yet ever.
     public function getSubscription($compId)
     {
 
@@ -338,72 +341,41 @@ class CompanyAndUsersApiController extends Controller
 
     }
 
-    //Usage: check if have subscription then create subscription or swap subscription
-//    public function upgradeSubscription(Request $request){
-//
-//
-//    }
+    public function swapSubscription(Request $request){
 
-//    public function swapSubscription($request){
-//
-//    }
+        $user = Auth::user();
 
-    //ARCHIVED. NOW ABSORBED BY CREATESUBSCRIPTION()
-//    public function createSubscriptionTrial($request){
-//
-//        $user = Auth::user();
-//
-//        //verify company
-//        $verified = verifyCompany($user);
-//
-//        if(!$verified){
-//
-//            return response()->json($verified);//value = false
-//        }
-//
-//        //verify user is the primary contact
-//        $checkPrimaryContact = checkPrimaryContact($user);
-//
-//        //if true ie user is the company primary contact
-//        if(!$checkPrimaryContact){
-//            return response()->json([
-//                'primaryContact' => false,
-//                'success' => false
-//            ]);
-//        }
-//
-//        $stripeToken = $request->stripeToken;//either will hold a value or will be null
-//        $plan = $request->plan;
-//        $term = $request->term;
-//        $trialEndsAt = $request->trialEndsAt;
-//
-//        $stripePlan = stripePlanName($plan, $term);
-//
-//        //eg format input = 5th June 2018 returns 2018-06-05 02:42:27
-//        $dateTrialEndsAt = Carbon::createFromFormat('jS F Y', $trialEndsAt); // 1975-05-21 22:00:00
-//        $now = Carbon::now();
-//        $trialDays = $now->diffInDays($dateTrialEndsAt);
-//
-//        //The first argument passed to the newSubscription method should be the name of the subscription.
-//        // If your application only offers a single subscription, you might call this main or  primary.
-//        // The second argument is the specific Stripe / Braintree plan the user is subscribing to.
-//        $user->newSubscription('main', $stripePlan)
-//            ->trialDays($trialDays)
-//            ->create($stripeToken);
-//
-//        if ($user->subscribed('main')) {
-//
-//            return response()->json([
-//                'success' => true
-//            ]);
-//
-//        }else{
-//            return response()->json([
-//                'success' => false
-//            ]);
-//        }
-//    }
+        //verify user is the primary contact
+        $checkPrimaryContact = checkPrimaryContact($user);
 
+        //if true ie user is the company primary contact
+        if (!$checkPrimaryContact) {
+
+            return response()->json([
+                'primaryContact' => false,
+                'success' => false
+            ]);
+        }
+
+        $plan = $request->plan;
+        $term = $request->term;
+
+        $stripePlan = stripePlanName($plan, $term);
+
+        $user->subscription('main')->swap($stripePlan);
+
+        if ($user->subscribed('main')) {
+
+            return response()->json([
+                'success' => true
+            ]);
+
+        } else {
+            return response()->json([
+                'success' => false
+            ]);
+        }
+    }
 
     //usage 1: initial subscription for a company instigated by primary contact
     //usage 2: when the primary contact for a company changes, the old subscription is cancelled
@@ -411,16 +383,7 @@ class CompanyAndUsersApiController extends Controller
     //the new primary contact is notified that they need to enter credit card details and
     public function createSubscription(Request $request)
     {
-//
         $user = Auth::user();
-//
-//        //verify company
-//        $verified = verifyCompany($user);
-//
-//        if (!$verified) {
-//
-//            return response()->json($verified);//value = false
-//        }
 
         //verify user is the primary contact
         $checkPrimaryContact = checkPrimaryContact($user);
@@ -454,7 +417,6 @@ class CompanyAndUsersApiController extends Controller
             // If your application only offers a single subscription, you might call this main or  primary.
             // The second argument is the specific Stripe / Braintree plan the user is subscribing to.
             $user->newSubscription('main', $stripePlan)->create($stripeToken);
-
         }
 
         if ($user->subscribed('main')) {
