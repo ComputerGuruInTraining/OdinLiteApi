@@ -55,8 +55,11 @@ class CompanyAndUsersApiController extends Controller
         ]);
     }
 
-    //return subscription if it has begun,
-    //or returns inTrial false or inTrial true and trial_ends_at date
+    //return subscriptions == 1 active subscription (will only be one based on design);
+    //or return , graceSub if in trialPeriod but cancelled (with the latest trial_ends_at date,
+    ///////// as could be 2 if edit primary contact, and cancel first subscription, create 2nd, then user cancels 2nd;
+    //or return cancelSub if not in trial period but cancelled (with the latest trial_ends_at date, as with gracePeriod, could be 2.)
+    //or returns inTrial false or inTrial true and trial_ends_at date if no subscription created yet ever.
     public function getSubscription($compId)
     {
 
@@ -75,7 +78,6 @@ class CompanyAndUsersApiController extends Controller
         //only primary contacts can update subscriptions but the primary contact could change, so subscription
         //could be attached to old primary contact.
         //TODO: when edit the primary contact, copy in the subscription (except it is associated with a different customer)
-        //so how will this work???
 
         $compUsers = User::where('company_id', '=', $compId)
             ->get();
@@ -87,41 +89,140 @@ class CompanyAndUsersApiController extends Controller
         //but another user may have started the subscription, depending on our policy here.
         $subscriptions = DB::table('subscriptions')
             ->whereIn('user_id', $userIds)
-            ->orderBy('updated_at')
+            ->orderBy('ends_at', 'desc')
             ->get();
+
 
         //subscription has begun
         if (count($subscriptions) > 0) {
 
-            //todo: check details such as end date of subscription before returning subscription details
-            return response()->json([
-                'subscriptions' => $subscriptions,
+            //check if there is an active subscription (without an ends_at date)
+            $active = false;
+            $activeSub = null;
+        //todo: console deal with in trial subscriptions
+            foreach ($subscriptions as $sub) {
 
-            ]);
+                //if any of the subscriptions have not been cancelled
+                //the non cancelled subscription will be the active subscription, there should only be 1 of these.
+                if ($sub->ends_at == null) {
+
+                    $activeSub = $sub;
+                    $active = true;
+
+                }
+            }
+
+            if ($active == true) {
+
+                return response()->json([
+                    'subscriptions' => $activeSub,//worked for ends_at = null, only 1 subscription. check on console if has a trial period.
+
+                ]);
+
+            } else {
+                //no active subscription, need to retrieve cancelled subscription
+
+                $graceCheck = false;
+                $graceSub = null;
+                $graceSubscription = null;
+                $graceCollect = collect();
+
+
+                //find whether any are onGracePeriod still
+                //according to design, could be 2 on grace period considering edit primary contact design
+                //if edit primary contact, and cancel first subscription, create 2nd, user cancels 2nd,
+                //then have 2 trial ends at dates the same, 2 cancelled subscriptions, but the most recent one needs to be returned to console.
+                //the latest ends_at date would be the subscription we require.
+                foreach ($compUsers as $compUser) {
+
+                    //if the user has a subscription that is on Grace Period, it will return true and following will return all subscriptions
+                    if ($compUser->subscription('main')->onGracePeriod()) {
+
+                        $graceSub = Subscription::where('user_id', $compUser->id)
+                            ->where('trial_ends_at', '!=', null)
+                            ->orderBy('trial_ends_at', 'desc')
+                            ->first();
+
+                        $graceCollect->push($graceSub);
+
+                        $graceCheck = true;
+
+                    }
+                }
+                if ($graceCheck == true) {
+
+                    $graceCollect->sortBy('trial_ends_at');
+
+                    $graceSubscription = $graceCollect->first();
+
+                    return response()->json([
+                        'graceSub' => $graceSubscription,
+
+                    ]);
+                }
+                else{
+                    //user has cancelled and not on grace period
+
+                    $cancelSubscription = null;
+                    $cancelCollect = collect();
+                    $cancelSub = null;
+
+                    foreach ($compUsers as $compUser) {
+
+                        if ($compUser->subscription('main')->cancelled()) {
+                            $cancelSub = Subscription::where('user_id', $compUser->id)
+                                ->where('ends_at', '!=', null)
+                                ->orderBy('ends_at', 'desc')
+                                ->first();
+
+                            $cancelCollect->push($cancelSub);
+                        }
+                    }
+
+                    $cancelCollect->sortBy('ends_at');//5th june then the april
+
+                    $cancelSubscription = $cancelCollect->first();
+
+                    return response()->json([
+                        'cancelSub' => $cancelSubscription,
+
+                    ]);
+                }
+            }
 
         } else if (count($subscriptions) == 0) {
             //none of the company user's have started a subscription, check if in trial period
             $inTrial = false;
+            $trialEnds = null;
 
             foreach ($compUsers as $compUser) {
+                //check if trial_ends_at date is after current date, if so true.
                 if ($compUser->onTrial()) {
                     $inTrial = true;
-                    $trialEnds = $compUser->trial_ends_at;
+                    $trialEndsAt = $compUser->trial_ends_at;
+
                 }
             }
 
-            if ($inTrial == true) {
-                return response()->json([
-                    'trial' => $inTrial,//true if inTrial period and subscription has not begun for any of the users, or false if not
-                    'trial_ends_at' => $trialEnds//either null or a date
-                ]);
-            } else {
-                return response()->json([
-                    'trial' => $inTrial,//true if inTrial period and subscription has not begun for any of the users, or false if not
-                ]);
-            }
-        }
+            if($inTrial == false){
 
+                //could there be 2 trial_ends_at dates that differ?
+                // If say a company cancels account when on trial, and then reinstates account
+                //                with a trial (once we bring in remove account, and reinstate account, and if we provide a 2nd trial in this instance),
+                //so,to be safe, we'll presume there could be 2 trial_ends_at dates.
+
+                $compUsers->sortBy('trial_ends_at');
+
+                $outOfDate = $compUsers->first();
+
+                $trialEndsAt = $outOfDate->trial_ends_at;
+            }
+
+            return response()->json([
+                'trial' => $inTrial,//true if inTrial period and subscription has not begun for any of the users, or false if not
+                'trial_ends_at' => $trialEndsAt//could be a past date if trial == false, or a future date if trial = true
+            ]);
+        }
     }
 
     //wip, atm deletes company, primary contact from user and user roles
@@ -240,72 +341,71 @@ class CompanyAndUsersApiController extends Controller
 
     }
 
-    //Usage: check if have subscription then create subscription or swap subscription
-//    public function upgradeSubscription(Request $request){
-//
-//
-//    }
+    public function swapSubscription(Request $request){
 
-//    public function swapSubscription($request){
-//
-//    }
+        $user = Auth::user();
 
-    //ARCHIVED. NOW ABSORBED BY CREATESUBSCRIPTION()
-//    public function createSubscriptionTrial($request){
-//
-//        $user = Auth::user();
-//
-//        //verify company
-//        $verified = verifyCompany($user);
-//
-//        if(!$verified){
-//
-//            return response()->json($verified);//value = false
-//        }
-//
-//        //verify user is the primary contact
-//        $checkPrimaryContact = checkPrimaryContact($user);
-//
-//        //if true ie user is the company primary contact
-//        if(!$checkPrimaryContact){
-//            return response()->json([
-//                'primaryContact' => false,
-//                'success' => false
-//            ]);
-//        }
-//
-//        $stripeToken = $request->stripeToken;//either will hold a value or will be null
-//        $plan = $request->plan;
-//        $term = $request->term;
-//        $trialEndsAt = $request->trialEndsAt;
-//
-//        $stripePlan = stripePlanName($plan, $term);
-//
-//        //eg format input = 5th June 2018 returns 2018-06-05 02:42:27
-//        $dateTrialEndsAt = Carbon::createFromFormat('jS F Y', $trialEndsAt); // 1975-05-21 22:00:00
-//        $now = Carbon::now();
-//        $trialDays = $now->diffInDays($dateTrialEndsAt);
-//
-//        //The first argument passed to the newSubscription method should be the name of the subscription.
-//        // If your application only offers a single subscription, you might call this main or  primary.
-//        // The second argument is the specific Stripe / Braintree plan the user is subscribing to.
-//        $user->newSubscription('main', $stripePlan)
-//            ->trialDays($trialDays)
-//            ->create($stripeToken);
-//
-//        if ($user->subscribed('main')) {
-//
-//            return response()->json([
-//                'success' => true
-//            ]);
-//
-//        }else{
-//            return response()->json([
-//                'success' => false
-//            ]);
-//        }
-//    }
+        //verify user is the primary contact
+        $checkPrimaryContact = checkPrimaryContact($user);
 
+        //if true ie user is the company primary contact
+        if (!$checkPrimaryContact) {
+
+            return response()->json([
+                'primaryContact' => false,
+                'success' => false
+            ]);
+        }
+
+        /*the subscribed method returns true if the user has an active subscription,
+        even if the subscription is currently within its trial period*/
+        if ($user->subscribed('main')) {
+
+            $plan = $request->plan;
+            $term = $request->term;
+
+            $stripePlan = stripePlanName($plan, $term);
+
+            $user->subscription('main')->swap($stripePlan);
+
+            if ($user->subscribed('main')) {
+
+                return response()->json([
+                    'success' => true
+                ]);
+
+            } else {
+                return response()->json([
+                    'success' => false
+                ]);
+            }
+        }else {
+            /*
+             * To determine if the user was once an active subscriber,
+             * but has cancelled their subscription, you may use the cancelled method
+             */
+            if ($user->subscription('main')->cancelled()) {
+
+                if ($user->subscription('main')->onGracePeriod()) {
+                    return response()->json([
+                        'success' => false,
+                        'subscriptionStatus' => "cancelled but on grace period"
+                    ]);
+
+                }else {
+                    return response()->json([
+                        'success' => false,
+                        'subscriptionStatus' => "cancelled"
+                    ]);
+                }
+            }else {
+                return response()->json([
+                    'success' => false,
+                    'subscriptionStatus' => "not subscribed"
+                ]);
+            }
+        }
+    }
 
     //usage 1: initial subscription for a company instigated by primary contact
     //usage 2: when the primary contact for a company changes, the old subscription is cancelled
@@ -313,16 +413,7 @@ class CompanyAndUsersApiController extends Controller
     //the new primary contact is notified that they need to enter credit card details and
     public function createSubscription(Request $request)
     {
-//
         $user = Auth::user();
-//
-//        //verify company
-//        $verified = verifyCompany($user);
-//
-//        if (!$verified) {
-//
-//            return response()->json($verified);//value = false
-//        }
 
         //verify user is the primary contact
         $checkPrimaryContact = checkPrimaryContact($user);
@@ -356,7 +447,6 @@ class CompanyAndUsersApiController extends Controller
             // If your application only offers a single subscription, you might call this main or  primary.
             // The second argument is the specific Stripe / Braintree plan the user is subscribing to.
             $user->newSubscription('main', $stripePlan)->create($stripeToken);
-
         }
 
         if ($user->subscribed('main')) {
