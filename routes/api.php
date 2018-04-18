@@ -227,6 +227,9 @@ Route::group(['middleware' => 'auth:api'], function () {
     //soft delete
     Route::delete('/user/{id}', 'CompanyAndUsersApiController@deleteUser');
 
+    //update the primary contact (change the primary_contact in company)
+    Route::put("/user/primary/contact", 'CompanyAndUsersApiController@changePrimaryContact');
+
     Route::get("/user/list/{compId}", function ($compId) {
 
         //check the user_roles table and if a user_id is in there, don't retrieve

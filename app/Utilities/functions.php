@@ -320,7 +320,7 @@ if (!function_exists('markEmailAsDeleted')) {
 //scope for more updates as required
 //$result->message = "Contact added" or "contact updated" if successfully added
 if (!function_exists('addUpdateContactActiveCampaign')) {
-
+    //$newuser object, $comp object
     function addUpdateContactActiveCampaign($newuser, $tag1, $comp, $feature, $attempting, $succeeded)
     {
         $url = Config::get('constants.ACTIVE_URL');
@@ -436,6 +436,30 @@ if (!function_exists('addTag')) {
     }
 }
 
+//used for if in trial or if not in trial....
+//if (!function_exists('startSubscriptionTags')) {
+//
+//    function removeTag($user, $removeTag, $comp, $feature, $attempting, $succeeded)
+//    {
+//        $removeTag = Config::get('constants.TRIAL_TAG');
+//
+//        $removeTagUpperCase = ucwords($removeTag);
+//
+//        removeTag($user, $removeTag, $comp, 'Start of Paid Subscription',
+//            'Attempted to remove tag: ' . $removeTagUpperCase,
+//            'Succeeded in removing tag: ' . $removeTagUpperCase);
+//
+//        $addTag = Config::get('constants.PAID_CUSTOMER_TAG');
+//
+//        $addTagUpperCase = ucwords($addTag);
+//
+//        addTag($user, $addTag, $comp, 'Start of Paid Subscription',
+//            'Attempted to add tag: ' . $addTagUpperCase,
+//            'Succeeded in adding tag: ' . $addTagUpperCase
+//        );
+//    }
+//}
+
 if (!function_exists('urlEncodeBody')) {
 
     function urlEncodeBody($email, $firstName = null, $lastName = null, $tag1 = null)
@@ -533,7 +557,7 @@ if (!function_exists('stripePlanName')) {
     }
 }
 
-//eg format input = 5th June 2018 returns 2018-06-05 02:42:27
+//eg format input = 5th June 2018 converts to 2018-06-05 02:42:27
 if (!function_exists('trialDays')) {
 
     function trialDays($trialEndsAt)

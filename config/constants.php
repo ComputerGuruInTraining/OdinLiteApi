@@ -21,8 +21,10 @@ return [
     /****Active Campaign config****/
     'ACTIVE_API_KEY' => '7b60b3914bd330fe2f29461d391133847685111e2f6910dec5aa16627ea83bf82c1ecfb9',
     'ACTIVE_URL' => 'https://odin.api-us1.com/admin/api.php?',
-    'TRIAL_TAG' => 'in trial',
-    'PAID_CUSTOMER_TAG' => 'paid customer',
+    'TRIAL_TAG' => 'Started Trial - 90 Days',//todo, change to 30 days once beta testing complete
+//    'PAID_CUSTOMER_TAG' => 'paid customer',//todo: archive soon.
+    'PAID_MONTHLY_TAG' => 'Started Subscription - Paid Monthly',
+    'PAID_YEARLY_TAG' => 'Started Subscription - Paid Yearly',
     'REMOVE_TAG_REQUEST' => 'api_action=contact_tag_remove&api_output=json&api_key=',
     'ADD_TAG_REQUEST' => 'api_action=contact_tag_add&api_output=json&api_key=',
 

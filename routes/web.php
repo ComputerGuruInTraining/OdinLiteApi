@@ -317,50 +317,50 @@ Route::post("/error-logging", function (Request $request) {
 
 //Ready to implement once billing set up
 ///active/test/1374/404
-Route::get("/active/test/{id}/{compId}", function ($id, $compId) {
-    $tag1 = Config::get('constants.TRIAL_TAG');
+//Route::get("/active/test/{id}/{compId}", function ($id, $compId) {
+//    $tag1 = Config::get('constants.TRIAL_TAG');
+//
+//    $newuser = App\User::find($id);
+//
+//    $comp = App\Company::find($compId);
+//    $comp->name = 'Testing Active Campaign';
+//    $comp->save();
+//
+//    $tagUpperCase = ucwords($tag1);
+//
+//    addUpdateContactActiveCampaign($newuser, $tag1, $comp, 'New Company Registration',
+//        'Attempted to add contact with tag: '.$tagUpperCase, 'Succeeded in adding contact with tag: '.$tagUpperCase);
+//
+//    return response()->json(['success' => true]);
+//
+//});
 
-    $newuser = App\User::find($id);
-
-    $comp = App\Company::find($compId);
-    $comp->name = 'Testing Active Campaign';
-    $comp->save();
-
-    $tagUpperCase = ucwords($tag1);
-
-    addUpdateContactActiveCampaign($newuser, $tag1, $comp, 'New Company Registration',
-        'Attempted to add contact with tag: '.$tagUpperCase, 'Succeeded in adding contact with tag: '.$tagUpperCase);
-
-    return response()->json(['success' => true]);
-
-});
-
-Route::get("/active/test/start-paid-subscription", function () {
-
-    $user = App\User::find(1374);
-
-    $comp = App\Company::find(404);
-
-    $removeTag = Config::get('constants.TRIAL_TAG');
-
-    $removeTagUpperCase = ucwords($removeTag);
-
-    removeTag($user, $removeTag, $comp, 'Start of Paid Subscription',
-        'Attempted to remove tag: '. $removeTagUpperCase,
-        'Succeeded in removing tag: '.$removeTagUpperCase);
-
-    $addTag = Config::get('constants.PAID_CUSTOMER_TAG');
-
-    $addTagUpperCase = ucwords($addTag);
-
-    addTag($user, $addTag, $comp, 'Start of Paid Subscription',
-        'Attempted to add tag: '. $addTagUpperCase,
-        'Succeeded in adding tag: '.$addTagUpperCase
-    );
-
-    return response()->json(['success' => true]);
-
-});
+//Route::get("/active/test/start-paid-subscription", function () {
+//
+//    $user = App\User::find(1374);
+//
+//    $comp = App\Company::find(404);
+//
+//    $removeTag = Config::get('constants.TRIAL_TAG');
+//
+//    $removeTagUpperCase = ucwords($removeTag);
+//
+//    removeTag($user, $removeTag, $comp, 'Start of Paid Subscription',
+//        'Attempted to remove tag: '. $removeTagUpperCase,
+//        'Succeeded in removing tag: '.$removeTagUpperCase);
+//
+//    $addTag = Config::get('constants.PAID_CUSTOMER_TAG');
+//
+//    $addTagUpperCase = ucwords($addTag);
+//
+//    addTag($user, $addTag, $comp, 'Start of Paid Subscription',
+//        'Attempted to add tag: '. $addTagUpperCase,
+//        'Succeeded in adding tag: '.$addTagUpperCase
+//    );
+//
+//    return response()->json(['success' => true]);
+//
+//});
 
 //archived??? used when azure uploads were stored directly to server
 Route::get('/storage/app/public/{file}', function ($file) {
@@ -394,63 +394,185 @@ Route::get("/test/runtimes", function(){
 
 //Route::get("/misc/test", function () {
 //
+//    //need to check all of the company's users records to see if a subscription exists.
+//    //only primary contacts can update subscriptions but the primary contact could change, so subscription
+//    //could be attached to old primary contact.
+//    //TODO: when edit the primary contact, copy in the subscription (except it is associated with a different customer)
 //
-//        $user = Auth::user();
+//    $compId = 524;
 //
-//        //check primary contact and authorised to cancel the subscription
-//        // (safeguard even though the console btn will not be accessible to non primary contacts)
-//        $contact = checkPrimaryContact($user);
+//    $compUsers = User::where('company_id', '=', $compId)
+//        ->get();
 //
-//        if (!$contact) {
-//            return response()->json([
-//                'success' => false,
-//                'result' => "This user is not the primary contact for the company and as such cannot cancel the subscription."
-//            ]);
-//        }
+//    //array of userIds that belong to the company
+//    $userIds = $compUsers->pluck('id');
 //
-//        //else... user is primary contact...
+//    //the primary contact starts the free trial
+//    //but another user may have started the subscription, depending on our policy here.
+//    $subscriptions = DB::table('subscriptions')
+//        ->whereIn('user_id', $userIds)
+//        ->orderBy('ends_at', 'desc')
+//        ->get();
 //
-//        $subscriptionId = 54;
 //
-//        //get subscription
-//        $subscription = Subscription::find($subscriptionId);
+//    //subscription has begun
+//    if (count($subscriptions) > 0) {
 //
-//        //find the user associated with subscription
-//        $userSubscription = User::find($subscription->user_id);
+//        //check if there is an active subscription (without an ends_at date)
+//        $active = false;
+//        $activeSub = null;
+//        //todo: console deal with in trial subscriptions
+//        foreach ($subscriptions as $sub) {
 //
-//        //as a safeguard, check the userSubscription belongs to the same company as the logged in user
-//        if ($user->company_id == $userSubscription->company_id) {
+//            //if any of the subscriptions have not been cancelled
+//            //the non cancelled subscription will be the active subscription, there should only be 1 of these.
+//            if ($sub->ends_at == null) {
 //
-//            $user->subscription($subscription->name)->cancel();
-//
-//            if ($user->subscription($subscription->name)->onGracePeriod()) {
-//
-//                //get the subscription model to access the updated ends_at field
-//                $cancelledSub = Subscription::find($subscriptionId);
-//
-//                $endsAt = $cancelledSub->ends_at;
-//
-//                return response()->json([
-//                    'success' => true,
-//                    'result' => "The subscription has been cancelled, with a grace period ending on: " . $endsAt//tested :)
-//                ]);
-//            } else {
-//
-//                return response()->json([
-//                    'success' => true,
-//                    'result' => "The subscription has been cancelled."
-//                ]);
+//                $activeSub = $sub;
+//                $active = true;
 //
 //            }
 //
-//        } else {
-//            return response()->json([
-//                'success' => false,
-//                'result' => "The user is not authorized to cancel this company's subscription."//tested :)
-//            ]);
+//        }
+//
+//        $subUser = User::find($activeSub->user_id);
+//
+//        $invoices = $subUser->invoicesIncludingPending();
+//
+////        $invoices->sortByDesc();
+//
+//        foreach ($invoices as $invoice) {
+//
+//            $invoiceDate = $invoice->date;
+//            $invoiceTotal = $invoice->total();
+//            $invoiceId = $invoice->id;
 //
 //        }
 //
+//        $invoiceCollection = collect($invoices);
 //
+////        $collection->firstWhere('age', '>=', 18);
+////
+////
+////        $next = $invoiceCollection->firstWhere('date', '>=', Carbon::now());
+//        $now = Carbon::now();
+//
+//        if ($active == true) {
+//
+//            return response()->json([
+//                'subscriptions' => $activeSub,//worked for ends_at = null, only 1 subscription. check on console if has a trial period.
+//                'invoices' => $invoices,
+//                'subUser' => $subUser,
+//                '$invoiceDate' => $invoiceDate,
+//                '$invoiceId' => $invoiceId,
+//                '$invoiceTotal' => $invoiceTotal,
+////                '$next' => $next,
+//            'now' => $now,
+//            ]);
+//
+//        } else {
+//            //no active subscription, need to retrieve cancelled subscription
+//
+//            $graceCheck = false;
+//            $graceSub = null;
+//            $graceSubscription = null;
+//            $graceCollect = collect();
+//
+//
+//            //find whether any are onGracePeriod still
+//            //according to design, could be 2 on grace period considering edit primary contact design
+//            //if edit primary contact, and cancel first subscription, create 2nd, user cancels 2nd,
+//            //then have 2 trial ends at dates the same, 2 cancelled subscriptions, but the most recent one needs to be returned to console.
+//            //the latest ends_at date would be the subscription we require.
+//            foreach ($compUsers as $compUser) {
+//
+//                //if the user has a subscription that is on Grace Period, it will return true and following will return all subscriptions
+//                if ($compUser->subscription('main')->onGracePeriod()) {
+//
+//                    $graceSub = Subscription::where('user_id', $compUser->id)
+//                        ->where('trial_ends_at', '!=', null)
+//                        ->orderBy('trial_ends_at', 'desc')
+//                        ->first();
+//
+//                    $graceCollect->push($graceSub);
+//
+//                    $graceCheck = true;
+//
+//                }
+//            }
+//            if ($graceCheck == true) {
+//
+//                $graceCollect->sortBy('trial_ends_at');
+//
+//                $graceSubscription = $graceCollect->first();
+//
+//                return response()->json([
+//                    'graceSub' => $graceSubscription,
+//
+//                ]);
+//            }
+//            else{
+//                //user has cancelled and not on grace period
+//
+//                $cancelSubscription = null;
+//                $cancelCollect = collect();
+//                $cancelSub = null;
+//
+//                foreach ($compUsers as $compUser) {
+//
+//                    if ($compUser->subscription('main')->cancelled()) {
+//                        $cancelSub = Subscription::where('user_id', $compUser->id)
+//                            ->where('ends_at', '!=', null)
+//                            ->orderBy('ends_at', 'desc')
+//                            ->first();
+//
+//                        $cancelCollect->push($cancelSub);
+//                    }
+//                }
+//
+//                $cancelCollect->sortBy('ends_at');//5th june then the april
+//
+//                $cancelSubscription = $cancelCollect->first();
+//
+//                return response()->json([
+//                    'cancelSub' => $cancelSubscription,
+//
+//                ]);
+//            }
+//        }
+//
+//    } else if (count($subscriptions) == 0) {
+//        //none of the company user's have started a subscription, check if in trial period
+//        $inTrial = false;
+//        $trialEnds = null;
+//
+//        foreach ($compUsers as $compUser) {
+//            //check if trial_ends_at date is after current date, if so true.
+//            if ($compUser->onTrial()) {
+//                $inTrial = true;
+//                $trialEndsAt = $compUser->trial_ends_at;
+//
+//            }
+//        }
+//
+//        if($inTrial == false){
+//
+//            //could there be 2 trial_ends_at dates that differ?
+//            // If say a company cancels account when on trial, and then reinstates account
+//            //                with a trial (once we bring in remove account, and reinstate account, and if we provide a 2nd trial in this instance),
+//            //so,to be safe, we'll presume there could be 2 trial_ends_at dates.
+//
+//            $compUsers->sortBy('trial_ends_at');
+//
+//            $outOfDate = $compUsers->first();
+//
+//            $trialEndsAt = $outOfDate->trial_ends_at;
+//        }
+//
+//        return response()->json([
+//            'trial' => $inTrial,//true if inTrial period and subscription has not begun for any of the users, or false if not
+//            'trial_ends_at' => $trialEndsAt//could be a past date if trial == false, or a future date if trial = true
+//        ]);
+//    }
 //});
 
