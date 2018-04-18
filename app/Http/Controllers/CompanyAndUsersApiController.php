@@ -320,6 +320,53 @@ class CompanyAndUsersApiController extends Controller
         ]);
     }
 
+    //change the primary contact in companies table
+    //also update active tag contact (change contact details and name of current contact so as to keep tags and all else as is)
+    public function changePrimaryContact(Request $request){
+
+        if ($request->has('primaryContact')) {
+
+            $newPrimaryContactId = $request->primaryContact;
+
+            $user = Auth::user();
+
+            $company = Company::find($user->company_id);
+
+            $oldPrimaryContact = $company->primary_contact;
+
+            $company->primary_contact = $newPrimaryContactId;
+
+            if ($company->save()) {
+
+                //todo: update active campaign contact to be new primary contact
+
+//                $newuser = User::find($newPrimaryContactId);
+//1. need to contact_view_email and use the id to then edit
+
+                return response()->json([
+                    'success' => true,
+                    'newPrimaryContact' => $newPrimaryContactId,
+                    'oldPrimaryContact' => $oldPrimaryContact
+                ]);
+
+            } else {
+
+                $currentPrimaryContact = $company->primaryContact;
+
+                return response()->json([
+                    'success' => false,
+                    'currentPrimaryContact' => $currentPrimaryContact
+                ]);
+            }
+        } else {
+
+            return response()->json([
+                'success' => false
+            ]);
+
+        }
+    }
+
     public function deletePrimaryContact($userId)
     {
 
@@ -429,9 +476,12 @@ class CompanyAndUsersApiController extends Controller
         $stripeToken = $request->stripeToken;//either will hold a value or will be null
         $plan = $request->plan;
         $term = $request->term;
-        $trialEndsAt = $request->trialEndsAt;
+        $trialEndsAt = $request->trialEndsAt;//either user was in trial or primary contact edited so $trialEndsAt == $oldSubscriptionEndsAt
 
         $stripePlan = stripePlanName($plan, $term);
+
+        //for use with active campaign tags
+        $comp = Company::find($user->company_id);
 
         if (isset($trialEndsAt)) {
 
@@ -442,12 +492,37 @@ class CompanyAndUsersApiController extends Controller
             $user->newSubscription('main', $stripePlan)
                 ->trialDays($trialDays)
                 ->create($stripeToken);
+
+            //if company was on a free trial, remove the trial tag from active campaign
+            $removeTag = Config::get('constants.TRIAL_TAG');
+
+            $removeTagUpperCase = ucwords($removeTag);
+
+            removeTag($user, $removeTag, $comp, 'Start of Paid Subscription',
+                'Attempted to remove tag: ' . $removeTagUpperCase,
+                'Succeeded in removing tag: ' . $removeTagUpperCase);
+
         } else {
             //The first argument passed to the newSubscription method should be the name of the subscription.
             // If your application only offers a single subscription, you might call this main or  primary.
             // The second argument is the specific Stripe / Braintree plan the user is subscribing to.
             $user->newSubscription('main', $stripePlan)->create($stripeToken);
         }
+
+        //for all new subscriptions, add a tag to the active campaign
+        //tag to add depends on the billing cycle...
+        if ($term == 'monthly') {
+            $addTag = Config::get('constants.PAID_MONTHLY_TAG');
+        }else{
+            $addTag = Config::get('constants.PAID_YEARLY_TAG');
+        }
+
+        $addTagUpperCase = ucwords($addTag);
+
+        addTag($user, $addTag, $comp, 'Start of Paid Subscription',
+            'Attempted to add tag: '. $addTagUpperCase,
+            'Succeeded in adding tag: '.$addTagUpperCase
+        );
 
         if ($user->subscribed('main')) {
 
@@ -474,62 +549,65 @@ class CompanyAndUsersApiController extends Controller
     //Primary Contact must make the request
     public function cancelMySubscription(Request $request)
     {
+            $user = Auth::user();
 
-        $user = Auth::user();
+            //check primary contact and authorised to cancel the subscription
+            // (safeguard even though the console btn will not be accessible to non primary contacts)
+            $contact = checkPrimaryContact($user);
 
-        //check primary contact and authorised to cancel the subscription
-        // (safeguard even though the console btn will not be accessible to non primary contacts)
-        $contact = checkPrimaryContact($user);
-
-        if (!$contact) {
-            return response()->json([
-                'success' => false,
-                'result' => "This user is not the primary contact for the company and as such cannot cancel the subscription."
-            ]);
-        }
-
-        //else... user is primary contact...
-
-        $subscriptionId = $request->subId;
-
-        //get subscription
-        $subscription = Subscription::find($subscriptionId);
-
-        //find the user associated with subscription
-        $userSubscription = User::find($subscription->user_id);
-
-        //as a safeguard, check the userSubscription belongs to the same company as the logged in user
-        if ($user->company_id == $userSubscription->company_id) {
-
-            $user->subscription($subscription->name)->cancel();
-
-            if ($user->subscription($subscription->name)->onGracePeriod()) {
-
-                //get the subscription model to access the updated ends_at field
-                $cancelledSub = Subscription::find($subscriptionId);
-
-                $endsAt = $cancelledSub->ends_at;
-
+            if (!$contact) {
                 return response()->json([
-                    'success' => true,
-                    'result' => "The subscription has been cancelled, with a grace period ending on: " . $endsAt//tested :)
+                    'success' => false,
+                    'result' => "This user is not the primary contact for the company and as such cannot cancel the subscription."
                 ]);
-            } else {
+            }
 
+            //else... user is primary contact...
+            $subscriptionId = $request->subId;
+
+            //get subscription
+            $subscription = Subscription::find($subscriptionId);
+
+            //find the user associated with subscription
+            $userSubscription = User::find($subscription->user_id);
+
+            //as a safeguard, check the userSubscription belongs to the same company as the logged in user
+            if ($user->company_id == $userSubscription->company_id) {
+
+                //laravel db name for subscription
+                $user->subscription($subscription->name)->cancel();
+
+                if ($user->subscription($subscription->name)->onGracePeriod()) {
+
+                    //get the subscription model to access the updated ends_at field
+                    $cancelledSub = Subscription::find($subscriptionId);
+
+                    $endsAt = $cancelledSub->ends_at;
+
+                    return response()->json([
+                        'success' => true,
+                        'result' => 'on grace period',
+                        'endsAt' => $endsAt
+                    ]);
+                } else {
+
+                    //rare that would cancel on the same day as bill about to be charged, but could happen.
+                    return response()->json([
+                        'success' => true,
+                        'result' => 'cancelled'
+                    ]);
+
+                }
+
+            } else {
                 return response()->json([
-                    'success' => true,
-                    'result' => "The subscription has been cancelled."
+                    'success' => false,
+                    'result' => "unauthorized", //The user is not authorized to cancel this company's subscription.
                 ]);
 
             }
 
-        } else {
-            return response()->json([
-                'success' => false,
-                'result' => "The user is not authorized to cancel this company's subscription."//tested :)
-            ]);
 
-        }
     }
 
 }
