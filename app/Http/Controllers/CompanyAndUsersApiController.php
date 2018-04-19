@@ -288,6 +288,59 @@ class CompanyAndUsersApiController extends Controller
 
     }
 
+    //Usage: if edit the primary contact details directly (via user/{id}/edit), check if these details changed,
+    //if so, update the contact with the changed details
+//    public function checkUpdateActiveCampaignContact($user, $editedUser)
+//    {
+//        try {
+//
+//           if($user->first_name == $editedUser->first_name){
+//
+//               updateActiveCampaignContact($user, $editedUser, 'Edit Primary Contact Details', 'Attempting to change the first name', 'Succeeded in changing the first name');
+//           }
+//
+////            $resultCollection = viewContactActiveCampaign($viewContact, $comp, $feature, $attempting, $succeeded);
+////
+////            $contactId = $resultCollection->get('id');
+////
+////            $listsArray = $resultCollection->get('listsArray');
+////
+////            if (isset($contactId)) {
+////
+////                editContactActiveCampaign($viewContact, $editContact, $contactId, $comp, $feature, $attempting, $succeeded, $listsArray);
+////            }
+//
+//        }catch(\Exception $exception){
+//
+//            $errMsg = $exception->getMessage();
+//
+//            dd($errMsg);
+//        }
+//    }
+
+    //Usage: edit the active campaign contact (could be to a different email, different name, different user altogether etc)
+    //$viewContact == $editContact if editing same contact, not changing the contact to a different user
+    public function updateActiveCampaignContact($viewContact, $editContact, $feature, $attempting, $succeeded)
+    {
+
+        $comp = Company::find($viewContact->company_id);
+
+        $resultCollection = viewContactActiveCampaign($viewContact, $comp, $feature, $attempting, $succeeded);
+
+        $contactId = $resultCollection->get('id');
+
+        $listsArray = $resultCollection->get('listsArray');
+
+        if (isset($contactId)) {
+
+            editContactActiveCampaign($editContact, $contactId, $comp, $feature, $attempting, $succeeded, $listsArray);
+        }
+
+//        dd($resultCollection);
+
+    }
+
+
     //pm is userId
     public function deleteUser($id)
     {
