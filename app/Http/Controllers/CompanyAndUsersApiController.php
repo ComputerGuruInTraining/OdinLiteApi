@@ -10,6 +10,7 @@ use App\Company as Company;
 use App\User as User;
 use App\UserRole as Role;
 use App\Subscription as Subscription;
+use Config;
 
 class CompanyAndUsersApiController extends Controller
 {
@@ -324,47 +325,55 @@ class CompanyAndUsersApiController extends Controller
     //also update active tag contact (change contact details and name of current contact so as to keep tags and all else as is)
     public function changePrimaryContact(Request $request){
 
-        if ($request->has('primaryContact')) {
+//        try{
 
-            $newPrimaryContactId = $request->primaryContact;
+            if ($request->has('primaryContact')) {
 
-            $user = Auth::user();
+                $newPrimaryContactId = $request->primaryContact;
 
-            $company = Company::find($user->company_id);
+                $user = Auth::user();
 
-            $oldPrimaryContact = $company->primary_contact;
+                $company = Company::find($user->company_id);
 
-            $company->primary_contact = $newPrimaryContactId;
+                $oldPrimaryContact = $company->primary_contact;
 
-            if ($company->save()) {
+                $company->primary_contact = $newPrimaryContactId;
 
-                //todo: update active campaign contact to be new primary contact
+                if ($company->save()) {
 
-//                $newuser = User::find($newPrimaryContactId);
-//1. need to contact_view_email and use the id to then edit
+                    //todo: update active campaign contact to be new primary contact
 
-                return response()->json([
-                    'success' => true,
-                    'newPrimaryContact' => $newPrimaryContactId,
-                    'oldPrimaryContact' => $oldPrimaryContact
-                ]);
+    //                $newuser = User::find($newPrimaryContactId);
+    //1. need to contact_view_email and use the id to then edit
 
+                    return response()->json([
+                        'success' => true,
+                        'newPrimaryContact' => $newPrimaryContactId,
+                        'oldPrimaryContact' => $oldPrimaryContact
+                    ]);
+
+                } else {
+
+                    $currentPrimaryContact = $company->primaryContact;
+
+                    return response()->json([
+                        'success' => false,
+                        'currentPrimaryContact' => $currentPrimaryContact
+                    ]);
+                }
             } else {
 
-                $currentPrimaryContact = $company->primaryContact;
-
                 return response()->json([
-                    'success' => false,
-                    'currentPrimaryContact' => $currentPrimaryContact
+                    'success' => false
                 ]);
+
             }
-        } else {
-
-            return response()->json([
-                'success' => false
-            ]);
-
-        }
+//        }catch(\Exception $exception){
+//
+//        $errMsg = $exception->getMessage();
+//
+//        dd($errMsg);
+//        }
     }
 
     public function deletePrimaryContact($userId)
@@ -493,21 +502,22 @@ class CompanyAndUsersApiController extends Controller
                 ->trialDays($trialDays)
                 ->create($stripeToken);
 
-            //if company was on a free trial, remove the trial tag from active campaign
-            $removeTag = Config::get('constants.TRIAL_TAG');
-
-            $removeTagUpperCase = ucwords($removeTag);
-
-            removeTag($user, $removeTag, $comp, 'Start of Paid Subscription',
-                'Attempted to remove tag: ' . $removeTagUpperCase,
-                'Succeeded in removing tag: ' . $removeTagUpperCase);
-
         } else {
             //The first argument passed to the newSubscription method should be the name of the subscription.
             // If your application only offers a single subscription, you might call this main or  primary.
             // The second argument is the specific Stripe / Braintree plan the user is subscribing to.
             $user->newSubscription('main', $stripePlan)->create($stripeToken);
         }
+
+        //for all new subscriptions, remove trial tag from the active campaign (whether tag exists or not, request performs smoothly,
+        // however a notification will be sent to ourselves if the tag did not exist. todo: optimize so not sent if the error msg was tag did not exist.)
+         $removeTag = Config::get('constants.TRIAL_TAG');
+
+         $removeTagUpperCase = ucwords($removeTag);
+
+         removeTag($user, $removeTag, $comp, 'Start of Paid Subscription',
+             'Attempted to remove tag: ' . $removeTagUpperCase,
+             'Succeeded in removing tag: ' . $removeTagUpperCase);
 
         //for all new subscriptions, add a tag to the active campaign
         //tag to add depends on the billing cycle...
@@ -575,9 +585,9 @@ class CompanyAndUsersApiController extends Controller
             if ($user->company_id == $userSubscription->company_id) {
 
                 //laravel db name for subscription
-                $user->subscription($subscription->name)->cancel();
+                $userSubscription->subscription($subscription->name)->cancel();
 
-                if ($user->subscription($subscription->name)->onGracePeriod()) {
+                if ($userSubscription->subscription($subscription->name)->onGracePeriod()) {
 
                     //get the subscription model to access the updated ends_at field
                     $cancelledSub = Subscription::find($subscriptionId);
