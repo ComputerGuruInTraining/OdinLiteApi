@@ -406,12 +406,13 @@ if (!function_exists('viewContactActiveCampaign')) {
         //works, just need to implement sending of email
         if($result->result_message == "Success: Something is returned") {
 
-            notifyActiveCampaign($result->result_message, 'Success', $user, $comp, $feature, null, null, $succeeded);
+//            notifyActiveCampaign($result->result_message, 'Success', $user, $comp, $feature, null, null, $succeeded);
 
             return $collection;
 
         }else {
-            notifyActiveCampaign($result->result_message, 'Failed', $user, $comp, $feature,
+
+            notifyActiveCampaignAdmin($result->result_message, 'Failed', $user, $comp, $feature,
                 'This event did not complete successfully.', $attempting);
 
             return null;
@@ -448,16 +449,13 @@ if (!function_exists('editContactActiveCampaign')) {
 
         $result = json_decode((string)$response->getBody());
 
-        dd($result);
-
-
         //works, just need to implement sending of email
         if(($result->result_message == "Contact updated")||($result->result_message == "List ID 0 does not exist.")) {
 
-            notifyActiveCampaign($result->result_message, 'Success', $contact, $comp, $feature, null, null, $succeeded);
+            notifyActiveCampaignAdmin($result->result_message, 'Success', $contact, $comp, $feature, null, null, $succeeded);
 
         }else {
-            notifyActiveCampaign($result->result_message, 'Failed', $contact, $comp, $feature,
+            notifyActiveCampaignAdmin($result->result_message, 'Failed', $contact, $comp, $feature,
                 'This event did not complete successfully.', $attempting);
 
         }
@@ -466,13 +464,13 @@ if (!function_exists('editContactActiveCampaign')) {
 }
 
 //$result->message = "Contact tags deleted" if successfully deleted,
-//$result->message = "Contact tags deleted"  if tag never existed
+//$result->message = "Contact does not exist"  if tag never existed
 // and therefore not actually deleted but request operates successfully
 //fails: $result->message = "Contact does not exist" if that is the case
 if (!function_exists('removeTag')) {
 
     function removeTag($user, $removeTag, $comp, $feature, $attempting, $succeeded)
-    {//todo: optimize so not sent if the error msg was tag did not exist.
+    {
 
         $url = Config::get('constants.ACTIVE_URL');
 
@@ -495,11 +493,11 @@ if (!function_exists('removeTag')) {
         $result = json_decode((string)$response->getBody());
 
         if($result->result_message == "Contact tags deleted"){
-            notifyActiveCampaign($result->result_message, 'Success', $user, $comp, $feature, null, null, $succeeded);
+            notifyActiveCampaignAdmin($result->result_message, 'Success', $user, $comp, $feature, null, null, $succeeded);
 
-        } else{
-                notifyActiveCampaign($result->result_message, 'Failed', $user, $comp, $feature,
-                    'This event did not complete successfully.', $attempting);
+        } else {
+            notifyActiveCampaignAdmin($result->result_message, 'Failed', $user, $comp, $feature,
+                'This event did not complete successfully.', $attempting);
 
         }
     }
@@ -536,10 +534,10 @@ if (!function_exists('addTag')) {
         $result = json_decode((string)$response->getBody());
 
         if($result->result_message == "Contact tags added"){
-            notifyActiveCampaign($result->result_message, 'Success', $user, $comp, $feature, null, null, $succeeded);
+            notifyActiveCampaignAdmin($result->result_message, 'Success', $user, $comp, $feature, null, null, $succeeded);
 
         } else{
-            notifyActiveCampaign($result->result_message, 'Failed', $user, $comp, $feature,
+            notifyActiveCampaignAdmin($result->result_message, 'Failed', $user, $comp, $feature,
                 'This event did not complete successfully.', $attempting);
 
         }
@@ -547,28 +545,47 @@ if (!function_exists('addTag')) {
 }
 
 //used for if in trial or if not in trial....
-//if (!function_exists('startSubscriptionTags')) {
-//
-//    function removeTag($user, $removeTag, $comp, $feature, $attempting, $succeeded)
-//    {
-//        $removeTag = Config::get('constants.TRIAL_TAG');
-//
-//        $removeTagUpperCase = ucwords($removeTag);
-//
-//        removeTag($user, $removeTag, $comp, 'Start of Paid Subscription',
-//            'Attempted to remove tag: ' . $removeTagUpperCase,
-//            'Succeeded in removing tag: ' . $removeTagUpperCase);
-//
-//        $addTag = Config::get('constants.PAID_CUSTOMER_TAG');
-//
-//        $addTagUpperCase = ucwords($addTag);
-//
-//        addTag($user, $addTag, $comp, 'Start of Paid Subscription',
-//            'Attempted to add tag: ' . $addTagUpperCase,
-//            'Succeeded in adding tag: ' . $addTagUpperCase
-//        );
-//    }
-//}
+if (!function_exists('startSubscriptionTags')) {
+
+    function startSubscriptionTags($user, $term)
+    {
+        $comp = App\Company::find($user->company_id);
+
+        //for all new subscriptions, remove trial tag from the active campaign
+        //remove ordinary trial tag in case it exists on the active campaign contact
+        $removeTag = Config::get('constants.TRIAL_TAG');
+
+        $removeTagUpperCase = ucwords($removeTag);
+
+        removeTag($user, $removeTag, $comp, 'Start of Paid Subscription',
+            'Attempted to remove tag: ' . $removeTagUpperCase,
+            'Succeeded in removing tag: ' . $removeTagUpperCase);
+
+        //remove beta tag in case it exists on the active campaign contact
+        $removeTag = Config::get('constants.TRIAL_TAG_BETA');
+
+        $removeTagUpperCase = ucwords($removeTag);
+
+        removeTag($user, $removeTag, $comp, 'Start of Paid Subscription',
+            'Attempted to remove tag: ' . $removeTagUpperCase,
+            'Succeeded in removing tag: ' . $removeTagUpperCase);
+
+        //for all new subscriptions, add a tag to the active campaign
+        //tag to add depends on the billing cycle...
+        if ($term == 'monthly') {
+            $addTag = Config::get('constants.PAID_MONTHLY_TAG');
+        }else{
+            $addTag = Config::get('constants.PAID_YEARLY_TAG');
+        }
+
+        $addTagUpperCase = ucwords($addTag);
+
+        addTag($user, $addTag, $comp, 'Start of Paid Subscription',
+            'Attempted to add tag: '. $addTagUpperCase,
+            'Succeeded in adding tag: '.$addTagUpperCase
+        );
+    }
+}
 
 if (!function_exists('urlEncodeBody')) {
 
@@ -606,16 +623,10 @@ if (!function_exists('urlEncodeBody')) {
                     $parts[] = 'p['.$list.']=' . urlencode($list);
                 }
 
-
             }else{
                 //no lists
                 $parts[] = 'p[0]=' . urlencode('0');//todo: optimize, returns an error, but for the moment this is the recommended way to ensure those not on a list remain not on a list
             }
-//            $parts[] = 'p[1]=' . urlencode('1');
-//            $parts[] = 'p[8]=' . urlencode('8');
-//            $parts[] = 'p[7]=' . urlencode('7');
-//            $parts[] = 'p[9]=' . urlencode('9');
-//            $parts[] = 'p[6]=' . urlencode('6');
 
         }
 
@@ -625,7 +636,8 @@ if (!function_exists('urlEncodeBody')) {
     }
 }
 
-if (!function_exists('notifySuccessActiveCampaign')) {
+//notify both admin and marketing
+if (!function_exists('notifyActiveCampaign')) {
 
     function notifyActiveCampaign($msg, $result, $contact, $comp, $feature, $failedmsg = null, $attempting = null, $succeeded = null)
     {
@@ -635,6 +647,18 @@ if (!function_exists('notifySuccessActiveCampaign')) {
 
         $odinEmail = new App\Recipients\DynamicRecipient(Config::get('constants.COMPANY_EMAIL'));
         $odinEmail->notify(new App\Notifications\ActiveCampaign($msg, $result, $contact, $comp, $feature, $failedmsg, $attempting));
+
+    }
+}
+
+//notify just admin
+if (!function_exists('notifyActiveCampaignAdmin')) {
+
+    function notifyActiveCampaignAdmin($msg, $result, $contact, $comp, $feature, $failedmsg = null, $attempting = null, $succeeded = null)
+    {
+
+        $odinTeam = new App\Recipients\DynamicRecipient(Config::get('constants.COMPANY_EMAIL2'));
+        $odinTeam->notify(new App\Notifications\ActiveCampaign($msg, $result, $contact, $comp, $feature, $failedmsg, $attempting, $succeeded));
 
     }
 }

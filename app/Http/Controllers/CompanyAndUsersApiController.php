@@ -5,57 +5,19 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Config;
+use App\Notifications\genericErrorNotification;
+use App\Recipients\DynamicRecipient;
 
 use App\Company as Company;
 use App\User as User;
 use App\UserRole as Role;
 use App\Subscription as Subscription;
-use Config;
+use App\OdinErrorLogging as AppErrors;
+
 
 class CompanyAndUsersApiController extends Controller
 {
-
-    //receives the userId of the user that will now be the company contact
-    public function updateContact($userId)
-    {
-
-        //verify company
-        $user = User::withTrashed()
-            ->where('id', '=', $userId)
-            ->first();
-
-        $verified = verifyCompany($user);
-
-        if (!$verified) {
-
-            return response()->json($verified);//value = false
-        }
-
-//        dd($verified);
-
-        //new user instance for the update, as cannot be a deleted user
-        $contact = User::find($userId);
-
-        //if contact exists and is not deleted
-        if ($contact != null) {
-
-            $company = Company::find($contact->company_id);
-
-            $company->primary_contact = $contact->id;
-
-            $company->save();
-
-            return response()->json([
-                'success' => true
-            ]);
-        }
-
-        return response()->json([
-            'success' => false,
-            'reason' => 'user has been deleted or does not exist'
-        ]);
-    }
-
     //return subscriptions == 1 active subscription (will only be one based on design);
     //or return , graceSub if in trialPeriod but cancelled (with the latest trial_ends_at date,
     ///////// as could be 2 if edit primary contact, and cancel first subscription, create 2nd, then user cancels 2nd;
@@ -78,7 +40,6 @@ class CompanyAndUsersApiController extends Controller
         //need to check all of the company's users records to see if a subscription exists.
         //only primary contacts can update subscriptions but the primary contact could change, so subscription
         //could be attached to old primary contact.
-        //TODO: when edit the primary contact, copy in the subscription (except it is associated with a different customer)
 
         $compUsers = User::where('company_id', '=', $compId)
             ->get();
@@ -93,14 +54,13 @@ class CompanyAndUsersApiController extends Controller
             ->orderBy('ends_at', 'desc')
             ->get();
 
-
         //subscription has begun
         if (count($subscriptions) > 0) {
 
             //check if there is an active subscription (without an ends_at date)
             $active = false;
             $activeSub = null;
-        //todo: console deal with in trial subscriptions
+
             foreach ($subscriptions as $sub) {
 
                 //if any of the subscriptions have not been cancelled
@@ -109,7 +69,6 @@ class CompanyAndUsersApiController extends Controller
 
                     $activeSub = $sub;
                     $active = true;
-
                 }
             }
 
@@ -288,41 +247,10 @@ class CompanyAndUsersApiController extends Controller
 
     }
 
-    //Usage: if edit the primary contact details directly (via user/{id}/edit), check if these details changed,
-    //if so, update the contact with the changed details
-//    public function checkUpdateActiveCampaignContact($user, $editedUser)
-//    {
-//        try {
-//
-//           if($user->first_name == $editedUser->first_name){
-//
-//               updateActiveCampaignContact($user, $editedUser, 'Edit Primary Contact Details', 'Attempting to change the first name', 'Succeeded in changing the first name');
-//           }
-//
-////            $resultCollection = viewContactActiveCampaign($viewContact, $comp, $feature, $attempting, $succeeded);
-////
-////            $contactId = $resultCollection->get('id');
-////
-////            $listsArray = $resultCollection->get('listsArray');
-////
-////            if (isset($contactId)) {
-////
-////                editContactActiveCampaign($viewContact, $editContact, $contactId, $comp, $feature, $attempting, $succeeded, $listsArray);
-////            }
-//
-//        }catch(\Exception $exception){
-//
-//            $errMsg = $exception->getMessage();
-//
-//            dd($errMsg);
-//        }
-//    }
-
     //Usage: edit the active campaign contact (could be to a different email, different name, different user altogether etc)
     //$viewContact == $editContact if editing same contact, not changing the contact to a different user
     public function updateActiveCampaignContact($viewContact, $editContact, $feature, $attempting, $succeeded)
     {
-
         $comp = Company::find($viewContact->company_id);
 
         $resultCollection = viewContactActiveCampaign($viewContact, $comp, $feature, $attempting, $succeeded);
@@ -336,10 +264,7 @@ class CompanyAndUsersApiController extends Controller
             editContactActiveCampaign($editContact, $contactId, $comp, $feature, $attempting, $succeeded, $listsArray);
         }
 
-//        dd($resultCollection);
-
     }
-
 
     //pm is userId
     public function deleteUser($id)
@@ -374,30 +299,121 @@ class CompanyAndUsersApiController extends Controller
         ]);
     }
 
+    public function editUser(Request $request, $id){
+
+        $user = User::find($id);
+        $userPreEdit = User::find($id);//user before edits
+
+        $verified = verifyCompany($user);
+
+        if(!$verified){
+
+            return response()->json($verified);//value = false
+        }
+
+        if ($request->has('first_name')) {
+            $user->first_name = $request->input('first_name');
+        }
+
+        if ($request->has('last_name')) {
+            $user->last_name = $request->input('last_name');
+        }
+
+        if ($request->has('email')) {
+
+            //before changing the email, check the email has changed,
+            //if so, email the employee/mobile user's new email address,
+            $emailOld = $user->email;
+
+            $emailNew = $request->input('email');
+
+            if ($emailNew != $emailOld) {
+                //email the new email address and old email address and advise the employee changed
+                $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
+
+                //new email address notification mail
+                $recipientNew = new DynamicRecipient($emailNew);
+                $recipientNew->notify(new ChangeEmailNew($compName));
+
+                //old email address notification mail
+                $recipientOld = new DynamicRecipient($emailOld);
+                $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
+
+                $user->email = $emailNew;
+            }
+        }
+
+        $user->save();
+
+        /*if primary contact is edited,
+        update the details in active campaign if the email, first_name or last_name differs.*/
+        $editedUser = User::find($user->id);//user after edits
+
+        $company = Company::find($user->company_id);
+
+        //if the edited user is the primary contact (scope for when allow the edit)
+        if($userPreEdit->id == $company->primary_contact) {
+            if (($userPreEdit->first_name != $editedUser->first_name) || ($userPreEdit->last_name != $editedUser->last_name) || ($userPreEdit->email != $editedUser->email)) {
+
+                $this->updateActiveCampaignContact($userPreEdit, $editedUser, 'Edit Primary Contact Details',
+                    'Attempting to change contact details',
+                    'Succeeded in changing contact details');
+            }
+        }
+
+        if($request->has('role')){
+
+            $userRole = Role::where('user_id', '=', $id)->first();
+
+            $userRole->role = $request->input('role');
+            $userRole->save();
+        }
+
+        if ($user->save()) {
+            return response()->json([
+                'success' => true
+            ]);
+        } else {
+            return response()->json([
+                'success' => false
+            ]);
+        }
+    }
+
     //change the primary contact in companies table
     //also update active tag contact (change contact details and name of current contact so as to keep tags and all else as is)
     public function changePrimaryContact(Request $request){
 
-//        try{
+        try{
 
             if ($request->has('primaryContact')) {
 
-                $newPrimaryContactId = $request->primaryContact;
+                $newPrimaryContactId = $request->primaryContact;//user_id of new primary contact
 
                 $user = Auth::user();
 
                 $company = Company::find($user->company_id);
 
-                $oldPrimaryContact = $company->primary_contact;
+                $oldPrimaryContact = $company->primary_contact;//user_id of old primary contact
 
                 $company->primary_contact = $newPrimaryContactId;
 
                 if ($company->save()) {
 
-                    //todo: update active campaign contact to be new primary contact
+                    $currentContact = User::find($oldPrimaryContact);
 
-    //                $newuser = User::find($newPrimaryContactId);
-    //1. need to contact_view_email and use the id to then edit
+                    $newContact = User::find($newPrimaryContactId);
+
+                    //copy the trial_ends_at value from the $currentContact to the $newContact
+                    $newContact->trial_ends_at = $currentContact->trial_ends_at;
+
+                    $newContact->save();
+
+                    //update active campaign contact to the new primary contact
+                    $this->updateActiveCampaignContact($currentContact, $newContact,
+                        'changing the primary contact to a different user',
+                        'Attempting to update the email and contact name',
+                        "Succeeded in updating the email and contact name");
 
                     return response()->json([
                         'success' => true,
@@ -421,14 +437,19 @@ class CompanyAndUsersApiController extends Controller
                 ]);
 
             }
-//        }catch(\Exception $exception){
-//
-//        $errMsg = $exception->getMessage();
-//
-//        dd($errMsg);
-//        }
+
+        }catch(\Exception $exception){
+
+            $errMsg = $exception->getMessage();
+
+            return response()->json([
+                'success' => false,
+                'exception' => $errMsg
+            ]);
+        }
     }
 
+    //USAGE: only for remove company account, else don't allow the delete of the primary contact (company must change primary contact first)
     public function deletePrimaryContact($userId)
     {
 
@@ -542,9 +563,6 @@ class CompanyAndUsersApiController extends Controller
 
         $stripePlan = stripePlanName($plan, $term);
 
-        //for use with active campaign tags
-        $comp = Company::find($user->company_id);
-
         if (isset($trialEndsAt)) {
 
             $trialDays = trialDays($trialEndsAt);
@@ -562,30 +580,12 @@ class CompanyAndUsersApiController extends Controller
             $user->newSubscription('main', $stripePlan)->create($stripeToken);
         }
 
-        //for all new subscriptions, remove trial tag from the active campaign (whether tag exists or not, request performs smoothly,
-        // however a notification will be sent to ourselves if the tag did not exist. todo: optimize so not sent if the error msg was tag did not exist.)
-         $removeTag = Config::get('constants.TRIAL_TAG');
+        //for all brand new subscriptions (Usage 1), remove trial tags from the active campaign contact and add start subscription tags
+        //note: editPrimary is set to true for editPrimaryContact but not set and passed as null for initial subscription
+        if(!isset($request->editPrimary)) {
 
-         $removeTagUpperCase = ucwords($removeTag);
-
-         removeTag($user, $removeTag, $comp, 'Start of Paid Subscription',
-             'Attempted to remove tag: ' . $removeTagUpperCase,
-             'Succeeded in removing tag: ' . $removeTagUpperCase);
-
-        //for all new subscriptions, add a tag to the active campaign
-        //tag to add depends on the billing cycle...
-        if ($term == 'monthly') {
-            $addTag = Config::get('constants.PAID_MONTHLY_TAG');
-        }else{
-            $addTag = Config::get('constants.PAID_YEARLY_TAG');
+            startSubscriptionTags($user, $term);
         }
-
-        $addTagUpperCase = ucwords($addTag);
-
-        addTag($user, $addTag, $comp, 'Start of Paid Subscription',
-            'Attempted to add tag: '. $addTagUpperCase,
-            'Succeeded in adding tag: '.$addTagUpperCase
-        );
 
         if ($user->subscribed('main')) {
 
@@ -669,8 +669,121 @@ class CompanyAndUsersApiController extends Controller
                 ]);
 
             }
+    }
+
+    //notify ourselves of an error and log the error in the database
+    //Usage: atm, is used for edit primary contact when the process does not complete smoothly
+    public function genericErrorNotifyLog(Request $request){
+
+        $user = Auth::user();
+
+        $comp = Company::find($user->company_id);
+
+        $contact = User::find($comp->primary_contact);//new primary contact
+
+        $errorCode = $request->input('errorCode');
+
+        //notify admin
+        $odinTeam = new DynamicRecipient(Config::get('constants.COMPANY_EMAIL2'));
+
+        $odinTeam->notify(new genericErrorNotification($errorCode, $comp, $contact));
+
+        //store error in database
+        $appErrors = new AppErrors;
+
+        //required fields
+        $appErrors->event = $request->input('event');
+        $appErrors->recipient = $request->input('recipient');
+        $appErrors->description = $request->input('description');
+
+        //presume the notification was successfully sent, and check if db store was successful
+        if($appErrors->save()) {
+            return response()->json([
+                'success' => true,
+            ]);
+        }else{
+            return response()->json([
+                'success' => false,
+            ]);
+        }
+    }
+
+//    public function genericErrorNotifyLogTest(){
+//
+//        $user = Auth::user();
+//
+//        $comp = Company::find($user->company_id);
+//
+//        $contact = User::find($comp->primary_contact);//new primary contact
+//
+//        $errorCode = 'EPCNS';
+//
+//        //notify admin
+//        $odinTeam = new DynamicRecipient(Config::get('constants.COMPANY_EMAIL2'));
+//
+//        $odinTeam->notify(new genericErrorNotification($errorCode, $comp, $contact));
+//
+//        //store error in database
+//        $appErrors = new AppErrors;
+//
+//        //required fields
+//        $appErrors->event = "test this";
+//        $appErrors->recipient = 'na';
+//        $appErrors->description = 'test description';
+//
+//        //presume the notification was successfully sent, and check if db store was successful
+//        if($appErrors->save()) {
+//            return response()->json([
+//                'success' => true,
+//            ]);
+//        }else{
+//            return response()->json([
+//                'success' => false,
+//            ]);
+//        }
+//    }
 
 
+    //ARCHIVE? NOT USED I BELIEVE, INSTEAD USE THE FUNCTION CHANGEPRIMARYCONTACT!!!
+    //receives the userId of the user that will now be the company contact
+    public function updateContact($userId)
+    {
+
+        //verify company
+        $user = User::withTrashed()
+            ->where('id', '=', $userId)
+            ->first();
+
+        $verified = verifyCompany($user);
+
+        if (!$verified) {
+
+            return response()->json($verified);//value = false
+        }
+
+//        dd($verified);
+
+        //new user instance for the update, as cannot be a deleted user
+        $contact = User::find($userId);
+
+        //if contact exists and is not deleted
+        if ($contact != null) {
+
+            $company = Company::find($contact->company_id);
+
+            $company->primary_contact = $contact->id;
+
+            $company->save();
+
+            return response()->json([
+                'success' => true
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'reason' => 'user has been deleted or does not exist'
+        ]);
     }
 
 }
