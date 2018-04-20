@@ -390,7 +390,7 @@ if (!function_exists('viewContactActiveCampaign')) {
 
         if($listsStr != ""){
 
-         $listsArray = explode("-", $listsStr);
+            $listsArray = explode("-", $listsStr);
 
         }else{
 
@@ -423,7 +423,7 @@ if (!function_exists('viewContactActiveCampaign')) {
 //active campaign: updates an existing contact's email address
 //usage: when primary contact is changed to a different user or email and/or name is edited
 //scope for more updates as required
-//$result->message success = 1. lists : "Contact updated" or 2. no lists: "List ID 0 does not exist."
+//$result->message success = 1. lists : "Contact updated" or 2. no lists: "List ID 0 does not exist." or "You did not select any lists"
 //
 if (!function_exists('editContactActiveCampaign')) {
     //pass through null as the value if the pm has no relevance
@@ -617,16 +617,19 @@ if (!function_exists('urlEncodeBody')) {
 
         if($pList != null) {
 
-            if(count($pList)>0){
+//            if(count($pList)>0){
 
-                foreach($pList as $list) {
-                    $parts[] = 'p['.$list.']=' . urlencode($list);
-                }
-
-            }else{
-                //no lists
-                $parts[] = 'p[0]=' . urlencode('0');//todo: optimize, returns an error, but for the moment this is the recommended way to ensure those not on a list remain not on a list
+            foreach($pList as $list) {
+                $parts[] = 'p['.$list.']=' . urlencode($list);
             }
+
+//            }else{
+//                //no lists
+//                $parts[] = 'p[0]=' . urlencode('0');//todo: optimize, returns an error, but for the moment this is the recommended way to ensure those not on a list remain not on a list
+//            }
+
+        }else{
+            $parts[] = 'p[0]=' . urlencode('0');//todo: optimize, returns an error, but for the moment this is the recommended way to ensure those not on a list remain not on a list
 
         }
 
