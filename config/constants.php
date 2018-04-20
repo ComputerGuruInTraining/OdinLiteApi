@@ -21,7 +21,9 @@ return [
     /****Active Campaign config****/
     'ACTIVE_API_KEY' => '7b60b3914bd330fe2f29461d391133847685111e2f6910dec5aa16627ea83bf82c1ecfb9',
     'ACTIVE_URL' => 'https://odin.api-us1.com/admin/api.php?',
-    'TRIAL_TAG' => 'Started Trial - 90 Days',//todo, change to 30 days once beta testing complete
+    //both the trial tags are used so we can remove both of them (thereby removing whichever exists) in active campaign when new subscription created
+    'TRIAL_TAG' => 'Started Trial - 90 Days',//todo, change to 30 once beta testing complete,this tag is used in /register/start-free-trial route
+    'TRIAL_TAG_BETA' => 'Started Trial - 90 Days',//keep as is
 //    'PAID_CUSTOMER_TAG' => 'paid customer',//todo: archive soon.
     'PAID_MONTHLY_TAG' => 'Started Subscription - Paid Monthly',
     'PAID_YEARLY_TAG' => 'Started Subscription - Paid Yearly',
@@ -54,5 +56,12 @@ return [
 
 //    'ERROR_UPDATE' => 'Unexpected error updating details',
 
+    /*Error Codes*/
+    'EDIT_PRIMARY_CONTACT_ERROR' => 'EPC',
+    'NEW_SUBSCRIPTION_ERROR' => 'NS',
+     //usage for EPCNS: if the original subscription was cancelled and the new subscription and subsequently resume subscription failed. and didn't revert to original primary contact
+    'EDIT_PRIMARY_CONTACT_NEW_SUBSCRIPTION' => 'EPCNS',
+    //usage for EPCCS: subscription wasn't transferred and then didn't revert back to original primary contact. original subscription is still intact.
+    'EDIT_PRIMARY_CONTACT_CANCEL_SUBSCRIPTION' => 'EPCCS',
 
 ];
