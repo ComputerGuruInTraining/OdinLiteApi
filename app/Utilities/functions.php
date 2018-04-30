@@ -386,38 +386,40 @@ if (!function_exists('viewContactActiveCampaign')) {
 
         $result = json_decode((string)$response->getBody());
 
-        $listsStr = $result->listslist;
-
-        if($listsStr != ""){
-
-            $listsArray = explode("-", $listsStr);
-
-        }else{
-
-            $listsArray = [];//empty array
-        }
-
-
-        $collection = collect([
-            'id' => $result->id,
-            'listsArray' => $listsArray
-        ]);
-
-        //works, just need to implement sending of email
         if($result->result_message == "Success: Something is returned") {
 
-//            notifyActiveCampaign($result->result_message, 'Success', $user, $comp, $feature, null, null, $succeeded);
+            if(isset($result->listslist)) {
+
+                $listsStr = $result->listslist;
+
+                if ($listsStr != "") {
+
+                    $listsArray = $result->lists;
+
+                } else {
+
+                    $listsArray = [];//empty array
+                }
+
+            }else{
+                $listsArray = [];//empty array
+            }
+
+            $collection = collect([
+                'id' => $result->id,
+                'listsArray' => $listsArray
+            ]);
 
             return $collection;
 
         }else {
-
             notifyActiveCampaignAdmin($result->result_message, 'Failed', $user, $comp, $feature,
                 'This event did not complete successfully.', $attempting);
 
             return null;
         }
     }
+
 }
 
 //active campaign: updates an existing contact's email address
@@ -617,16 +619,13 @@ if (!function_exists('urlEncodeBody')) {
 
         if($pList != null) {
 
-//            if(count($pList)>0){
+            foreach($pList as $key=>$value){
 
-            foreach($pList as $list) {
-                $parts[] = 'p['.$list.']=' . urlencode($list);
+                $parts[] = 'p['.$key.']=' . urlencode($key);
+
+                $parts[] = 'status['.$key.']=' . urlencode($value->status);
+
             }
-
-//            }else{
-//                //no lists
-//                $parts[] = 'p[0]=' . urlencode('0');//todo: optimize, returns an error, but for the moment this is the recommended way to ensure those not on a list remain not on a list
-//            }
 
         }else{
             $parts[] = 'p[0]=' . urlencode('0');//todo: optimize, returns an error, but for the moment this is the recommended way to ensure those not on a list remain not on a list

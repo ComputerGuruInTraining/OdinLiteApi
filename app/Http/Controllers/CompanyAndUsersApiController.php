@@ -253,15 +253,18 @@ class CompanyAndUsersApiController extends Controller
     {
         $comp = Company::find($viewContact->company_id);
 
-        $resultCollection = viewContactActiveCampaign($viewContact, $comp, $feature, $attempting, $succeeded);
+        $resultCollection = viewContactActiveCampaign($viewContact, $comp, $feature, $attempting, $succeeded);//null or has a value
 
-        $contactId = $resultCollection->get('id');
+        if(isset($resultCollection)) {
 
-        $listsArray = $resultCollection->get('listsArray');
+            $contactId = $resultCollection->get('id');
 
-        if (isset($contactId)) {
+            $listsArray = $resultCollection->get('listsArray');
 
-            editContactActiveCampaign($editContact, $contactId, $comp, $feature, $attempting, $succeeded, $listsArray);
+            if (isset($contactId)) {
+
+                editContactActiveCampaign($editContact, $contactId, $comp, $feature, $attempting, $succeeded, $listsArray);
+            }
         }
 
     }
@@ -412,8 +415,8 @@ class CompanyAndUsersApiController extends Controller
                     //update active campaign contact to the new primary contact
                     $this->updateActiveCampaignContact($currentContact, $newContact,
                         'changing the primary contact to a different user',
-                        'Attempting to update the email and contact name',
-                        "Succeeded in updating the email and contact name");
+                        'Attempting to update the email and contact name.',
+                        "Succeeded in updating the email and contact name.");
 
                     return response()->json([
                         'success' => true,
