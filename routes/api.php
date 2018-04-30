@@ -11,6 +11,7 @@ use App\Notifications\ChangePW;
 use App\Notifications\ChangeEmailNew;
 use App\Notifications\ChangeEmailOld;
 use App\Notifications\NewMobileUserExistingUser;
+use App\Recipients\DynamicRecipient;
 
 use App\User as User;
 use App\Location as Location;
@@ -31,7 +32,6 @@ use App\CaseFile as CaseFile;
 use App\ShiftCheck as ShiftCheck;
 use App\ShiftCheckCases as CheckCases;
 use App\Employee as Employee;
-use App\Recipients\DynamicRecipient;
 
 /*---------------User----------------*/
 
@@ -110,69 +110,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //Update Console user
-    Route::put("/user/{id}/edit", function (Request $request, $id) {
-
-        $user = App\User::find($id);
-
-        $verified = verifyCompany($user);
-
-        if(!$verified){
-
-            return response()->json($verified);//value = false
-        }
-
-        if ($request->has('first_name')) {
-            $user->first_name = $request->input('first_name');
-        }
-
-        if ($request->has('last_name')) {
-            $user->last_name = $request->input('last_name');
-        }
-
-        if ($request->has('email')) {
-
-            //before changing the email, check the email has changed,
-            //if so, email the employee/mobile user's new email address,
-            $emailOld = $user->email;
-
-            $emailNew = $request->input('email');
-
-            if ($emailNew != $emailOld) {
-                //email the new email address and old email address and advise the employee changed
-                $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
-
-                //new email address notification mail
-                $recipientNew = new DynamicRecipient($emailNew);
-                $recipientNew->notify(new ChangeEmailNew($compName));
-
-                //old email address notification mail
-                $recipientOld = new DynamicRecipient($emailOld);
-                $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
-
-                $user->email = $emailNew;
-            }
-        }
-
-        $user->save();
-
-        if($request->has('role')){
-
-            $userRole = App\UserRole::where('user_id', '=', $id)->first();
-
-            $userRole->role = $request->input('role');
-            $userRole->save();
-        }
-
-        if ($user->save()) {
-            return response()->json([
-                'success' => true
-            ]);
-        } else {
-            return response()->json([
-                'success' => false
-            ]);
-        }
-    });
+    Route::put("/user/{id}/edit", 'CompanyAndUsersApiController@editUser');
 
     //Update Mobile user password
     Route::put("/user/{id}/change-pw", function (Request $request, $id) {
@@ -226,6 +164,9 @@ Route::group(['middleware' => 'auth:api'], function () {
     //delete user
     //soft delete
     Route::delete('/user/{id}', 'CompanyAndUsersApiController@deleteUser');
+
+    //update the primary contact (change the primary_contact in company)
+    Route::put("/user/primary/contact", 'CompanyAndUsersApiController@changePrimaryContact');
 
     Route::get("/user/list/{compId}", function ($compId) {
 
@@ -301,7 +242,6 @@ Route::group(['middleware' => 'auth:api'], function () {
     //create first subscription no trial period
     Route::post('/subscription/create', 'CompanyAndUsersApiController@createSubscription');
 
-    //todo: cancel subscription
     Route::post('/subscription/cancel', 'CompanyAndUsersApiController@cancelMySubscription');
 
     Route::post('/subscription/swap', 'CompanyAndUsersApiController@swapSubscription');
@@ -422,6 +362,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
             //verify company
             $user = User::find($id);
+            $userPreEdit = User::find($id);
 
             $verified = verifyCompany($user);
 
@@ -456,14 +397,27 @@ Route::group(['middleware' => 'auth:api'], function () {
             //and advise console user the email address was not changed because email not valid (ie real)
             $emailOld = $user->email;
             $msg = '';
-            $response = '';
+
+            //update the contact in active campaign if the name or email has changed
+            $editedUser = User::find($id);
+            $company = Company::find($editedUser->company_id);
+
+            //if the edited employee is the primary contact (scope for when allow the edit)
+            if($userPreEdit->id == $company->primary_contact) {
+                if (($userPreEdit->first_name != $editedUser->first_name) || ($userPreEdit->last_name != $editedUser->last_name) || ($userPreEdit->email != $editedUser->email)) {
+
+                    $this->updateActiveCampaignContact($userPreEdit, $editedUser, 'Edit Primary Contact Employee Details',
+                        'Attempting to change contact details',
+                        'Succeeded in changing contact details');
+                }
+            }
 
             if ($emailNew != $emailOld) {
                 //email the new email address and old email address and advise the employee changed
                 $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
 
-                //FIXME: atm there is no check for if email delivered successfully.
-                //$reponse has a value of null either way.
+                //Important!! atm there is no check in laravel for if email delivered successfully.
+                //so a mailgun webhook has been setup
 
                 //new email address notification mail
                 $recipientNew = new DynamicRecipient($emailNew);
@@ -473,21 +427,10 @@ Route::group(['middleware' => 'auth:api'], function () {
                 $recipientOld = new DynamicRecipient($emailOld);
                 $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
 
-
-//                $response = $user->notify(new ChangeEmailNew($compName));//worked on user
-
-                //check to ensure the email was successful
-                //if notification event etc...
-
                 $user->email = $emailNew;
 
                 $user->save();
-                // }
-                // else{
-                // don't change the email because the email is invalid (email sending unsuccessfuly)
-                // $user->save();
-                // $msg = "email invalid";
-                // }
+
 
             } else {
                 //don't change the email because it hasn't changed
@@ -1531,6 +1474,9 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     Route::get('/commencedshiftdetails/{assignedId}', 'JobsController@getCommencedShiftDetails');
+
+    /*----------------Generic Notification----------*/
+    Route::post('/notify/log/error', 'CompanyAndUsersApiController@genericErrorNotifyLog');
 
 
 });//end Route::group...
