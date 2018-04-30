@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Config;
 use App\Notifications\genericErrorNotification;
 use App\Recipients\DynamicRecipient;
+use App\Notifications\ChangeEmailNew;
+use App\Notifications\ChangeEmailOld;
 
 use App\Company as Company;
 use App\User as User;
@@ -454,7 +456,7 @@ class CompanyAndUsersApiController extends Controller
             }
 
         }catch(\Exception $exception){
-
+            //note: does not catch FatalThrowableError
             $errMsg = $exception->getMessage();
 
             return response()->json([
