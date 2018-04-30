@@ -304,81 +304,93 @@ class CompanyAndUsersApiController extends Controller
 
     public function editUser(Request $request, $id){
 
-        $user = User::find($id);
-        $userPreEdit = User::find($id);//user before edits
+        try {
 
-        $verified = verifyCompany($user);
+            $user = User::find($id);
+            $userPreEdit = User::find($id);//user before edits
 
-        if(!$verified){
+            $verified = verifyCompany($user);
 
-            return response()->json($verified);//value = false
-        }
+            if (!$verified) {
 
-        if ($request->has('first_name')) {
-            $user->first_name = $request->input('first_name');
-        }
-
-        if ($request->has('last_name')) {
-            $user->last_name = $request->input('last_name');
-        }
-
-        if ($request->has('email')) {
-
-            //before changing the email, check the email has changed,
-            //if so, email the employee/mobile user's new email address,
-            $emailOld = $user->email;
-
-            $emailNew = $request->input('email');
-
-            if ($emailNew != $emailOld) {
-                //email the new email address and old email address and advise the employee changed
-                $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
-
-                //new email address notification mail
-                $recipientNew = new DynamicRecipient($emailNew);
-                $recipientNew->notify(new ChangeEmailNew($compName));
-
-                //old email address notification mail
-                $recipientOld = new DynamicRecipient($emailOld);
-                $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
-
-                $user->email = $emailNew;
+                return response()->json($verified);//value = false
             }
-        }
 
-        $user->save();
-
-        /*if primary contact is edited,
-        update the details in active campaign if the email, first_name or last_name differs.*/
-        $editedUser = User::find($user->id);//user after edits
-
-        $company = Company::find($user->company_id);
-
-        //if the edited user is the primary contact (scope for when allow the edit)
-        if($userPreEdit->id == $company->primary_contact) {
-            if (($userPreEdit->first_name != $editedUser->first_name) || ($userPreEdit->last_name != $editedUser->last_name) || ($userPreEdit->email != $editedUser->email)) {
-
-                $this->updateActiveCampaignContact($userPreEdit, $editedUser, 'Edit Primary Contact Details',
-                    'Attempting to change contact details',
-                    'Succeeded in changing contact details');
+            if ($request->has('first_name')) {
+                $user->first_name = $request->input('first_name');
             }
-        }
 
-        if($request->has('role')){
+            if ($request->has('last_name')) {
+                $user->last_name = $request->input('last_name');
+            }
 
-            $userRole = Role::where('user_id', '=', $id)->first();
+            if ($request->has('email')) {
 
-            $userRole->role = $request->input('role');
-            $userRole->save();
-        }
+                //before changing the email, check the email has changed,
+                //if so, email the employee/mobile user's new email address,
+                $emailOld = $user->email;
 
-        if ($user->save()) {
+                $emailNew = $request->input('email');
+
+                if ($emailNew != $emailOld) {
+                    //email the new email address and old email address and advise the employee changed
+                    $compName = Company::where('id', '=', $user->company_id)->pluck('name')->first();
+
+                    //new email address notification mail
+                    $recipientNew = new DynamicRecipient($emailNew);
+                    $recipientNew->notify(new ChangeEmailNew($compName));
+
+                    //old email address notification mail
+                    $recipientOld = new DynamicRecipient($emailOld);
+                    $recipientOld->notify(new ChangeEmailOld($compName, $emailNew));
+
+                    $user->email = $emailNew;
+                }
+            }
+
+            $user->save();
+
+            /*if primary contact is edited,
+            update the details in active campaign if the email, first_name or last_name differs.*/
+            $editedUser = User::find($user->id);//user after edits
+
+            $company = Company::find($user->company_id);
+
+            //if the edited user is the primary contact (scope for when allow the edit)
+            if ($userPreEdit->id == $company->primary_contact) {
+                if (($userPreEdit->first_name != $editedUser->first_name) || ($userPreEdit->last_name != $editedUser->last_name) || ($userPreEdit->email != $editedUser->email)) {
+
+                    $this->updateActiveCampaignContact($userPreEdit, $editedUser, 'Edit Primary Contact Details',
+                        'Attempting to change contact details.',
+                        'Succeeded in changing contact details.');
+                }
+            }
+
+            if ($request->has('role')) {
+
+                $userRole = Role::where('user_id', '=', $id)->first();
+
+                $userRole->role = $request->input('role');
+                $userRole->save();
+            }
+
+            if ($user->save()) {
+                return response()->json([
+                    'success' => true
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false
+                ]);
+            }
+
+        }catch(\Exception $exception){
+
+            $errMsg = $exception->getMessage();
+
             return response()->json([
-                'success' => true
-            ]);
-        } else {
-            return response()->json([
-                'success' => false
+                'success' => false,
+                'exception' => $errMsg
             ]);
         }
     }
