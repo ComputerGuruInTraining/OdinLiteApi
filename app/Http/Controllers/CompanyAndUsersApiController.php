@@ -97,20 +97,23 @@ class CompanyAndUsersApiController extends Controller
                 //the latest ends_at date would be the subscription we require.
                 foreach ($compUsers as $compUser) {
 
-                    //if the user has a subscription that is on Grace Period, it will return true and following will return all subscriptions
-                    if ($compUser->subscription('main')->onGracePeriod()) {
+                    if ($compUser->subscribed('main')) {
+                        //if the user has a subscription that is on Grace Period, it will return true and following will return all subscriptions
+                        if ($compUser->subscription('main')->onGracePeriod()) {
 
-                        $graceSub = Subscription::where('user_id', $compUser->id)
-                            ->where('trial_ends_at', '!=', null)
-                            ->orderBy('trial_ends_at', 'desc')
-                            ->first();
+                            $graceSub = Subscription::where('user_id', $compUser->id)
+                                ->where('trial_ends_at', '!=', null)
+//                                ->orderBy('trial_ends_at', 'desc')
+                                ->first();
 
-                        $graceCollect->push($graceSub);
+                            $graceCollect->push($graceSub);
 
-                        $graceCheck = true;
+                            $graceCheck = true;
 
+                        }
                     }
                 }
+
                 if ($graceCheck == true) {
 
                     $graceCollect->sortBy('trial_ends_at');
@@ -131,13 +134,16 @@ class CompanyAndUsersApiController extends Controller
 
                     foreach ($compUsers as $compUser) {
 
-                        if ($compUser->subscription('main')->cancelled()) {
-                            $cancelSub = Subscription::where('user_id', $compUser->id)
-                                ->where('ends_at', '!=', null)
-                                ->orderBy('ends_at', 'desc')
-                                ->first();
+                        if ($compUser->subscribed('main')) {
 
-                            $cancelCollect->push($cancelSub);
+                            if ($compUser->subscription('main')->cancelled()) {
+                                $cancelSub = Subscription::where('user_id', $compUser->id)
+                                    ->where('ends_at', '!=', null)
+                                    ->orderBy('ends_at', 'desc')
+                                    ->first();
+
+                                $cancelCollect->push($cancelSub);
+                            }
                         }
                     }
 
