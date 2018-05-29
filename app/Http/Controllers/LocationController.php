@@ -4,9 +4,55 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Location;
+use App\LocationCompany as LocationCo;
 
 class LocationController extends Controller
 {
+
+    public function storeLocation(Request $request) {
+
+        try{
+
+            $location = new App\Location;
+
+            $location->name = $request->input('name');
+            $location->address = $request->input('address');
+            $location->latitude = $request->input('latitude');
+            $location->longitude = $request->input('longitude');
+            $location->notes = $request->input('notes');
+
+            $location->save();
+            //retrieve id of last insert
+            $id = $location->id;
+
+            //save location as current users company's location
+            $locationCo = new LocationCo;
+            $locationCo->location_id = $id;
+            $locationCo->company_id = $request->input('compId');
+            //$locationCo->save();
+
+            if ($locationCo->save()) {
+                return response()->json([
+                    'success' => true
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false
+                ]);
+            }
+            
+        }catch(\Exception $exception){
+
+            $errMsg = $exception->getMessage();
+
+            return response()->json([
+                'success' => false,
+                'exception' => $errMsg
+            ]);
+        }
+
+    }
 
 //    functions.php contains getGeoData
 
