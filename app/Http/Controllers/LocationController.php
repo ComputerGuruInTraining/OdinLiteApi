@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Location;
+use App\Location as Location;
 use App\LocationCompany as LocationCo;
 
 class LocationController extends Controller
@@ -13,8 +13,7 @@ class LocationController extends Controller
     public function storeLocation(Request $request) {
 
         try{
-
-            $location = new App\Location;
+            $location = new Location;
 
             $location->name = $request->input('name');
             $location->address = $request->input('address');
@@ -41,7 +40,7 @@ class LocationController extends Controller
                     'success' => false
                 ]);
             }
-            
+
         }catch(\Exception $exception){
 
             $errMsg = $exception->getMessage();
@@ -55,7 +54,6 @@ class LocationController extends Controller
     }
 
 //    functions.php contains getGeoData
-
     //get some location details: only latitude, longitude
     public function getLocationData($locId)
     {
