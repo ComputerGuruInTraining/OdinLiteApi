@@ -1250,36 +1250,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     //insert to locations and location_companies table
-    Route::post("/locations", function (Request $request) {
-
-        $location = new App\Location;
-
-        $location->name = $request->input('name');
-        $location->address = $request->input('address');
-        $location->latitude = $request->input('latitude');
-        $location->longitude = $request->input('longitude');
-        $location->notes = $request->input('notes');
-
-        $location->save();
-        //retrieve id of last insert
-        $id = $location->id;
-
-        //save location as current users company's location
-        $locationCo = new LocationCo;
-        $locationCo->location_id = $id;
-        $locationCo->company_id = $request->input('compId');
-        //$locationCo->save();
-
-        if ($locationCo->save()) {
-            return response()->json([
-                'success' => true
-            ]);
-        } else {
-            return response()->json([
-                'success' => false
-            ]);
-        }
-    });
+    Route::post("/locations", 'LocationController@storeLocation');
 
     //soft delete
     Route::delete('/locations/{id}', function ($id) {
