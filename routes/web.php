@@ -98,10 +98,13 @@ Route::post('/company', function (Request $request) {
         $user->first_name = $request->input('first_name');
         $user->last_name = $request->input('last_name');
         $user->email = $emailRegister;
+        $user->password = $request->input('pw');
 
-        $password = $request->input('pw');
-        $pwEnc = Hash::make($password);
-        $user->password = $pwEnc;
+//start pre encrypt client side
+//        $password = $request->input('pw');
+//        $pwEnc = Hash::make($password);
+//        $user->password = $pwEnc;
+//end pre encrypt client side
 
         $user->company_id = $compId;
         $user->remember_token = str_random(10);
@@ -294,6 +297,7 @@ Route::get('/download-photo/{filename}', function ($filename) {
 });
 
 //CSRF_Token excluded route
+//webhook used by mailgun to store the error in the database and notify admin of the email dropped
 Route::post("/error-logging", function (Request $request) {
 
     $appErrors = new AppErrors;
