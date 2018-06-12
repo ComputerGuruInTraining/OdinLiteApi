@@ -1311,48 +1311,57 @@ Route::group(['middleware' => 'auth:api'], function () {
     //mobile
     Route::post('/currentlocation', function (Request $request) {
 
-        //determine address//
+        try {
 
-        $latitude = $request->input('lat');
-        $longitude = $request->input('long');
+            //determine address//
 
-        //use latitude and longitude to determine address
-        $converted = file_get_contents('https://maps.googleapis.com/maps/api/geocode/json?latlng=' . $latitude . ',' . $longitude . '&key=AIzaSyAwMSIuq6URGvS9Sb-asJ4izgNNaQkWnEQ');
-        $output = json_decode($converted);
-        $address = $output->results[0]->formatted_address;
+            $latitude = $request->input('lat');
+            $longitude = $request->input('long');
 
-        //find user details//
+            //use latitude and longitude to determine address
+            $converted = file_get_contents('https://maps.googleapis.com/maps/api/geocode/json?latlng=' . $latitude . ',' . $longitude . '&key=AIzaSyAwMSIuq6URGvS9Sb-asJ4izgNNaQkWnEQ');
+            $output = json_decode($converted);
+            $address = $output->results[0]->formatted_address;
 
-        $userId = $request->input('userId');
+            //find user details//
 
-        $user = User::find($userId);
+            $userId = $request->input('userId');
 
-        //store in db
+            $user = User::find($userId);
 
-        $position = new Position;
+            //store in db
 
-        $position->latitude = $latitude;
-        $position->longitude = $longitude;
-        $position->address = $address;
-        $position->shift_id = $request->input('shiftId');
-        $position->mobile_user_id = $userId;
-        $position->user_first_name = $user->first_name;
-        $position->user_last_name = $user->last_name;
+            $position = new Position;
 
-        if ($request->input('locId') != 0) {
-            $position->location_id = $request->input('locId');
-        }
-        $position->save();
-        $id = $position->id;
+            $position->latitude = $latitude;
+            $position->longitude = $longitude;
+            $position->address = $address;
+            $position->shift_id = $request->input('shiftId');
+            $position->mobile_user_id = $userId;
+            $position->user_first_name = $user->first_name;
+            $position->user_last_name = $user->last_name;
 
-        if ($position->save()) {
+            if ($request->input('locId') != 0) {
+                $position->location_id = $request->input('locId');
+            }
+            $position->save();
+            $id = $position->id;
+
+            if ($position->save()) {
+                return response()->json([
+                    'success' => true,
+                    'id' => $id
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false
+                ]);
+
+            }
+
+        }catch(\ErrorException $e){
             return response()->json([
-                'success' => true,
-                'id' => $id
-            ]);
-        } else {
-            return response()->json([
-                'success' => false
+                'error' => $e
             ]);
 
         }
