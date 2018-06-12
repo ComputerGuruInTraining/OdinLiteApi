@@ -444,6 +444,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         } catch (\ErrorException $e) {
 
+            //todo: get message from $e
             return response()->json([
                 'error' => $e
             ]);
@@ -1360,8 +1361,11 @@ Route::group(['middleware' => 'auth:api'], function () {
             }
 
         }catch(\ErrorException $e){
+
+            $errMsg = $e->getMessage();
+
             return response()->json([
-                'error' => $e
+                'error' => $errMsg
             ]);
 
         }
