@@ -1319,8 +1319,19 @@ Route::group(['middleware' => 'auth:api'], function () {
             $latitude = $request->input('lat');
             $longitude = $request->input('long');
 
+            $arrContextOptions=array(
+                "ssl"=>array(
+                    "verify_peer"=>false,
+                    "verify_peer_name"=>false,
+                ),
+            );
+
             //use latitude and longitude to determine address
-            $converted = file_get_contents('https://maps.googleapis.com/maps/api/geocode/json?latlng=' . $latitude . ',' . $longitude . '&key=AIzaSyAwMSIuq6URGvS9Sb-asJ4izgNNaQkWnEQ');
+            $converted = file_get_contents(
+                'https://maps.googleapis.com/maps/api/geocode/json?latlng=' . $latitude . ',' . $longitude . '&key=AIzaSyAwMSIuq6URGvS9Sb-asJ4izgNNaQkWnEQ',
+                false,
+                stream_context_create($arrContextOptions));
+
             $output = json_decode($converted);
             $address = $output->results[0]->formatted_address;
 
