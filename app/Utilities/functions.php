@@ -619,7 +619,7 @@ if (!function_exists('urlEncodeBody')) {
         }
 
         //if $sourceFn = addUpdate ie contact_sync is being used not contact_edit, then don't pass through the list pm.
-        if($sourceFn != null) {
+        if($sourceFn == null) {
             if ($pList != null) {
 
                 foreach ($pList as $key => $value) {
