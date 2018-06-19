@@ -334,7 +334,8 @@ if (!function_exists('addUpdateContactActiveCampaign')) {
         $request = 'api_action=contact_sync&api_output=json&api_key='.Config::get('constants.ACTIVE_API_KEY');
 
         //url_encode the body, especially in case a user input of first_name contains spaces
-        $body = urlEncodeBody($newuser->email, $newuser->first_name, $newuser->last_name, $tag1);
+        $body = urlEncodeBody($newuser->email, $newuser->first_name, $newuser->last_name, $tag1,
+            null, null, 'addUpdate');
 
         $client = new GuzzleHttp\Client;
 
@@ -591,7 +592,7 @@ if (!function_exists('startSubscriptionTags')) {
 
 if (!function_exists('urlEncodeBody')) {
 
-    function urlEncodeBody($email, $firstName = null, $lastName = null, $tag1 = null, $id = null, $pList = null)
+    function urlEncodeBody($email, $firstName = null, $lastName = null, $tag1 = null, $id = null, $pList = null, $sourceFn = null)
     {
 
         $parts = array();
@@ -617,19 +618,22 @@ if (!function_exists('urlEncodeBody')) {
 
         }
 
-        if($pList != null) {
+        //if $sourceFn = addUpdate ie contact_sync is being used not contact_edit, then don't pass through the list pm.
+        if($sourceFn != null) {
+            if ($pList != null) {
 
-            foreach($pList as $key=>$value){
+                foreach ($pList as $key => $value) {
 
-                $parts[] = 'p['.$key.']=' . urlencode($key);
+                    $parts[] = 'p[' . $key . ']=' . urlencode($key);
 
-                $parts[] = 'status['.$key.']=' . urlencode($value->status);
+                    $parts[] = 'status[' . $key . ']=' . urlencode($value->status);
+
+                }
+
+            } else {
+                $parts[] = 'p[0]=' . urlencode('0');//todo: optimize, returns an error, but for the moment this is the recommended way to ensure those not on a list remain not on a list
 
             }
-
-        }else{
-            $parts[] = 'p[0]=' . urlencode('0');//todo: optimize, returns an error, but for the moment this is the recommended way to ensure those not on a list remain not on a list
-
         }
 
         $body = implode('&', $parts);
