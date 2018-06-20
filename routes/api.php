@@ -444,6 +444,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         } catch (\ErrorException $e) {
 
+            //todo: get message from $e
             return response()->json([
                 'error' => $e
             ]);
@@ -1311,48 +1312,71 @@ Route::group(['middleware' => 'auth:api'], function () {
     //mobile
     Route::post('/currentlocation', function (Request $request) {
 
-        //determine address//
+        try {
 
-        $latitude = $request->input('lat');
-        $longitude = $request->input('long');
+            //determine address//
 
-        //use latitude and longitude to determine address
-        $converted = file_get_contents('https://maps.googleapis.com/maps/api/geocode/json?latlng=' . $latitude . ',' . $longitude . '&key=AIzaSyAwMSIuq6URGvS9Sb-asJ4izgNNaQkWnEQ');
-        $output = json_decode($converted);
-        $address = $output->results[0]->formatted_address;
+            $latitude = $request->input('lat');
+            $longitude = $request->input('long');
 
-        //find user details//
+            $arrContextOptions=array(
+                "ssl"=>array(
+                    "verify_peer"=>false,
+                    "verify_peer_name"=>false,
+                ),
+            );
 
-        $userId = $request->input('userId');
+            //use latitude and longitude to determine address
+            $converted = file_get_contents(
+                'https://maps.googleapis.com/maps/api/geocode/json?latlng=' . $latitude . ',' . $longitude . '&key=AIzaSyAwMSIuq6URGvS9Sb-asJ4izgNNaQkWnEQ',
+                false,
+                stream_context_create($arrContextOptions));
 
-        $user = User::find($userId);
+            $output = json_decode($converted);
+            $address = $output->results[0]->formatted_address;
 
-        //store in db
+            //find user details//
 
-        $position = new Position;
+            $userId = $request->input('userId');
 
-        $position->latitude = $latitude;
-        $position->longitude = $longitude;
-        $position->address = $address;
-        $position->shift_id = $request->input('shiftId');
-        $position->mobile_user_id = $userId;
-        $position->user_first_name = $user->first_name;
-        $position->user_last_name = $user->last_name;
+            $user = User::find($userId);
 
-        if ($request->input('locId') != 0) {
-            $position->location_id = $request->input('locId');
-        }
-        $position->save();
-        $id = $position->id;
+            //store in db
 
-        if ($position->save()) {
+            $position = new Position;
+
+            $position->latitude = $latitude;
+            $position->longitude = $longitude;
+            $position->address = $address;
+            $position->shift_id = $request->input('shiftId');
+            $position->mobile_user_id = $userId;
+            $position->user_first_name = $user->first_name;
+            $position->user_last_name = $user->last_name;
+
+            if ($request->input('locId') != 0) {
+                $position->location_id = $request->input('locId');
+            }
+            $position->save();
+            $id = $position->id;
+
+            if ($position->save()) {
+                return response()->json([
+                    'success' => true,
+                    'id' => $id
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false
+                ]);
+
+            }
+
+        }catch(\ErrorException $e){
+
+            $errMsg = $e->getMessage();
+
             return response()->json([
-                'success' => true,
-                'id' => $id
-            ]);
-        } else {
-            return response()->json([
-                'success' => false
+                'error' => $errMsg
             ]);
 
         }
