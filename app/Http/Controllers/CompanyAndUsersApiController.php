@@ -134,13 +134,23 @@ class CompanyAndUsersApiController extends Controller
 
                     foreach ($compUsers as $compUser) {
 
-                        if ($compUser->subscription('main')->cancelled()) {
-                            $cancelSub = Subscription::where('user_id', $compUser->id)
-                                ->where('ends_at', '!=', null)
-                                ->orderBy('ends_at', 'desc')
-                                ->first();
+                        //to avoid an error being thrown (which starting occuring when the user had no subscription, though docs suggest shouldn't occur)
+                        //ensure user has had a subscription
+                        $subExists = Subscription::where('user_id', $compUser->id)
+                            ->first();
 
-                            $cancelCollect->push($cancelSub);
+                        if($subExists != null) {
+
+                            if ($compUser->subscription('main')->cancelled()) {
+                                
+                                $cancelSub = Subscription::where('user_id', $compUser->id)
+                                    ->where('ends_at', '!=', null)
+                                    ->orderBy('ends_at', 'desc')
+                                    ->first();
+
+                                $cancelCollect->push($cancelSub);
+
+                            }
                         }
                     }
 
