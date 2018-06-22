@@ -134,16 +134,13 @@ class CompanyAndUsersApiController extends Controller
 
                     foreach ($compUsers as $compUser) {
 
-                        if ($compUser->subscribed('main')) {
+                        if ($compUser->subscription('main')->cancelled()) {
+                            $cancelSub = Subscription::where('user_id', $compUser->id)
+                                ->where('ends_at', '!=', null)
+                                ->orderBy('ends_at', 'desc')
+                                ->first();
 
-                            if ($compUser->subscription('main')->cancelled()) {
-                                $cancelSub = Subscription::where('user_id', $compUser->id)
-                                    ->where('ends_at', '!=', null)
-                                    ->orderBy('ends_at', 'desc')
-                                    ->first();
-
-                                $cancelCollect->push($cancelSub);
-                            }
+                            $cancelCollect->push($cancelSub);
                         }
                     }
 
