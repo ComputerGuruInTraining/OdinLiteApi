@@ -134,15 +134,22 @@ class CompanyAndUsersApiController extends Controller
 
                     foreach ($compUsers as $compUser) {
 
-                        if ($compUser->subscribed('main')) {
+                        //to avoid an error being thrown (which starting occuring when the user had no subscription, though docs suggest shouldn't occur)
+                        //ensure user has had a subscription
+                        $subExists = Subscription::where('user_id', $compUser->id)
+                            ->first();
+
+                        if($subExists != null) {
 
                             if ($compUser->subscription('main')->cancelled()) {
+
                                 $cancelSub = Subscription::where('user_id', $compUser->id)
                                     ->where('ends_at', '!=', null)
                                     ->orderBy('ends_at', 'desc')
                                     ->first();
 
                                 $cancelCollect->push($cancelSub);
+
                             }
                         }
                     }
@@ -494,6 +501,9 @@ class CompanyAndUsersApiController extends Controller
 
     }
 
+    //Assumptions: check the current user is the primary contact, if they are not, do not proceed.
+    // If they are, any current subscriptions will be associated with the user id so check if one exists
+    // or if one is cancelled/ongraceperiod for the current user.
     public function swapSubscription(Request $request){
 
         $user = Auth::user();
@@ -533,24 +543,38 @@ class CompanyAndUsersApiController extends Controller
                 ]);
             }
         }else {
-            /*
-             * To determine if the user was once an active subscriber,
-             * but has cancelled their subscription, you may use the cancelled method
-             */
-            if ($user->subscription('main')->cancelled()) {
 
-                if ($user->subscription('main')->onGracePeriod()) {
-                    return response()->json([
-                        'success' => false,
-                        'subscriptionStatus' => "cancelled but on grace period"
-                    ]);
+            //check if a record exists in the Subscription table at all, if so, go on to check if cancelled.
+            //must first check if one exists because an unexpected error (if refer to laravel docs) was found when checking
+            // if cancelled and none existed.
 
-                }else {
-                    return response()->json([
-                        'success' => false,
-                        'subscriptionStatus' => "cancelled"
-                    ]);
+            $subExists = Subscription::where('user_id', $user->id)
+                ->first();
+
+            if($subExists != null) {
+
+                /*
+                 * To determine if the user was once an active subscriber,
+                 * but has cancelled their subscription, you may use the cancelled method
+                 */
+
+
+                if ($user->subscription('main')->cancelled()) {
+
+                    if ($user->subscription('main')->onGracePeriod()) {
+                        return response()->json([
+                            'success' => false,
+                            'subscriptionStatus' => "cancelled but on grace period"
+                        ]);
+
+                    } else {
+                        return response()->json([
+                            'success' => false,
+                            'subscriptionStatus' => "cancelled"
+                        ]);
+                    }
                 }
+
             }else {
                 return response()->json([
                     'success' => false,
