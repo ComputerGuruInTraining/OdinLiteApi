@@ -35,8 +35,8 @@ class ReportApiController extends Controller
     public function getReportList($compId)
     {
         $reports = Report::where('company_id', $compId)
-            ->orderBy('date_start', 'asc')
-            ->get();
+                      ->orderBy('date_start', 'desc')
+                      ->get();
 
         if (count($reports) > 0) {
             foreach ($reports as $i => $report) {
@@ -630,6 +630,7 @@ class ReportApiController extends Controller
                     ->whereIn('case_notes.id', $caseNoteIds);
             })
             ->select('shift_checks.*', 'case_notes.case_id', 'case_notes.title', 'case_notes.user_id', 'case_notes.description', 'case_notes.deleted_at as case_notes_deleted_at')
+            ->orderBy('shift_checks.created_at', 'desc')
             ->get();
 
         return $shiftChecks;
