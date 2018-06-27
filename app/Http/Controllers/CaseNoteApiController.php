@@ -196,6 +196,7 @@ class CaseNoteApiController extends Controller
                 'locations.longitude',
                 'shift_check_cases.shift_check_id', 'shift_check_cases.case_note_id')
             ->whereIn('shift_check_cases.id', $shiftCheckCasesIds)
+            ->orderBy('shift_check_cases.created_at', 'desc')
             ->get();
 
         return $shiftCheckCaseNotes;
