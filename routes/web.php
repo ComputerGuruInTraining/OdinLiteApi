@@ -406,24 +406,8 @@ Route::get("/map/{userId}/{shiftId}/shift-positions", function ($userId, $shiftI
             'current_user_locations.shift_id', 'current_user_locations.user_first_name',
             'current_user_locations.user_last_name', 'current_user_locations.location_id',
             'current_user_locations.created_at')
-        ->join('employees', 'current_user_locations.mobile_user_id', '=', 'employees.user_id')
-        ->join('users', 'employees.user_id', '=', 'users.id')
-        ->join('shifts', 'shifts.mobile_user_id', '=', 'current_user_locations.mobile_user_id')
-        //just the one record per user
-//        ->join(DB::raw('(SELECT mobile_user_id, MAX(created_at) MaxDate
-//               FROM `current_user_locations` GROUP BY mobile_user_id) t2'), function ($join) {
-//            $join->on('current_user_locations.mobile_user_id', '=', 't2.mobile_user_id');
-//            $join->on('current_user_locations.created_at', '=', 't2.MaxDate');
-//        })
         ->where('current_user_locations.mobile_user_id', '=', $userId)
         ->where('current_user_locations.shift_id', '=', $shiftId)
-        ->where('employees.deleted_at', '=', null)
-        ->where('users.deleted_at', '=', null)
-        //we want to see the current_users location for a particular shift (their most recent or input the shift date and time (like on the shift could see all the workers current locations)
-            //we want all the workers, to begin with one worker so input the userId and shiftId (or date etc but shiftId is fine for this purpose)
-//        ->where('shifts.end_time', '=', null)
-//        ->where('shifts.start_time', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 DAY)'))
-//        ->distinct()
         ->get();
 
     return response()->json($res);
