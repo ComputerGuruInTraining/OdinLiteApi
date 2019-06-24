@@ -397,7 +397,7 @@ Route::get("/test/runtimes", function(){
 });
 
 /*Work in Progress, Testing only*/
-Route::get("/map/{userId}/{shiftId}/shift-positions", function ($userId, $shiftId) {
+/*Route::get("/map/{userId}/{shiftId}/shift-positions", function ($userId, $shiftId) {
 
 
     $res = DB::table('current_user_locations')
@@ -415,7 +415,7 @@ Route::get("/map/{userId}/{shiftId}/shift-positions", function ($userId, $shiftI
 //    return response()->json($count);
     return response()->json($res);
 
-});
+});*/
 
 
 //Route::get("/reports/list/test/{compId}", 'ReportApiController@getReportList');
