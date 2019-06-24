@@ -396,6 +396,35 @@ Route::get("/test/runtimes", function(){
 
 });
 
+
+/*Work in Progress, Testing only*/
+/*Route::get("/map/{userId}/{shiftId}/shift-positions", function ($userId, $shiftId) {
+
+
+    $res = DB::table('current_user_locations')
+        ->select('current_user_locations.mobile_user_id', 'current_user_locations.address',
+            'current_user_locations.latitude', 'current_user_locations.longitude',
+            'current_user_locations.shift_id', 'current_user_locations.user_first_name',
+            'current_user_locations.user_last_name', 'current_user_locations.location_id',
+            'current_user_locations.created_at')
+        ->where('current_user_locations.mobile_user_id', '=', $userId)
+        ->where('current_user_locations.shift_id', '=', $shiftId)
+        ->get();
+
+//    $count = $res->count();
+
+//    return response()->json($count);
+    return response()->json($res);
+
+});*/
+
+
+//Route::get("/reports/list/test/{compId}", 'ReportApiController@getReportList');
+//
+//Route::get("/locationreport/test/{id}", 'ReportApiController@getLocationReport');
+//
+//Route::get("/individualreport/test/{reportId}", 'ReportApiController@getIndividualReport');
+
 //Route::get("/misc/test", function () {
 //
 //    //need to check all of the company's users records to see if a subscription exists.
