@@ -410,6 +410,9 @@ Route::get("/map/{userId}/{shiftId}/shift-positions", function ($userId, $shiftI
         ->where('current_user_locations.shift_id', '=', $shiftId)
         ->get();
 
+//    $count = $res->count();
+
+//    return response()->json($count);
     return response()->json($res);
 
 });
