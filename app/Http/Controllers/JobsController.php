@@ -178,7 +178,7 @@ class JobsController extends Controller
             ->orderBy('shifts.start_time', 'desc')//the most recent first
             ->get();
 
-        //returns a result set of assigned_shift_ids
+        //returns a result set of assigned_shift_ids or null
         return response()->json($myCommenced);
     }
 
