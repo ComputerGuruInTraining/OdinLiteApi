@@ -1382,6 +1382,81 @@ Route::group(['middleware' => 'auth:api'], function () {
         }
     });
 
+//WIP: for improving background geolocation accuracy
+    //request will be an array of locations with param = see https://ionicframework.com/docs/native/background-geolocation/#BackgroundGeolocationResponse
+//    Route::post('/backgroundlocation', function (Request $request) {
+//
+//    try {
+//
+//        //determine address//
+//
+//        $latitude = $request->input('latitude');
+//        $longitude = $request->input('longitude');
+//
+//
+//        $arrContextOptions=array(
+//            "ssl"=>array(
+//                "verify_peer"=>false,
+//                "verify_peer_name"=>false,
+//            ),
+//        );
+//
+//        //use latitude and longitude to determine address
+//        $converted = file_get_contents(
+//            'https://maps.googleapis.com/maps/api/geocode/json?latlng=' . $latitude . ',' . $longitude . '&key=AIzaSyAwMSIuq6URGvS9Sb-asJ4izgNNaQkWnEQ',
+//            false,
+//            stream_context_create($arrContextOptions));
+//
+//        $output = json_decode($converted);
+//        $address = $output->results[0]->formatted_address;
+//
+//        //find user details//
+//
+////        $userId = $request->input('userId');
+////
+////        $user = User::find($userId);
+//        Auth::user();
+//
+//        //store in db
+//
+//        $position = new Position;
+//
+//        $position->latitude = $latitude;
+//        $position->longitude = $longitude;
+//        $position->address = $address;
+////        $position->shift_id = $request->input('shiftId');
+////        $position->mobile_user_id = $userId;
+////        $position->user_first_name = $user->first_name;
+////        $position->user_last_name = $user->last_name;
+//
+//        if ($request->input('locId') != 0) {
+//            $position->location_id = $request->input('locId');
+//        }
+//        $position->save();
+//        $id = $position->id;
+//
+//        if ($position->save()) {
+//            return response()->json([
+//                'success' => true,
+//                'id' => $id
+//            ]);
+//        } else {
+//            return response()->json([
+//                'success' => false
+//            ]);
+//
+//        }
+//
+//    }catch(\ErrorException $e){
+//
+//        $errMsg = $e->getMessage();
+//
+//        return response()->json([
+//            'error' => $errMsg
+//        ]);
+//
+//    }
+//});
 
     /* --------------- Shift --------------- */
 
