@@ -396,6 +396,7 @@ Route::get("/test/runtimes", function(){
 
 });
 
+
 /*Work in Progress, Testing only*/
 /*Route::get("/map/{userId}/{shiftId}/shift-positions", function ($userId, $shiftId) {
 
@@ -423,7 +424,6 @@ Route::get("/test/runtimes", function(){
 //Route::get("/locationreport/test/{id}", 'ReportApiController@getLocationReport');
 //
 //Route::get("/individualreport/test/{reportId}", 'ReportApiController@getIndividualReport');
-
 
 //Route::get("/misc/test", function () {
 //
