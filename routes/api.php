@@ -973,8 +973,6 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     //console
     //retrieve a list of assigned shifts for a particular company for roster page
-
-
     Route::get("/assignedshifts/list/{compId}", 'JobsController@getAssignedShiftsList');
 
     //Archived: replaced by controller function
@@ -1080,6 +1078,9 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         $assigned->start = $start;
         $assigned->end = $end;
+
+        $assigned->assigned_duration = $start->diffInMinutes($end);
+
         $assigned->save();
 
         $id = $assigned->id;
@@ -1476,10 +1477,14 @@ Route::group(['middleware' => 'auth:api'], function () {
         //retrieve id of the saved shift
         $id = $shift->id;
 
+        //store the start shift in the shiftResumeTable
+        $shiftResumeId = app('App\Http\Controllers\JobsController')->storeShiftResume('start', $id);
+
         return response()->json([
             'success' => true,
             'id' => $id,
             'user' => $user
+            , 'shiftResumeId' => $shiftResumeId//value or null if storeError
         ]);
     });
 

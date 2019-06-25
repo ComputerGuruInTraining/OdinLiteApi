@@ -398,6 +398,19 @@ Route::get("/test/runtimes", function(){
 
 
 /*Work in Progress, Testing only*/
+
+Route::get('/testduration', function(){
+
+    $start = Carbon::createFromFormat('Y-m-d H:i:s', '2019-04-11 09:00:00');
+    $end = Carbon::createFromFormat('Y-m-d H:i:s', '2019-04-11 11:00:00');
+
+    dd($start->diffInMinutes($end));//120 minutes
+
+
+    dd($start, $end);
+
+});
+
 /*Route::get("/map/{userId}/{shiftId}/shift-positions", function ($userId, $shiftId) {
 
 

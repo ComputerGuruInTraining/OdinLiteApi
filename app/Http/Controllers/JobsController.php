@@ -12,6 +12,7 @@ use App\AssignedShiftEmployee as AssignedEmp;
 use App\AssignedShiftLocation as AssignedLoc;
 use App\Location as Location;
 use App\User as User;
+use App\ShiftResume as ShiftResume;
 
 
 class JobsController extends Controller
@@ -97,7 +98,7 @@ class JobsController extends Controller
         return response()->json($assigned);
     }
 
-    //
+    //getAssignedShifts for a particular userId
     public function getAssignedShifts($id){
         //the logic is:
         //step 1: all assignedShifts for the period. (array1)
@@ -182,8 +183,8 @@ class JobsController extends Controller
         return response()->json($myCommenced);
     }
 
-    public function getCommencedShiftDetails($assignedid, $mobileUserId){
-
+    public function getCommencedShiftDetails($assignedid, $mobileUserId)
+    {
         //Step 1: get the shift_locations
         //each assigned object will have:
         //location_id, name, address, latitude, longitude, notes, [required] checks
@@ -200,7 +201,7 @@ class JobsController extends Controller
         foreach ($assignedLoc as $i => $location) {
 
             //Data Requirement 2. number of checks completed
-            $numChecks =  $this->countShiftChecks($shiftId->id, $location->location_id);
+            $numChecks = $this->countShiftChecks($shiftId->id, $location->location_id);
 
             $assignedLoc[$i]->checked = $numChecks;
 
@@ -236,27 +237,30 @@ class JobsController extends Controller
 //                }
         }
 
+        //store the resume shift in the shiftResumeTable
+        $shiftResumeId = app('App\Http\Controllers\JobsController')->storeShiftResume('resume', $shiftId);
+
         //single locations
         //data required is: location details, has a case note been submitted,
-        if(count($assignedLoc) == 1){
+        if (count($assignedLoc) == 1) {
 
             $notes = app('App\Http\Controllers\CaseNoteApiController')->getShiftCaseNotes($shiftId->id);
 
-            if(count($notes) > 0){
+            if (count($notes) > 0) {
                 $singleCaseNote = true;
 
-            }else{
+            } else {
                 $singleCaseNote = false;
             }
 
             return response()->json([
                 'locations' => $assignedLoc,
                 'shiftId' => $shiftId,
-                'caseCheck' => $singleCaseNote,
+                'caseCheck' => $singleCaseNote
+                            , 'shiftResumeId' => $shiftResumeId//value or null if storeError
             ]);
 
-        }
-        else{
+        } else {
             //several locations
             //data required is: 1.location details, 2.number of checks completed at each location,
             // 3.the current check in (if there is one),
@@ -268,13 +272,11 @@ class JobsController extends Controller
             //unfortunately, if the put_check_out fails, the check will not be recorded as complete.
             //one of those imperfections. But success rate is high thankfully.
 
-
-
             return response()->json([
                 'locations' => $assignedLoc,
                 'shiftId' => $shiftId
+                            , 'shiftResumeId' => $shiftResumeId//value or null if storeError
             ]);
-
         }//end else several locations
     }
 
@@ -363,6 +365,7 @@ class JobsController extends Controller
     }
 
     //mobile: Called to store the shift check_in in the shift_checks table
+    //and the shiftResumeTable
     public function storeCheckIn($request)
     {
         //use posId to get the latitude and the longitude of the geoLocation
@@ -537,6 +540,8 @@ class JobsController extends Controller
         $assigned->start = $start;
         $assigned->end = $end;
 
+        $assigned->assigned_duration = $start->diffInMinutes($end);
+
         $assigned->save();
 
         //assigned_shift_employees
@@ -704,5 +709,25 @@ class JobsController extends Controller
             'success' => true
         ]);
     }
+
+    public function storeShiftResume($status, $shiftId){
+
+        try {
+            $shiftResume = new ShiftResume;
+
+            $shiftResume->status = $status;
+            $shiftResume->shift_id = $shiftId;
+            $shiftResume->save();
+
+            //retrieve id of the saved shift
+            $id = $shiftResume->id;
+
+            return $id;
+        }catch (\ErrorException $e) {
+
+            return null;
+        }
+    }
+
 
 }
