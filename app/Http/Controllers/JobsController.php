@@ -221,14 +221,14 @@ class JobsController extends Controller
                 //only possibly for 1 location per shift
                 if (count($checkId) == 1) {
                     //therefore only 1 array item
-
+//dd($checkId);
                     //for the location that has a current check in without a check out
                     if ($assignedLoc[$i]->location_id == $checkId[0]->location_id) {
                         //assign this location to the locationCheckedIn Variable in mobile
                         $assignedLoc[$i]->checkedIn = true;
 
                         //Data Requirement 4:
-                        $casePerCheck = $this->caseNoteSbmtd($checkId->id);
+                        $casePerCheck = $this->caseNoteSbmtd($checkId[0]->id);
 
                         //if a case note exists for the current check in
                         if (count($casePerCheck) > 0) {
