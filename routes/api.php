@@ -1463,6 +1463,12 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::post('/shift/start', function (Request $request) {
 
+        //fixme: check if an assigned_shift_id of this value exists in shiftTable for those cases where an error occurs
+        //following successful shiftTable entry, but before fucntion successfully completes entirely.
+        //in these cases, the mobile app receives an error response and the shift/start request is resent
+        //in a small amount of cases, it is possible to have multiple shift table entries which is undesirable and erroneous.
+        //low priority to fix this in future.
+
         $userId = $request->input('mobile_user_id');
         $user = User::find($userId);
 
@@ -1549,6 +1555,9 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     Route::get('/commencedshiftdetails/{assignedId}', 'JobsController@getCommencedShiftDetails');
+
+    /*----------------Shift Resumes----------*/
+    Route::get('/lastshiftresumed/{userId}', 'JobsController@getLastShiftResumed');
 
     /*----------------Generic Notification----------*/
     Route::post('/notify/log/error', 'CompanyAndUsersApiController@genericErrorNotifyLog');

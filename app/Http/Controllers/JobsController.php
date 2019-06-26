@@ -730,5 +730,55 @@ class JobsController extends Controller
         }
     }
 
+    public function getLastShiftResumed($userId){
+        try{
+
+            //first, verify company
+            $user = User::find($userId);//works
+
+            $verified = verifyCompany($user);
+
+            if(!$verified){
+
+                return response()->json($verified);//value = false
+            }
+
+            $lastShiftIdPerUser = DB::table('shift_resumes')
+                ->join('shifts', 'shifts.id', '=', 'shift_resumes.shift_id')
+                ->select('shifts.id as shiftId', 'shift_resumes.created_at as shiftResumeCreatedAt')
+                ->where('shifts.mobile_user_id', '=', $userId)
+                ->where('shifts.deleted_at', '=', null)
+                ->where('shift_resumes.deleted_at', '=', null)
+                ->latest('shift_resumes.created_at')
+                ->first();
+
+            return response()->json([
+                'success' => true,
+                'shiftId' => $lastShiftIdPerUser->shiftId,
+                'shiftResumeCreatedAt' => $lastShiftIdPerUser->shiftResumeCreatedAt
+            ]);
+
+        }catch (\Exception $e) {
+            //Exception will catch all errors thrown
+            return response()->json([
+                'success' => false
+            ]);
+        }
+    }
+
+    //WIP
+   /* public function shiftsPerUser($userId){
+        //get the last shift resumed for a particular user
+        $shiftsPerUser = DB::table('shift_resumes')
+            ->join('shifts', 'shifts.id', '=', 'shift_resumes.shift_id')
+//                ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
+            ->where('shifts.mobile_user_id', '=', $userId)
+            ->where('shifts.deleted_at', '=', null)
+            ->where('shift_resumes.deleted_at', '=', null)
+            ->get();
+
+    }*/
+
+
 
 }
