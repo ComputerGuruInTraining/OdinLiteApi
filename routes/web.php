@@ -411,6 +411,87 @@ Route::get('/testduration', function(){
 
 });
 
+Route::get('/testshiftresume', function(){
+
+            $shiftResumeId = app('App\Http\Controllers\JobsController')->storeShiftResume('resume', 2124);
+
+dd($shiftResumeId);
+
+});
+
+//getAssignedShifts for a particular userId
+Route::get('/testGetAssignedShifts', function(){
+
+    $id = 2084;
+    //the logic is:
+    //step 1: all assignedShifts for the period. (array1)
+    //step 2: all assignedShifts that have been started by the mobile user (array2)
+    // (!Important! > 1 mobile user can be assigned to shift)
+    //step 3: array1 items that don't appear in array2 have not been started, therefore include in results.(array4)
+    //step 4: all assignedShifts that have been started, check if they have ended (array3)
+    //step 5: array2 items that are not in array3 have been started but not completed, therefore include in results.(array5)
+    //step 6: add (array1-2) to (array2-3) to get the complete set of results (= array6)
+
+    //step 1: all assigned shifts
+    $array1 = DB::table('assigned_shifts')
+        ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=',
+            'assigned_shifts.id')
+        ->select('assigned_shifts.id')
+        ->where('assigned_shift_employees.mobile_user_id', '=', $id)
+        ->where('assigned_shifts.end', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 2 DAY)'))
+        ->where('assigned_shifts.deleted_at', '=', null)
+        ->where('assigned_shift_employees.deleted_at', '=', null)
+        ->get();
+
+    //all assigned shifts for the period specified
+    $array1ids = $array1->pluck('id');
+
+    //step2 :all shifts that have been started by this mobile_user
+    $array2ids = DB::table('shifts')
+        ->whereIn('assigned_shift_id', $array1ids)
+        ->where('mobile_user_id', '=', $id)
+        ->pluck('assigned_shift_id');
+
+    //step 3: array1 items that don't appear in array2 have not been started, therefore include in results.(array1-2)
+    //1st set of data
+    $array4 = $array1ids->diff($array2ids);
+
+    //step4: all shifts out of the shifts that have been started and have been completed
+    $array3ids = DB::table('shifts')
+        //array of ids
+        ->whereIn('assigned_shift_id', $array2ids)
+        ->where('end_time', '!=', null)
+        ->where('mobile_user_id', '=', $id)
+        ->pluck('assigned_shift_id');
+
+    //step 5: array2 items that are not in array3 have been started but not completed, therefore include in results.(array5)
+    $array5 = $array2ids->diff($array3ids);
+
+    //step 6: add (array1-2) to (array2-3) to get the complete set of results (= array6)
+    $array6ids = $array4->merge($array5);
+
+    $myAssigned = DB::table('assigned_shift_employees')
+        ->join('assigned_shifts', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
+        ->whereIn('assigned_shifts.id', $array6ids)
+        ->where('mobile_user_id', '=', $id)
+        ->where('assigned_shifts.deleted_at', '=', null)
+        ->where('assigned_shift_employees.deleted_at', '=', null)
+        ->get();
+
+    foreach ($myAssigned as $i => $assigned) {
+        //convert start and end from a datetime object to timestamps
+        //and append to the end of all of the assigned objects
+        $myAssigned[$i]->start_ts = strtotime($assigned->start);
+        $myAssigned[$i]->end_ts = strtotime($assigned->end);
+    }
+
+    dd($myAssigned);
+
+    return response()->json($myAssigned);
+
+});
+
+
 /*Route::get("/map/{userId}/{shiftId}/shift-positions", function ($userId, $shiftId) {
 
 

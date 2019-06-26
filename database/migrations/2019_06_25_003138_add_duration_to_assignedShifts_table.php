@@ -14,7 +14,7 @@ class AddDurationToAssignedShiftsTable extends Migration
     public function up()
     {
         Schema::table('assigned_shifts', function (Blueprint $table) {
-            $table->integer('assigned_duration')->nullable();
+            $table->integer('asg_duration_mins')->nullable();
         });
     }
 
@@ -26,7 +26,7 @@ class AddDurationToAssignedShiftsTable extends Migration
     public function down()
     {
         Schema::table('assigned_shifts', function (Blueprint $table) {
-            $table->dropColumn('assigned_duration');
+            $table->dropColumn('asg_duration_mins');
         });
     }
 }

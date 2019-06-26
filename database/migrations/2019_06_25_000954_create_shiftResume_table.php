@@ -13,11 +13,10 @@ class CreateShiftResumeTable extends Migration
      */
     public function up()
     {
-        Schema::create('shift_resume', function (Blueprint $table) {
+        Schema::create('shift_resumes', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('shift_id')->unsigned();//fk
             $table->string('status', 10);//values = start or resume
-            $table->integer('current_shift_check_id')->unsigned()->nullable();//fk values=shift_checks_id while checkIn active, null if no check started yet, 0 if checked out
             $table->timestamps();
             $table->softDeletes();
         });
@@ -30,6 +29,6 @@ class CreateShiftResumeTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('shift_resume');
+        Schema::dropIfExists('shift_resumes');
     }
 }

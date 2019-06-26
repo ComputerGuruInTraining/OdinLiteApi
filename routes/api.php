@@ -1079,7 +1079,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         $assigned->start = $start;
         $assigned->end = $end;
 
-        $assigned->assigned_duration = $start->diffInMinutes($end);
+        $assigned->asg_duration_mins = $start->diffInMinutes($end);
 
         $assigned->save();
 
@@ -1483,8 +1483,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         return response()->json([
             'success' => true,
             'id' => $id,
-            'user' => $user
-            , 'shiftResumeId' => $shiftResumeId//value or null if storeError
+            'user' => $user,
+            'shiftResumeId' => $shiftResumeId//value or null if storeError
         ]);
     });
 

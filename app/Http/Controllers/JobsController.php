@@ -238,7 +238,7 @@ class JobsController extends Controller
         }
 
         //store the resume shift in the shiftResumeTable
-        $shiftResumeId = app('App\Http\Controllers\JobsController')->storeShiftResume('resume', $shiftId);
+        $shiftResumeId = app('App\Http\Controllers\JobsController')->storeShiftResume('resume', $shiftId->id);
 
         //single locations
         //data required is: location details, has a case note been submitted,
@@ -256,8 +256,8 @@ class JobsController extends Controller
             return response()->json([
                 'locations' => $assignedLoc,
                 'shiftId' => $shiftId,
-                'caseCheck' => $singleCaseNote
-                            , 'shiftResumeId' => $shiftResumeId//value or null if storeError
+                'caseCheck' => $singleCaseNote,
+                'shiftResumeId' => $shiftResumeId//value or null if storeError
             ]);
 
         } else {
@@ -274,8 +274,8 @@ class JobsController extends Controller
 
             return response()->json([
                 'locations' => $assignedLoc,
-                'shiftId' => $shiftId
-                            , 'shiftResumeId' => $shiftResumeId//value or null if storeError
+                'shiftId' => $shiftId,
+                'shiftResumeId' => $shiftResumeId//value or null if storeError
             ]);
         }//end else several locations
     }
@@ -540,7 +540,7 @@ class JobsController extends Controller
         $assigned->start = $start;
         $assigned->end = $end;
 
-        $assigned->assigned_duration = $start->diffInMinutes($end);
+        $assigned->asg_duration_mins = $start->diffInMinutes($end);
 
         $assigned->save();
 
@@ -723,8 +723,9 @@ class JobsController extends Controller
             $id = $shiftResume->id;
 
             return $id;
-        }catch (\ErrorException $e) {
 
+        }catch (\Exception $e) {
+        //Exception will catch all errors thrown
             return null;
         }
     }
