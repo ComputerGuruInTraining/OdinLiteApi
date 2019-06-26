@@ -202,7 +202,7 @@ class JobsController extends Controller
         //returns the shiftCheckId for each location
         $checkId = $this->getCurrentCheckIn($shiftId->id);
 
-//        dd($checkId);
+        $countChecksWoCheckOut = count($checkId);
 
         foreach ($assignedLoc as $i => $location) {
 
@@ -212,60 +212,23 @@ class JobsController extends Controller
             $assignedLoc[$i]->checked = $numChecks;
 
         }
-        //start
 
-        $caseCheck = false;//initialise
+        if (count($assignedLoc) > 1) {
+            $caseCheck = false;//initialise
 
-        foreach ($assignedLoc as $i => $location) {
-            //Data Requirement 3. if a shift check is still to be completed
-            //only possibly for 1 location per shift
-//            dd($assignedLoc);
-//            dd($checkId[0]->location_id);
-            if (count($checkId) == 1) {
-                //therefore only 1 array item
-                //commencedshiftdetails/2174/2014
-                //for the location that has a current check in without a check out
-                if ($assignedLoc[$i]->location_id == $checkId[0]->location_id) {
-                    //assign this location to the locationCheckedIn Variable in mobile
-                    $assignedLoc[$i]->checkedIn = true;
+            foreach ($assignedLoc as $i => $location) {
+                //Data Requirement 3. if a shift check is still to be completed
+                //only possibly for 1 location per shift
+                if (count($checkId) == 1) {
+                    //therefore only 1 array item
 
-                    //Data Requirement 4:
-                    $casePerCheck = $this->caseNoteSbmtd($checkId->id);
-
-                    //if a case note exists for the current check in
-                    if (count($casePerCheck) > 0) {
-                        $assignedLoc[$i]->casePerCheck = true;
-                        $caseCheck = true;
-
-                    } else if (count($casePerCheck) == 0) {
-                        //case note not submitted
-                        $assignedLoc[$i]->casePerCheck = false;
-                        $caseCheck = false;
-                    }
-                }else{
-
-                    $assignedLoc[$i]->checkedIn = false;
-                    $assignedLoc[$i]->casePerCheck = false;
-                }
-
-            }else if(count($checkId) == 0){
-                //commencedshiftdetails/2114/2104/
-                //location not checked in
-                $assignedLoc[$i]->checkedIn = false;
-                $assignedLoc[$i]->casePerCheck = false;
-                $caseCheck = false;
-
-            } else if (count($checkId) > 1) {
-                //commencedshiftdetails/2114/2104
-                //todo: in future, optimize for greater than 1 current check in
-                //location not checked in
-                foreach ($checkId as $j => $checkIdItem) {
-                    if ($assignedLoc[$i]->location_id == $checkId[$j]->location_id) {
-
+                    //for the location that has a current check in without a check out
+                    if ($assignedLoc[$i]->location_id == $checkId[0]->location_id) {
+                        //assign this location to the locationCheckedIn Variable in mobile
                         $assignedLoc[$i]->checkedIn = true;
 
                         //Data Requirement 4:
-                        $casePerCheck = $this->caseNoteSbmtd($checkIdItem->id);
+                        $casePerCheck = $this->caseNoteSbmtd($checkId->id);
 
                         //if a case note exists for the current check in
                         if (count($casePerCheck) > 0) {
@@ -277,42 +240,94 @@ class JobsController extends Controller
                             $assignedLoc[$i]->casePerCheck = false;
                             $caseCheck = false;
                         }
-                    }else{
+                    } else {
 
                         $assignedLoc[$i]->checkedIn = false;
                         $assignedLoc[$i]->casePerCheck = false;
                     }
+
+                } else if (count($checkId) == 0) {
+                    //location not checked in
+                    $assignedLoc[$i]->checkedIn = false;
+                    $assignedLoc[$i]->casePerCheck = false;
+                    $caseCheck = false;
+
+                } else if (count($checkId) > 1) {
+                    //commencedshiftdetails/2114/2104
+                    //commencedshiftdetails/2174/2014 (shiftId = 5344, 2 checkInsWoCheckOuts via db and count good)
+                    //todo: in future, optimize for greater than 1 current check in
+                    //location not checked in
+                    foreach ($checkId as $j => $checkIdItem) {
+                        if ($assignedLoc[$i]->location_id == $checkId[$j]->location_id) {
+
+                            $assignedLoc[$i]->checkedIn = true;
+
+                            //Data Requirement 4:
+                            $casePerCheck = $this->caseNoteSbmtd($checkIdItem->id);
+
+                            //if a case note exists for the current check in
+                            if (count($casePerCheck) > 0) {
+                                $assignedLoc[$i]->casePerCheck = true;
+                                $caseCheck = true;
+
+                            } else if (count($casePerCheck) == 0) {
+                                //case note not submitted
+                                $assignedLoc[$i]->casePerCheck = false;
+                                $caseCheck = false;
+                            }
+                        } else {
+
+                            $assignedLoc[$i]->checkedIn = false;
+                            $assignedLoc[$i]->casePerCheck = false;
+                        }
+                    }
                 }
             }
         }
-
-//        dd($assignedLoc);
-        //end
 
         //store the resume shift in the shiftResumeTable
         $shiftResumeId = app('App\Http\Controllers\JobsController')->storeShiftResume('resume', $shiftId->id);
 
         //single locations
         //data required is: location details, has a case note been submitted,
+        //ATM, before more testing is complete, reluctant to remove this working code for single location shifts,
+        //so keep it for the moment
         if (count($assignedLoc) == 1) {
-
+//            commencedshiftdetails/2124/2104
             $notes = app('App\Http\Controllers\CaseNoteApiController')->getShiftCaseNotes($shiftId->id);
 
             if (count($notes) > 0) {
                 $singleCaseNote = true;
+                //single loc commencedshiftdetails/2124/2084
 
             } else {
                 $singleCaseNote = false;
             }
 
+            if (count($checkId) == 1) {
+                //todo: test case for this
+                $assignedLoc[$i]->checkedIn = true;
+
+            }else if (count($checkId) == 0) {
+                //2124/2104 & 2144/2084
+                $assignedLoc[$i]->checkedIn = false;
+
+            } else if (count($checkId) > 1) {
+                //2124/2084
+                $assignedLoc[$i]->checkedIn = true;
+            }
+
+
             return response()->json([
                 'locations' => $assignedLoc,
                 'shiftId' => $shiftId,
                 'caseCheck' => $singleCaseNote,
-                'shiftResumeId' => $shiftResumeId//value or null if storeError
+                'shiftResumeId' => $shiftResumeId,//value or null if storeError
+                'countChecksWoCheckOut' => $countChecksWoCheckOut
             ]);
 
         } else {
+
             //several locations
             //data required is: 1.location details, 2.number of checks completed at each location,
             // 3.the current check in (if there is one),
@@ -328,7 +343,8 @@ class JobsController extends Controller
                 'locations' => $assignedLoc,
                 'shiftId' => $shiftId,
                 'caseCheck' => $caseCheck,
-                'shiftResumeId' => $shiftResumeId//value or null if storeError
+                'shiftResumeId' => $shiftResumeId,//value or null if storeError
+                'countChecksWoCheckOut' => $countChecksWoCheckOut
             ]);
         }//end else several locations
     }
