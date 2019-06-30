@@ -381,6 +381,7 @@ Route::get('/storage/app/public/{file}', function ($file) {
 //Route::get('/company/account/remove/{compId}/{userId}', 'CompanyAndUsersApiController@removeAccount');
 
 /*Test Routes*/
+
 //todo: remove by end of March
 Route::get("/test/runtimes", function(){
 
@@ -396,8 +397,28 @@ Route::get("/test/runtimes", function(){
 
 });
 
+Route::get('/auth/check/{userId}', function($userId){
 
-/*Work in Progress, Testing only*/
+    if (Auth::check()) {
+
+        //todo: change to 2 days once the master pushed
+        $res = DB::table('oauth_access_tokens')
+            ->select('id')
+            ->where('user_id', '=', $userId)
+            ->where('expires_at', '>=', DB::raw('DATE_ADD(NOW(), INTERVAL 2 DAY)'))
+            ->latest()
+            ->first();//test item returned
+
+        return response()->json([
+            'userLoggedIn' => true,
+            'token' => $res//either null or oauth id
+            ]);
+
+    }else{
+        return response()->json(['userLoggedIn' => false]);
+
+    }
+});
 
 Route::get('/testduration', function(){
 
@@ -490,6 +511,10 @@ Route::get('/testGetAssignedShifts', function(){
     return response()->json($myAssigned);
 
 });
+
+Route::get('/lastshiftresumed/{userId}', 'JobsController@getLastShiftResumed');
+
+Route::get('/commencedshiftdetails/{assignedid}/{mobileUserId}', 'JobsController@getCommencedShiftDetails');
 
 
 /*Route::get("/map/{userId}/{shiftId}/shift-positions", function ($userId, $shiftId) {
@@ -702,4 +727,6 @@ Route::get('/testGetAssignedShifts', function(){
 //        ]);
 //    }
 //});
+
+
 
