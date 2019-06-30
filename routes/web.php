@@ -397,9 +397,13 @@ Route::get("/test/runtimes", function(){
 
 });
 
-Route::get('/auth/check/{userId}', function($userId){
+Route::get('/auth/check', function(){
 
     if (Auth::check()) {
+
+        $user = Auth::user();
+
+        $userId = $user->id;
 
         //todo: change to 2 days once the master pushed
         $res = DB::table('oauth_access_tokens')
@@ -407,11 +411,12 @@ Route::get('/auth/check/{userId}', function($userId){
             ->where('user_id', '=', $userId)
             ->where('expires_at', '>=', DB::raw('DATE_ADD(NOW(), INTERVAL 2 DAY)'))
             ->latest()
-            ->first();//test item returned
+            ->first();
 
         return response()->json([
             'userLoggedIn' => true,
-            'token' => $res//either null or oauth id
+            'token' => $res,//either null or oauth id
+            'user' => $user
             ]);
 
     }else{
