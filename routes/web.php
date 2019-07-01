@@ -517,9 +517,9 @@ Route::get('/testGetAssignedShifts', function(){
 
 });
 
-Route::get('/lastshiftresumed/{userId}', 'JobsController@getLastShiftResumed');
+//Route::get('/lastshiftresumed/{userId}', 'JobsController@getLastShiftResumed');
 
-Route::get('/commencedshiftdetails/{assignedid}/{mobileUserId}', 'JobsController@getCommencedShiftDetails');
+//Route::get('/commencedshiftdetails/{assignedid}/{mobileUserId}', 'JobsController@getCommencedShiftDetails');
 
 
 /*Route::get("/map/{userId}/{shiftId}/shift-positions", function ($userId, $shiftId) {
