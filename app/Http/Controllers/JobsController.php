@@ -199,7 +199,7 @@ class JobsController extends Controller
         $shiftId = $this->getShiftId($assignedid, $mobileUserId);
 
         //todo: implement at a later date as needs to be thorough or there will be errors
-        //returns the shiftCheckId for each location
+        //returns details such as the shiftCheckId for each location and location_id
         $checkId = $this->getCurrentCheckIn($shiftId->id);
 
         $countChecksWoCheckOut = count($checkId);
@@ -226,6 +226,7 @@ class JobsController extends Controller
                     if ($assignedLoc[$i]->location_id == $checkId[0]->location_id) {
                         //assign this location to the locationCheckedIn Variable in mobile
                         $assignedLoc[$i]->checkedIn = true;
+                        $assignedLoc[$i]->currentCheckIn = $checkId[0]->id;
 
                         //Data Requirement 4:
                         $casePerCheck = $this->caseNoteSbmtd($checkId[0]->id);
@@ -241,7 +242,7 @@ class JobsController extends Controller
                             $caseCheck = false;
                         }
                     } else {
-
+                        $assignedLoc[$i]->currentCheckIn = null;
                         $assignedLoc[$i]->checkedIn = false;
                         $assignedLoc[$i]->casePerCheck = false;
                     }
@@ -250,6 +251,7 @@ class JobsController extends Controller
                     //location not checked in
                     $assignedLoc[$i]->checkedIn = false;
                     $assignedLoc[$i]->casePerCheck = false;
+                    $assignedLoc[$i]->currentCheckIn = null;
                     $caseCheck = false;
 
                 } else if (count($checkId) > 1) {
@@ -261,6 +263,7 @@ class JobsController extends Controller
                         if ($assignedLoc[$i]->location_id == $checkId[$j]->location_id) {
 
                             $assignedLoc[$i]->checkedIn = true;
+                            $assignedLoc[$i]->currentCheckIn = $checkId[$j]->id;
 
                             //Data Requirement 4:
                             $casePerCheck = $this->caseNoteSbmtd($checkIdItem->id);
@@ -276,7 +279,7 @@ class JobsController extends Controller
                                 $caseCheck = false;
                             }
                         } else {
-
+                            $assignedLoc[$i]->currentCheckIn = null;
                             $assignedLoc[$i]->checkedIn = false;
                             $assignedLoc[$i]->casePerCheck = false;
                         }
@@ -395,7 +398,6 @@ class JobsController extends Controller
         $checkInProgress = DB::table('shift_checks')
             ->select('id', 'check_ins', 'check_outs', 'location_id', 'created_at')
             ->where('shift_id', '=', $shiftId)
-//            ->where('location_id', '=', $locationId)
             ->where('check_outs', '=',  null)
             ->get();
 
