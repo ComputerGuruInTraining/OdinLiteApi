@@ -800,7 +800,7 @@ class JobsController extends Controller
     //get last shift resumed by the user
     //ensure that shift has not ended
     //return: shiftId, assignedShiftId, shiftResumeCreatedAt
-    public function getLastShiftResumed($userId){
+    public function getLastShiftResumed($userId, Request $request){
         try{
 
             //first, verify company
