@@ -1557,7 +1557,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('/commencedshiftdetails/{assignedId}', 'JobsController@getCommencedShiftDetails');
 
     /*----------------Shift Resumes----------*/
-    Route::post('/lastshiftresumed/{userId}', 'JobsController@getLastShiftResumed');
+    Route::post('/lastshiftresumed', 'JobsController@getLastShiftResumed');
 
     /*----------------Generic Notification----------*/
     Route::post('/notify/log/error', 'CompanyAndUsersApiController@genericErrorNotifyLog');
