@@ -797,6 +797,9 @@ class JobsController extends Controller
         }
     }
 
+    //get last shift resumed by the user
+    //ensure that shift has not ended
+    //return: shiftId, assignedShiftId, shiftResumeCreatedAt
     public function getLastShiftResumed($userId){
         try{
 
@@ -812,8 +815,10 @@ class JobsController extends Controller
 
             $lastShiftIdPerUser = DB::table('shift_resumes')
                 ->join('shifts', 'shifts.id', '=', 'shift_resumes.shift_id')
-                ->select('shifts.id as shiftId', 'shift_resumes.created_at as shiftResumeCreatedAt')
+                ->select('shifts.id as shiftId',
+                    'shift_resumes.created_at as shiftResumeCreatedAt', 'shifts.assigned_shift_id as assignedId')
                 ->where('shifts.mobile_user_id', '=', $userId)
+                ->where('shifts.end_time', '=', null)
                 ->where('shifts.deleted_at', '=', null)
                 ->where('shift_resumes.deleted_at', '=', null)
                 ->latest('shift_resumes.created_at')
@@ -822,6 +827,7 @@ class JobsController extends Controller
             return response()->json([
                 'success' => true,
                 'shiftId' => $lastShiftIdPerUser->shiftId,
+                'assignedId' => $lastShiftIdPerUser->assignedId,
                 'shiftResumeCreatedAt' => $lastShiftIdPerUser->shiftResumeCreatedAt
             ]);
 
