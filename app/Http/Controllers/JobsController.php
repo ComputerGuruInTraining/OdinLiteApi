@@ -798,7 +798,7 @@ class JobsController extends Controller
     }
 
     //get last shift resumed by the user
-    //ensure that shift has not ended
+    //then ensure that shift has not ended
     //return: shiftId, assignedShiftId, shiftResumeCreatedAt
     public function getLastShiftResumed(Request $request){
         try{
@@ -815,24 +815,56 @@ class JobsController extends Controller
                 return response()->json($verified);//value = false
             }
 
+            //get the last shift resumed by the user
             $lastShiftIdPerUser = DB::table('shift_resumes')
                 ->join('shifts', 'shifts.id', '=', 'shift_resumes.shift_id')
                 ->select('shifts.id as shiftId',
                     'shift_resumes.created_at as shiftResumeCreatedAt', 'shifts.assigned_shift_id as assignedId')
                 ->where('shifts.mobile_user_id', '=', $userId)
-                ->where('shifts.end_time', '=', null)
                 ->where('shifts.deleted_at', '=', null)
                 ->where('shift_resumes.deleted_at', '=', null)
                 ->latest('shift_resumes.created_at')
                 ->first();
 
-            return response()->json([
-                'success' => true,
-                'shiftId' => $lastShiftIdPerUser->shiftId,
-                'assignedId' => $lastShiftIdPerUser->assignedId,
-                'shiftResumeCreatedAt' => $lastShiftIdPerUser->shiftResumeCreatedAt
-            ]);
+            //then, if there is a value, ensure that shift has not ended
+            if ($lastShiftIdPerUser != null) {
 
+                $shiftIdNotEnded = DB::table('shifts')
+                    ->select('id')
+                    ->where('id', '=', $lastShiftIdPerUser->shiftId)
+                    ->where('end_time', '=', null)
+                    ->get();
+
+                if(count($shiftIdNotEnded) != 0){
+
+                    $shiftId = $shiftIdNotEnded[0]->id;
+
+                    //1. lastShiftIdPerUser has a value and shiftId has a value
+                    return response()->json([
+                        'success' => true,
+                        'shiftId' => $shiftId,
+                        'lastShiftResumed' => $lastShiftIdPerUser->shiftId,//mostly for testing/checking purposes, this shift may be ended
+                        'assignedId' => $lastShiftIdPerUser->assignedId,
+                        'shiftResumeCreatedAt' => $lastShiftIdPerUser->shiftResumeCreatedAt
+                    ]);
+                }else {
+
+                    //2. lastShiftIdPerUser has a value but shiftId does not have a value
+                    return response()->json([
+                        'success' => true,
+                        'shiftIdEnded' => $shiftIdNotEnded,//the last shift resumed by the user has been ended, but return the empty array for thorough mobile testing
+                        'lastShiftResumed' => $lastShiftIdPerUser->shiftId,//mostly for testing/checking purposes
+                        'assignedId' => $lastShiftIdPerUser->assignedId,
+                        'shiftResumeCreatedAt' => $lastShiftIdPerUser->shiftResumeCreatedAt
+                    ]);
+                }
+            } else {
+                //3. lastShiftIdPerUser has no value because user has no entries in the shiftResume table
+                return response()->json([
+                    'success' => true,
+                    'shiftId' => null//the user does not have an entry in the shift resume table, so return null
+                ]);
+            }
         }catch (\Exception $e) {
             //Exception will catch all errors thrown
             return response()->json([
