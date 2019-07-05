@@ -1562,5 +1562,4 @@ Route::group(['middleware' => 'auth:api'], function () {
     /*----------------Generic Notification----------*/
     Route::post('/notify/log/error', 'CompanyAndUsersApiController@genericErrorNotifyLog');
 
-
 });//end Route::group...
