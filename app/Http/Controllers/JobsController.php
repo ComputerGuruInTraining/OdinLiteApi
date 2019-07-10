@@ -221,7 +221,6 @@ class JobsController extends Controller
                 //only possibly for 1 location per shift
                 if (count($checkId) == 1) {
                     //therefore only 1 array item
-//dd($checkId);
                     //for the location that has a current check in without a check out
                     if ($assignedLoc[$i]->location_id == $checkId[0]->location_id) {
                         //assign this location to the locationCheckedIn Variable in mobile
@@ -309,17 +308,24 @@ class JobsController extends Controller
 
             if (count($checkId) == 1) {
                 //todo: test case for this
-                $assignedLoc[$i]->checkedIn = true;
+                $assignedLoc[0]->checkedIn = true;
+                $assignedLoc[0]->currentCheckIn = $checkId[0]->id;
 
             }else if (count($checkId) == 0) {
                 //2124/2104 & 2144/2084
-                $assignedLoc[$i]->checkedIn = false;
+                $assignedLoc[0]->checkedIn = false;
+                $assignedLoc[0]->currentCheckIn = null;
 
             } else if (count($checkId) > 1) {
                 //2124/2084
-                $assignedLoc[$i]->checkedIn = true;
-            }
+                foreach ($checkId as $x => $checkIdItem) {
+                    if ($assignedLoc[0]->location_id == $checkId[$x]->location_id) {
 
+                        $assignedLoc[0]->checkedIn = true;
+                        $assignedLoc[0]->currentCheckIn = $checkId[$x]->id;
+                    }
+                }
+            }
 
             return response()->json([
                 'locations' => $assignedLoc,
