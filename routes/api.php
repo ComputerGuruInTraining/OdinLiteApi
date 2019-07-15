@@ -42,6 +42,43 @@ Route::group(['middleware' => 'auth:api'], function () {
         return Auth::user();
     });
 
+    //used to check the user details as stored in the device
+    Route::post("/validate/user", function (Request $request) {
+
+       try{
+            //variables sent in request body
+            $firstName = $request->input('first_name');
+            $lastName = $request->input('last_name');
+            $userId = $request->input('user_id');
+
+            $user = App\User::find($userId);
+
+            if(($user->first_name == $firstName)&&($user->last_name == $lastName)){
+
+                $expireSoon = app('App\Http\Controllers\CompanyAndUsersApiController')->tokenExpiry($userId);
+
+                //$user details match the request details
+                return response()->json([
+                    'expiresSoon' => $expireSoon,
+                    'success' => true,
+                    'valid' => true
+                ]);
+
+            }else{
+                //user is not validated
+                return response()->json([
+                    'success' => true,
+                    'valid' => false
+                ]);
+            }
+        }catch (\Exception $e) {
+            //Exception will catch all errors thrown
+            return response()->json([
+                'success' => false
+            ]);
+        }
+    });
+
     //@login, get all sessionDetails
     Route::get('/session', 'CompanyAndUsersApiController@getSession');
 
@@ -1561,5 +1598,6 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     /*----------------Generic Notification----------*/
     Route::post('/notify/log/error', 'CompanyAndUsersApiController@genericErrorNotifyLog');
+
 
 });//end Route::group...

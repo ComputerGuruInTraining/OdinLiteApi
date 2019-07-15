@@ -286,9 +286,30 @@ class JobsController extends Controller
                 }
             }
         }
+/*
+        //initially, check the last shiftResume entry for the user, prior to storing this shift resume in the table
+        //if the shiftId is the same, proceed,
+        //if not, we needn't do any extra processing to see if the user has resumed any shifts since starting this one
+        $lastShift = $this->getLastShiftResumedByUser($mobileUserId);
+
+        $lastShiftId = $lastShift->pluck('shiftId');
+
+        $lastShiftResumed = false;
+
+        if($lastShiftId == $shiftId->id){
+
+            $lastShiftResumed = true;
+
+        }*/
 
         //store the resume shift in the shiftResumeTable
-        $shiftResumeId = app('App\Http\Controllers\JobsController')->storeShiftResume('resume', $shiftId->id);
+        $shiftResumeId = $this->storeShiftResume('resume', $shiftId->id);
+
+        /*//check this shift that is being resumed by the user is the last shift started by the user
+        //ie we need to know that the user is not resuming this shift after starting another shift
+        if($lastShiftResumed == true) {
+            $shiftLastStarted = $this->checkShiftLastStartedForUser($shiftId->id, $shiftResumeId, $mobileUserId);
+        }*/
 
         //single locations
         //data required is: location details, has a case note been submitted,
@@ -357,6 +378,44 @@ class JobsController extends Controller
             ]);
         }//end else several locations
     }
+
+/*    public function checkShiftLastStartedForUser($mobileUserId, $shiftId){
+
+
+        $mobileUserId = 2014;
+        $shiftId = 5514;//5514 is the last shift resumed by the user and there are 2 records before 5504
+        //if shiftId = 5524, the $results returns the last shift started by the user as it wasn't the shiftId being passed in.
+
+        //Step: find the next record where not equal to the shiftId we pass in
+        $results = DB::table('shift_resumes')
+            ->select('*', 'shift_resumes.id as shift_resumes_id')
+            ->join('shifts', 'shifts.id', '=', 'shift_resumes.shift_id')
+            ->where('shifts.mobile_user_id', '=', $mobileUserId)
+            ->where('shift_resumes.shift_id', '!=', $shiftId)
+            ->orderBy('shift_resumes.created_at', 'desc')
+            ->first();
+
+        //Step: we need to retrieve the first record before the $results record
+        $res = DB::table('shift_resumes')
+                    ->where('id', '>', $results->shift_resumes_id)
+                    ->orderBy('id','desc')
+                    ->first();
+
+        $shiftLastStarted = null;
+
+        //Step: check if the first record before the shiftId value changes (for the user) has a status of start
+        //if so, we can deduce that the last shift started was the shiftId we pass through
+        //therefore, we can keep the user checked into the location
+        if($res != null) {
+            if ($res->status == 'start') {
+
+                $shiftLastStarted = $res->shift_id;
+            }
+        }
+
+        dd($results, $res, $shiftLastStarted);
+
+    }*/
 
     public function getShiftLocations($asgnshftid){
 
@@ -803,14 +862,27 @@ class JobsController extends Controller
         }
     }
 
+    //this returns the last entry in the shift resume table for the user, regardless of whether shift has ended or not
+    public function getLastShiftResumedByUser($userId){
+
+        //get the last shift resumed by the user
+        $lastShiftForUser = DB::table('shift_resumes')
+            ->join('shifts', 'shifts.id', '=', 'shift_resumes.shift_id')
+            ->where('shifts.mobile_user_id', '=', $userId)
+            ->where('shifts.deleted_at', '=', null)
+            ->where('shift_resumes.deleted_at', '=', null)
+            ->latest('shift_resumes.created_at')
+            ->first();
+
+        return $lastShiftForUser;
+
+    }
+
     //get last shift resumed by the user
     //then ensure that shift has not ended
     //return: shiftId, assignedShiftId, shiftResumeCreatedAt
     public function getLastShiftResumed(Request $request){
         try{
-
-            //first, verify company
-//            $user = User::find($userId);//works
             $userId = $request->input('userId');
             $user = User::find($userId);
 

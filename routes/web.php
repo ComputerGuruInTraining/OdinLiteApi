@@ -308,7 +308,6 @@ Route::post("/error-logging", function (Request $request) {
 
     //nullable field
     if($request->has('description')) {
-
         $appErrors->description = $request->input('description');
     }
 
@@ -383,7 +382,7 @@ Route::get('/storage/app/public/{file}', function ($file) {
 /*Test Routes*/
 
 //todo: remove by end of March
-Route::get("/test/runtimes", function(){
+/*Route::get("/test/runtimes", function(){
 
     $ds = time();
 
@@ -395,11 +394,11 @@ Route::get("/test/runtimes", function(){
 
     dd($diff);
 
-});
+});*/
 
 //I think because the mobile is not a laravel web app, or because it is on a device and the app opens and refreshes everything,
 //the user is not considered logged in.
-Route::get('/auth/check', function(){
+/*Route::get('/auth/check', function(){
 
     if (Auth::check()) {
 
@@ -425,9 +424,9 @@ Route::get('/auth/check', function(){
         return response()->json(['userLoggedIn' => false]);
 
     }
-});
+});*/
 
-Route::get('/testduration', function(){
+/*Route::get('/testduration', function(){
 
     $start = Carbon::createFromFormat('Y-m-d H:i:s', '2019-04-11 09:00:00');
     $end = Carbon::createFromFormat('Y-m-d H:i:s', '2019-04-11 11:00:00');
@@ -439,13 +438,13 @@ Route::get('/testduration', function(){
 
 });
 
-Route::get('/testshiftresume', function(){
-
-            $shiftResumeId = app('App\Http\Controllers\JobsController')->storeShiftResume('resume', 2124);
-
-dd($shiftResumeId);
-
-});
+//Route::get('/testshiftresume', function(){
+//
+//            $shiftResumeId = app('App\Http\Controllers\JobsController')->storeShiftResume('resume', 2124);
+//
+//dd($shiftResumeId);
+//
+});*/
 
 //2104 had shiftId = []
 
@@ -457,7 +456,7 @@ dd($shiftResumeId);
 //3. lastShiftIdPerUser has no value because user has not entries in the shiftResume table
 //  (test by a user that hasn't started a shift recently and has no entry in the shiftResume table)
 
-Route::get('/testgetlastshiftresume/{userId}', function($userId){
+/*Route::get('/testgetlastshiftresume/{userId}', function($userId){
 
       try {
 
@@ -529,9 +528,9 @@ Route::get('/testgetlastshiftresume/{userId}', function($userId){
               'success' => false
           ]);
       }
-});
+});*/
 //getAssignedShifts for a particular userId
-Route::get('/testGetAssignedShifts', function(){
+/*Route::get('/testGetAssignedShifts', function(){
 
     $id = 2084;
     //the logic is:
@@ -600,12 +599,13 @@ Route::get('/testGetAssignedShifts', function(){
 
     return response()->json($myAssigned);
 
-});
+});*/
 
+//test routes
 //use the userId sent from the app to get the oauth_access_tokens.id which is the token
 //check the token retrieved from the db with the token sent from the app,
 //if the values match, verified = true
-Route::post('/verify/user', function(Request $request){
+/*Route::post('/verify/user', function(Request $request){
 
     try {
 
@@ -645,12 +645,78 @@ Route::post('/verify/user', function(Request $request){
         //Exception will catch all errors thrown
         return response()->json(['success' => false]);
     }
-});
+});*/
 
 
 //Route::get('/lastshiftresumed/{userId}', 'JobsController@getLastShiftResumed');
 
 //Route::get('/commencedshiftdetails/{assignedid}/{mobileUserId}', 'JobsController@getCommencedShiftDetails');
+
+//Route::get('/testcheckshiftresume', 'JobsController@checkShiftLastStartedForUser');
+
+//tokenExpiry($userId)
+Route::get('/testexpirydate/{userId}', 'CompanyAndUsersApiController@tokenExpiry');
+
+//Route::get('/testverify', function(){
+//
+//try{
+//    //variables sent in request body
+//    $firstName = 'Sample';
+//    $lastName = 'User';
+//    $userId = 2084;
+//
+//    //fixme token expiring process...
+//    //what if expiring in an hour??? we would want them to login again.
+//    //also when start/resume a shift. we need to check when the token will expire
+//    //no, we just need to get a refresh token for them.//todo;
+//
+//    $user = App\User::find($userId);
+//
+//    if(($user->first_name == $firstName)&&($user->last_name == $lastName)){
+//
+//        $expiry = app('App\Http\Controllers\CompanyAndUsersApiController')->tokenExpiry($userId);
+//
+//        $now = Carbon::now();
+//
+//        //convert string to a Carbon datetime object
+//        $expiryCarbon = new Carbon($expiry);
+//
+//        $days = $now->diffInDays($expiryCarbon);
+//
+//        if($days > 2){
+//
+//            $expiresSoon = false;
+//        }else{
+//
+//            $expiresSoon = true;
+//        }
+//
+//        dd($days, $expiresSoon);
+//
+//        //$user details match the request details
+//        return response()->json([
+//            'success' => true,
+//            'valid' => true
+//        ]);
+//
+//    }else{
+//        //user is not validated
+//        return response()->json([
+//            'success' => true,
+//            'valid' => false
+//        ]);
+//
+//
+//    }
+//}catch (\Exception $e) {
+//    //Exception will catch all errors thrown
+//    return response()->json([
+//        'success' => false
+//    ]);
+//}
+//
+//});
+
 
 
 /*Route::get("/map/{userId}/{shiftId}/shift-positions", function ($userId, $shiftId) {
