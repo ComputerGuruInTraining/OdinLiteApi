@@ -28,8 +28,11 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         //configure short lived tokens
-        Passport::tokensExpireIn(Carbon::now()->addDays(17));
+//        Passport::tokensExpireIn(Carbon::now()->addDays(17));
+        Passport::tokensExpireIn(Carbon::now()->addDays(1));
 
-        Passport::refreshTokensExpireIn(Carbon::now()->addDays(32));
+//        Passport::refreshTokensExpireIn(Carbon::now()->addDays(32));
+        Passport::refreshTokensExpireIn(Carbon::now()->addDays(2));
+
     }
 }
