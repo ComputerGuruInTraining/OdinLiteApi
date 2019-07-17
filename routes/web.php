@@ -318,6 +318,24 @@ Route::post("/error-logging", function (Request $request) {
     return response()->json(['message' => 'post successful']);
 });
 
+//WIP
+/*Route::get("/token/expiry/{userId}", function ($userId) {
+    try {
+        //$expireSoon will be a boolean value, if expires in less than 2 days, value = true else false
+        $expireSoon = app('App\Http\Controllers\CompanyAndUsersApiController')->tokenExpiry($userId);
+
+        return response()->json([
+            'success' => true,
+            'expireSoon' => $expireSoon
+        ]);
+    }catch(Exception $e) {
+        //Exception will catch all errors thrown
+        return response()->json([
+            'success' => false
+        ]);
+    }
+});*/
+
 //Ready to implement once billing set up
 ///active/test/1374/404
 //Route::get("/active/test/{id}/{compId}", function ($id, $compId) {
@@ -655,7 +673,9 @@ Route::get('/storage/app/public/{file}', function ($file) {
 //Route::get('/testcheckshiftresume', 'JobsController@checkShiftLastStartedForUser');
 
 //tokenExpiry($userId)
-Route::get('/testexpirydate/{userId}', 'CompanyAndUsersApiController@tokenExpiry');
+//Route::get('/testexpirydate/{userId}', 'CompanyAndUsersApiController@tokenExpiry');
+
+
 
 //Route::get('/testverify', function(){
 //

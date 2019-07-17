@@ -79,6 +79,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         }
     });
 
+//    Route::get('/token/expires/{userId}', 'CompanyAndUsersApiController@tokenExpiry');
+
     //@login, get all sessionDetails
     Route::get('/session', 'CompanyAndUsersApiController@getSession');
 
