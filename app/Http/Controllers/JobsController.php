@@ -213,10 +213,25 @@ class JobsController extends Controller
 
         }
 
+        //ensure that the latest check in started by the user was not started before another shift was started or resumed
+        //we can keep the location checked in if not,
+        // but if there has been another shift started or resumed since, we won't keep the location checked in
+
+        //value will be null if doesn't meet our conditions
+        //or if does meet our conditions an object with shift_id, shift_checks.id, check_ins, check_outs, location_id, shift_checks.created_at
+        $latestCheck = $this->getLatestShiftCheckResume($mobileUserId);
+
         if (count($assignedLoc) > 1) {
             $caseCheck = false;//initialise
 
             foreach ($assignedLoc as $i => $location) {
+
+                //default
+                $assignedLoc[$i]->latestCheckIn = false;
+                $assignedLoc[$i]->currentCheckIn = null;
+                $assignedLoc[$i]->checkedIn = false;
+                $assignedLoc[$i]->casePerCheck = false;
+
                 //Data Requirement 3. if a shift check is still to be completed
                 //only possibly for 1 location per shift
                 if (count($checkId) == 1) {
@@ -240,17 +255,22 @@ class JobsController extends Controller
                             $assignedLoc[$i]->casePerCheck = false;
                             $caseCheck = false;
                         }
-                    } else {
-                        $assignedLoc[$i]->currentCheckIn = null;
-                        $assignedLoc[$i]->checkedIn = false;
-                        $assignedLoc[$i]->casePerCheck = false;
+
+                        //this check in is the latest for the user, and they haven't started or resumed another shift since this check in
+                        if($latestCheck != null) {
+                            if ($checkId[0]->id == $latestCheck->id) {
+                                $assignedLoc[$i]->latestCheckIn = true;
+                            }
+                        }
                     }
+
 
                 } else if (count($checkId) == 0) {
                     //location not checked in
                     $assignedLoc[$i]->checkedIn = false;
                     $assignedLoc[$i]->casePerCheck = false;
                     $assignedLoc[$i]->currentCheckIn = null;
+                    $assignedLoc[$i]->latestCheckIn = false;
                     $caseCheck = false;
 
                 } else if (count($checkId) > 1) {
@@ -258,6 +278,14 @@ class JobsController extends Controller
                     //commencedshiftdetails/2174/2014 (shiftId = 5344, 2 checkInsWoCheckOuts via db and count good)
                     //todo: in future, optimize for greater than 1 current check in
                     //location not checked in
+
+                    //default values
+                    $assignedLoc[$i]->currentCheckIn = null;
+                    $assignedLoc[$i]->checkedIn = false;
+                    $assignedLoc[$i]->casePerCheck = false;
+                    $assignedLoc[$i]->latestCheckIn = false;
+
+                    //if the check in relates to that location, assign relevant value
                     foreach ($checkId as $j => $checkIdItem) {
                         if ($assignedLoc[$i]->location_id == $checkId[$j]->location_id) {
 
@@ -272,15 +300,20 @@ class JobsController extends Controller
                                 $assignedLoc[$i]->casePerCheck = true;
                                 $caseCheck = true;
 
-                            } else if (count($casePerCheck) == 0) {
+                            }
+                            else if (count($casePerCheck) == 0) {
                                 //case note not submitted
                                 $assignedLoc[$i]->casePerCheck = false;
                                 $caseCheck = false;
                             }
-                        } else {
-                            $assignedLoc[$i]->currentCheckIn = null;
-                            $assignedLoc[$i]->checkedIn = false;
-                            $assignedLoc[$i]->casePerCheck = false;
+
+                            //this check in is the latest for the user, and they haven't started or resumed another shift since this check in
+                            if($latestCheck != null) {
+                                if ($checkId[$j]->id == $latestCheck->id) {
+                                    $assignedLoc[$i]->latestCheckIn = true;
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
@@ -316,6 +349,9 @@ class JobsController extends Controller
         //ATM, before more testing is complete, reluctant to remove this working code for single location shifts,
         //so keep it for the moment
         if (count($assignedLoc) == 1) {
+
+            $assignedLoc[0]->latestCheckIn = false;//default
+
 //            commencedshiftdetails/2124/2104
             $notes = app('App\Http\Controllers\CaseNoteApiController')->getShiftCaseNotes($shiftId->id);
 
@@ -331,6 +367,12 @@ class JobsController extends Controller
                 //todo: test case for this
                 $assignedLoc[0]->checkedIn = true;
                 $assignedLoc[0]->currentCheckIn = $checkId[0]->id;
+                //this check in is the latest for the user, and they haven't started or resumed another shift since this check in
+                if($latestCheck != null) {
+                    if ($checkId[0]->id == $latestCheck->id) {
+                        $assignedLoc[0]->latestCheckIn = true;
+                    }
+                }
 
             }else if (count($checkId) == 0) {
                 //2124/2104 & 2144/2084
@@ -344,9 +386,20 @@ class JobsController extends Controller
 
                         $assignedLoc[0]->checkedIn = true;
                         $assignedLoc[0]->currentCheckIn = $checkId[$x]->id;
+
+                        //this check in is the latest for the user, and they haven't started or resumed another shift since this check in
+                        if($latestCheck != null) {
+                            if ($checkId[$x]->id == $latestCheck->id) {
+                                $assignedLoc[0]->latestCheckIn = true;
+                                break;
+                            }
+                        }
                     }
                 }
             }
+
+
+
 
             return response()->json([
                 'locations' => $assignedLoc,
@@ -358,6 +411,7 @@ class JobsController extends Controller
 
         } else {
 
+//            dd($assignedLoc, $caseCheck, $shiftId, $shiftResumeId, $countChecksWoCheckOut);
             //several locations
             //data required is: 1.location details, 2.number of checks completed at each location,
             // 3.the current check in (if there is one),
@@ -379,43 +433,112 @@ class JobsController extends Controller
         }//end else several locations
     }
 
-/*    public function checkShiftLastStartedForUser($mobileUserId, $shiftId){
+    public function getLatestShiftCheckResume($mobileUserId){
 
+        $resumes = null;
+        $latestCheckIn = true;
 
-        $mobileUserId = 2014;
-        $shiftId = 5514;//5514 is the last shift resumed by the user and there are 2 records before 5504
-        //if shiftId = 5524, the $results returns the last shift started by the user as it wasn't the shiftId being passed in.
+        //get the latest shift check for the user, whether checked out or not
+        $check = $this->latestShiftCheck($mobileUserId);//either an object or null
 
-        //Step: find the next record where not equal to the shiftId we pass in
-        $results = DB::table('shift_resumes')
-            ->select('*', 'shift_resumes.id as shift_resumes_id')
-            ->join('shifts', 'shifts.id', '=', 'shift_resumes.shift_id')
-            ->where('shifts.mobile_user_id', '=', $mobileUserId)
-            ->where('shift_resumes.shift_id', '!=', $shiftId)
-            ->orderBy('shift_resumes.created_at', 'desc')
-            ->first();
+        //get all the shift resumes > the latest check in created_at times
+        if($check != null) {
+            $resumes = $this->latestShiftResumes($mobileUserId, $check->created_at);
 
-        //Step: we need to retrieve the first record before the $results record
-        $res = DB::table('shift_resumes')
-                    ->where('id', '>', $results->shift_resumes_id)
-                    ->orderBy('id','desc')
-                    ->first();
+            //loop through the resumes array
+            //if any of the shift_ids do not equal the shift id of the latest_check
+            //then another shift has started or resumed after the check in
+            //so just return null and do not keep the location checked in on the mobile side
+            if(sizeof($resumes) > 0) {
+                foreach ($resumes as $i => $resume) {
 
-        $shiftLastStarted = null;
-
-        //Step: check if the first record before the shiftId value changes (for the user) has a status of start
-        //if so, we can deduce that the last shift started was the shiftId we pass through
-        //therefore, we can keep the user checked into the location
-        if($res != null) {
-            if ($res->status == 'start') {
-
-                $shiftLastStarted = $res->shift_id;
+                    //if any of the $resumes array has a value not equal to the check in shift id
+                    if ($resume->shift_id != $check->shift_id) {
+                        $latestCheckIn = false;
+                    }
+                }
             }
         }
 
-        dd($results, $res, $shiftLastStarted);
+//        dd($check, $latestCheckIn);
 
-    }*/
+        if($latestCheckIn == true){
+
+            return $check;
+
+        }else{
+
+            return null;
+        }
+    }
+
+    //returns array or null?
+    public function latestShiftResumes($mobileUserId, $createdAt){
+
+        $resumes = DB::table('shift_resumes')
+            ->join('shifts', 'shifts.id', '=', 'shift_resumes.shift_id')
+            ->select('shift_resumes.shift_id', 'shift_resumes.created_at', 'shifts.mobile_user_id')
+            ->where('shifts.mobile_user_id', '=', $mobileUserId)
+            ->where('shift_resumes.created_at', '>', $createdAt)
+            ->get();
+
+
+        return $resumes;
+
+
+    }
+
+    //get the latest shift check for the user, whether checked out or not
+    public function latestShiftCheck($mobileUserId){
+
+        $check = DB::table('shift_checks')
+            ->join('shifts', 'shifts.id', '=', 'shift_checks.shift_id')
+            ->select('shift_checks.shift_id', 'shift_checks.id', 'shift_checks.check_ins', 'shift_checks.check_outs', 'shift_checks.location_id', 'shift_checks.created_at')
+            ->where('shifts.mobile_user_id', '=', $mobileUserId)
+            ->latest()
+            ->first();
+
+        return $check;
+
+    }
+
+    /*    public function checkShiftLastStartedForUser($mobileUserId, $shiftId){
+
+
+            $mobileUserId = 2014;
+            $shiftId = 5514;//5514 is the last shift resumed by the user and there are 2 records before 5504
+            //if shiftId = 5524, the $results returns the last shift started by the user as it wasn't the shiftId being passed in.
+
+            //Step: find the next record where not equal to the shiftId we pass in
+            $results = DB::table('shift_resumes')
+                ->select('*', 'shift_resumes.id as shift_resumes_id')
+                ->join('shifts', 'shifts.id', '=', 'shift_resumes.shift_id')
+                ->where('shifts.mobile_user_id', '=', $mobileUserId)
+                ->where('shift_resumes.shift_id', '!=', $shiftId)
+                ->orderBy('shift_resumes.created_at', 'desc')
+                ->first();
+
+            //Step: we need to retrieve the first record before the $results record
+            $res = DB::table('shift_resumes')
+                        ->where('id', '>', $results->shift_resumes_id)
+                        ->orderBy('id','desc')
+                        ->first();
+
+            $shiftLastStarted = null;
+
+            //Step: check if the first record before the shiftId value changes (for the user) has a status of start
+            //if so, we can deduce that the last shift started was the shiftId we pass through
+            //therefore, we can keep the user checked into the location
+            if($res != null) {
+                if ($res->status == 'start') {
+
+                    $shiftLastStarted = $res->shift_id;
+                }
+            }
+
+            dd($results, $res, $shiftLastStarted);
+
+        }*/
 
     public function getShiftLocations($asgnshftid){
 
