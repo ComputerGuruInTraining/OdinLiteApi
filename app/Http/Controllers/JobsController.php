@@ -216,13 +216,13 @@ class JobsController extends Controller
         //ensure that the latest check in started by the user was not started before another shift was started or resumed
         //we can keep the location checked in if not,
         // but if there has been another shift started or resumed since, we won't keep the location checked in
-
         //value will be null if doesn't meet our conditions
         //or if does meet our conditions an object with shift_id, shift_checks.id, check_ins, check_outs, location_id, shift_checks.created_at
         $latestCheck = $this->getLatestShiftCheckResume($mobileUserId);
 
+        $caseCheck = false;//initialise
+
         if (count($assignedLoc) > 1) {
-            $caseCheck = false;//initialise
 
             foreach ($assignedLoc as $i => $location) {
 
@@ -232,154 +232,54 @@ class JobsController extends Controller
                 $assignedLoc[$i]->checkedIn = false;
                 $assignedLoc[$i]->casePerCheck = false;
 
-                //Data Requirement 3. if a shift check is still to be completed
-                //only possibly for 1 location per shift
-                if (count($checkId) == 1) {
-                    //therefore only 1 array item
-                    //for the location that has a current check in without a check out
-                    if ($assignedLoc[$i]->location_id == $checkId[0]->location_id) {
-                        //assign this location to the locationCheckedIn Variable in mobile
+                //if the check in relates to that location, assign relevant value
+                foreach ($checkId as $j => $checkIdItem) {
+                    if ($assignedLoc[$i]->location_id == $checkId[$j]->location_id) {
+
                         $assignedLoc[$i]->checkedIn = true;
-                        $assignedLoc[$i]->currentCheckIn = $checkId[0]->id;
+                        $assignedLoc[$i]->currentCheckIn = $checkId[$j]->id;
 
                         //Data Requirement 4:
-                        $casePerCheck = $this->caseNoteSbmtd($checkId[0]->id);
+                        $casePerCheck = $this->caseNoteSbmtd($checkId[$j]->id);
 
                         //if a case note exists for the current check in
                         if (count($casePerCheck) > 0) {
                             $assignedLoc[$i]->casePerCheck = true;
-                            $caseCheck = true;
-
-                        } else if (count($casePerCheck) == 0) {
-                            //case note not submitted
-                            $assignedLoc[$i]->casePerCheck = false;
-                            $caseCheck = false;
                         }
 
                         //this check in is the latest for the user, and they haven't started or resumed another shift since this check in
                         if($latestCheck != null) {
-                            if ($checkId[0]->id == $latestCheck->id) {
+                            if ($checkId[$j]->id == $latestCheck->id) {
                                 $assignedLoc[$i]->latestCheckIn = true;
-                            }
-                        }
-                    }
 
-
-                } else if (count($checkId) == 0) {
-                    //location not checked in
-                    $assignedLoc[$i]->checkedIn = false;
-                    $assignedLoc[$i]->casePerCheck = false;
-                    $assignedLoc[$i]->currentCheckIn = null;
-                    $assignedLoc[$i]->latestCheckIn = false;
-                    $caseCheck = false;
-
-                } else if (count($checkId) > 1) {
-                    //commencedshiftdetails/2114/2104
-                    //commencedshiftdetails/2174/2014 (shiftId = 5344, 2 checkInsWoCheckOuts via db and count good)
-                    //todo: in future, optimize for greater than 1 current check in
-                    //location not checked in
-
-                    //default values
-                    $assignedLoc[$i]->currentCheckIn = null;
-                    $assignedLoc[$i]->checkedIn = false;
-                    $assignedLoc[$i]->casePerCheck = false;
-                    $assignedLoc[$i]->latestCheckIn = false;
-
-                    //if the check in relates to that location, assign relevant value
-                    foreach ($checkId as $j => $checkIdItem) {
-                        if ($assignedLoc[$i]->location_id == $checkId[$j]->location_id) {
-
-                            $assignedLoc[$i]->checkedIn = true;
-                            $assignedLoc[$i]->currentCheckIn = $checkId[$j]->id;
-
-                            //Data Requirement 4:
-                            $casePerCheck = $this->caseNoteSbmtd($checkIdItem->id);
-
-                            //if a case note exists for the current check in
-                            if (count($casePerCheck) > 0) {
-                                $assignedLoc[$i]->casePerCheck = true;
-                                $caseCheck = true;
-
-                            }
-                            else if (count($casePerCheck) == 0) {
-                                //case note not submitted
-                                $assignedLoc[$i]->casePerCheck = false;
-                                $caseCheck = false;
-                            }
-
-                            //this check in is the latest for the user, and they haven't started or resumed another shift since this check in
-                            if($latestCheck != null) {
-                                if ($checkId[$j]->id == $latestCheck->id) {
-                                    $assignedLoc[$i]->latestCheckIn = true;
-                                    break;
+                                //if a case note exists for the current check in
+                                if (count($casePerCheck) > 0) {
+                                    $caseCheck = true;
                                 }
+
+                                break;
                             }
+
                         }
                     }
                 }
+
             }
-        }
-/*
-        //initially, check the last shiftResume entry for the user, prior to storing this shift resume in the table
-        //if the shiftId is the same, proceed,
-        //if not, we needn't do any extra processing to see if the user has resumed any shifts since starting this one
-        $lastShift = $this->getLastShiftResumedByUser($mobileUserId);
+        } else if (count($assignedLoc) == 1) {
+            //single locations
+            //data required is: location details, has a case note been submitted,
+            //ATM, before more testing is complete, reluctant to remove this working code for single location shifts,
+            //so keep it for the moment
 
-        $lastShiftId = $lastShift->pluck('shiftId');
 
-        $lastShiftResumed = false;
-
-        if($lastShiftId == $shiftId->id){
-
-            $lastShiftResumed = true;
-
-        }*/
-
-        //store the resume shift in the shiftResumeTable
-        $shiftResumeId = $this->storeShiftResume('resume', $shiftId->id);
-
-        /*//check this shift that is being resumed by the user is the last shift started by the user
-        //ie we need to know that the user is not resuming this shift after starting another shift
-        if($lastShiftResumed == true) {
-            $shiftLastStarted = $this->checkShiftLastStartedForUser($shiftId->id, $shiftResumeId, $mobileUserId);
-        }*/
-
-        //single locations
-        //data required is: location details, has a case note been submitted,
-        //ATM, before more testing is complete, reluctant to remove this working code for single location shifts,
-        //so keep it for the moment
-        if (count($assignedLoc) == 1) {
-
-            $assignedLoc[0]->latestCheckIn = false;//default
+            //default
+            $assignedLoc[0]->latestCheckIn = false;
+            $assignedLoc[0]->checkedIn = false;
+            $assignedLoc[0]->currentCheckIn = null;
+            $assignedLoc[$i]->casePerCheck = false;
+            $caseCheck = false;
 
 //            commencedshiftdetails/2124/2104
-            $notes = app('App\Http\Controllers\CaseNoteApiController')->getShiftCaseNotes($shiftId->id);
-
-            if (count($notes) > 0) {
-                $singleCaseNote = true;
-                //single loc commencedshiftdetails/2124/2084
-
-            } else {
-                $singleCaseNote = false;
-            }
-
-            if (count($checkId) == 1) {
-                //todo: test case for this
-                $assignedLoc[0]->checkedIn = true;
-                $assignedLoc[0]->currentCheckIn = $checkId[0]->id;
-                //this check in is the latest for the user, and they haven't started or resumed another shift since this check in
-                if($latestCheck != null) {
-                    if ($checkId[0]->id == $latestCheck->id) {
-                        $assignedLoc[0]->latestCheckIn = true;
-                    }
-                }
-
-            }else if (count($checkId) == 0) {
-                //2124/2104 & 2144/2084
-                $assignedLoc[0]->checkedIn = false;
-                $assignedLoc[0]->currentCheckIn = null;
-
-            } else if (count($checkId) > 1) {
                 //2124/2084
                 foreach ($checkId as $x => $checkIdItem) {
                     if ($assignedLoc[0]->location_id == $checkId[$x]->location_id) {
@@ -391,46 +291,31 @@ class JobsController extends Controller
                         if($latestCheck != null) {
                             if ($checkId[$x]->id == $latestCheck->id) {
                                 $assignedLoc[0]->latestCheckIn = true;
+
+                                $notes = app('App\Http\Controllers\CaseNoteApiController')->getShiftCaseNotes($shiftId->id);
+
+                                if (count($notes) > 0) {
+                                    $caseCheck = true;
+                                    //single loc commencedshiftdetails/2124/2084
+                                }
+
                                 break;
                             }
                         }
                     }
                 }
-            }
+        }
 
+        //store the resume shift in the shiftResumeTable
+        $shiftResumeId = $this->storeShiftResume('resume', $shiftId->id);
 
-
-
-            return response()->json([
-                'locations' => $assignedLoc,
-                'shiftId' => $shiftId,
-                'caseCheck' => $singleCaseNote,
-                'shiftResumeId' => $shiftResumeId,//value or null if storeError
-                'countChecksWoCheckOut' => $countChecksWoCheckOut
-            ]);
-
-        } else {
-
-//            dd($assignedLoc, $caseCheck, $shiftId, $shiftResumeId, $countChecksWoCheckOut);
-            //several locations
-            //data required is: 1.location details, 2.number of checks completed at each location,
-            // 3.the current check in (if there is one),
-            // 4.has a case note been submitted?
-
-            //Note: Data Requirement 2 ie number of checks:
-            //can be deciphered from the number of shift_check entries that
-            //correspond to the shift_id and the location_id and that have a check_outs entry
-            //unfortunately, if the put_check_out fails, the check will not be recorded as complete.
-            //one of those imperfections. But success rate is high thankfully.
-
-            return response()->json([
-                'locations' => $assignedLoc,
-                'shiftId' => $shiftId,
-                'caseCheck' => $caseCheck,
-                'shiftResumeId' => $shiftResumeId,//value or null if storeError
-                'countChecksWoCheckOut' => $countChecksWoCheckOut
-            ]);
-        }//end else several locations
+        return response()->json([
+            'locations' => $assignedLoc,
+            'shiftId' => $shiftId,
+            'caseCheck' => $caseCheck,
+            'shiftResumeId' => $shiftResumeId,//value or null if storeError
+            'countChecksWoCheckOut' => $countChecksWoCheckOut
+        ]);
     }
 
     public function getLatestShiftCheckResume($mobileUserId){
