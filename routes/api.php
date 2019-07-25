@@ -42,6 +42,45 @@ Route::group(['middleware' => 'auth:api'], function () {
         return Auth::user();
     });
 
+    //used to check the user details as stored in the device
+    Route::post("/validate/user", function (Request $request) {
+
+       try{
+            //variables sent in request body
+            $firstName = $request->input('first_name');
+            $lastName = $request->input('last_name');
+            $userId = $request->input('user_id');
+
+            $user = App\User::find($userId);
+
+            if(($user->first_name == $firstName)&&($user->last_name == $lastName)){
+
+                $expireSoon = app('App\Http\Controllers\CompanyAndUsersApiController')->tokenExpiry($userId);
+
+                //$user details match the request details
+                return response()->json([
+                    'expiresSoon' => $expireSoon,
+                    'success' => true,
+                    'valid' => true
+                ]);
+
+            }else{
+                //user is not validated
+                return response()->json([
+                    'success' => true,
+                    'valid' => false
+                ]);
+            }
+        }catch (\Exception $e) {
+            //Exception will catch all errors thrown
+            return response()->json([
+                'success' => false
+            ]);
+        }
+    });
+
+//    Route::get('/token/expires/{userId}', 'CompanyAndUsersApiController@tokenExpiry');
+
     //@login, get all sessionDetails
     Route::get('/session', 'CompanyAndUsersApiController@getSession');
 
@@ -973,8 +1012,6 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     //console
     //retrieve a list of assigned shifts for a particular company for roster page
-
-
     Route::get("/assignedshifts/list/{compId}", 'JobsController@getAssignedShiftsList');
 
     //Archived: replaced by controller function
@@ -1080,6 +1117,9 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         $assigned->start = $start;
         $assigned->end = $end;
+
+        $assigned->asg_duration_mins = $start->diffInMinutes($end);
+
         $assigned->save();
 
         $id = $assigned->id;
@@ -1462,6 +1502,12 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::post('/shift/start', function (Request $request) {
 
+        //fixme: check if an assigned_shift_id of this value exists in shiftTable for those cases where an error occurs
+        //following successful shiftTable entry, but before fucntion successfully completes entirely.
+        //in these cases, the mobile app receives an error response and the shift/start request is resent
+        //in a small amount of cases, it is possible to have multiple shift table entries which is undesirable and erroneous.
+        //low priority to fix this in future.
+
         $userId = $request->input('mobile_user_id');
         $user = User::find($userId);
 
@@ -1476,10 +1522,14 @@ Route::group(['middleware' => 'auth:api'], function () {
         //retrieve id of the saved shift
         $id = $shift->id;
 
+        //store the start shift in the shiftResumeTable
+        $shiftResumeId = app('App\Http\Controllers\JobsController')->storeShiftResume('start', $id);
+
         return response()->json([
             'success' => true,
             'id' => $id,
-            'user' => $user
+            'user' => $user,
+            'shiftResumeId' => $shiftResumeId//value or null if storeError
         ]);
     });
 
@@ -1544,6 +1594,9 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     Route::get('/commencedshiftdetails/{assignedId}', 'JobsController@getCommencedShiftDetails');
+
+    /*----------------Shift Resumes----------*/
+    Route::post('/lastshiftresumed', 'JobsController@getLastShiftResumed');
 
     /*----------------Generic Notification----------*/
     Route::post('/notify/log/error', 'CompanyAndUsersApiController@genericErrorNotifyLog');

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Config;
+use Carbon\Carbon;
 use App\Notifications\genericErrorNotification;
 use App\Recipients\DynamicRecipient;
 use App\Notifications\ChangeEmailNew;
@@ -20,6 +21,32 @@ use App\OdinErrorLogging as AppErrors;
 
 class CompanyAndUsersApiController extends Controller
 {
+    public function tokenExpiry($userId){
+
+        $expireSoon = true;//default value
+
+        $res = DB::table('oauth_access_tokens')
+            ->select('expires_at')
+            ->where('user_id', '=', $userId)
+            ->latest()
+            ->first();
+
+        $now = Carbon::now();
+
+        //convert string to a Carbon datetime object
+        if($res != null) {
+            $expiryCarbon = new Carbon($res->expires_at);
+
+            $days = $now->diffInDays($expiryCarbon);
+
+            if ($days > 2) {
+                $expireSoon = false;
+            }
+        }
+
+        return $expireSoon;
+    }
+
     //return subscriptions == 1 active subscription (will only be one based on design);
     //or return , graceSub if in trialPeriod but cancelled (with the latest trial_ends_at date,
     ///////// as could be 2 if edit primary contact, and cancel first subscription, create 2nd, then user cancels 2nd;

@@ -308,7 +308,6 @@ Route::post("/error-logging", function (Request $request) {
 
     //nullable field
     if($request->has('description')) {
-
         $appErrors->description = $request->input('description');
     }
 
@@ -381,8 +380,9 @@ Route::get('/storage/app/public/{file}', function ($file) {
 //Route::get('/company/account/remove/{compId}/{userId}', 'CompanyAndUsersApiController@removeAccount');
 
 /*Test Routes*/
+
 //todo: remove by end of March
-Route::get("/test/runtimes", function(){
+/*Route::get("/test/runtimes", function(){
 
     $ds = time();
 
@@ -394,10 +394,356 @@ Route::get("/test/runtimes", function(){
 
     dd($diff);
 
+});*/
+
+
+//WIP
+/*Route::get("/token/expiry/{userId}", function ($userId) {
+    try {
+        //$expireSoon will be a boolean value, if expires in less than 2 days, value = true else false
+        $expireSoon = app('App\Http\Controllers\CompanyAndUsersApiController')->tokenExpiry($userId);
+
+        return response()->json([
+            'success' => true,
+            'expireSoon' => $expireSoon
+        ]);
+    }catch(Exception $e) {
+        //Exception will catch all errors thrown
+        return response()->json([
+            'success' => false
+        ]);
+    }
+});*/
+
+//I think because the mobile is not a laravel web app, or because it is on a device and the app opens and refreshes everything,
+//the user is not considered logged in.
+/*Route::get('/auth/check', function(){
+
+    if (Auth::check()) {
+
+        $user = Auth::user();
+
+        $userId = $user->id;
+
+        //todo: change to 2 days once the master pushed
+        $res = DB::table('oauth_access_tokens')
+            ->select('id')
+            ->where('user_id', '=', $userId)
+            ->where('expires_at', '>=', DB::raw('DATE_ADD(NOW(), INTERVAL 2 DAY)'))
+            ->latest()
+            ->first();
+
+        return response()->json([
+            'userLoggedIn' => true,
+            'token' => $res,//either null or oauth id
+            'user' => $user
+            ]);
+
+    }else{
+        return response()->json(['userLoggedIn' => false]);
+
+    }
+});*/
+
+/*Route::get('/testduration', function(){
+
+    $start = Carbon::createFromFormat('Y-m-d H:i:s', '2019-04-11 09:00:00');
+    $end = Carbon::createFromFormat('Y-m-d H:i:s', '2019-04-11 11:00:00');
+
+    dd($start->diffInMinutes($end));//120 minutes
+
+
+    dd($start, $end);
+
 });
 
+//Route::get('/testshiftresume', function(){
+//
+//            $shiftResumeId = app('App\Http\Controllers\JobsController')->storeShiftResume('resume', 2124);
+//
+//dd($shiftResumeId);
+//
+});*/
 
-/*Work in Progress, Testing only*/
+//2104 had shiftId = []
+
+//response alternatives:
+//1. lastShiftIdPerUser has a value and shiftId has a value
+//  (test by last shift has not ended by is in shiftResume for a user)
+//2. lastShiftIdPerUser has a value but shiftId does not have a value
+//  (test by last shift in the shiftResume table for a user has ended)
+//3. lastShiftIdPerUser has no value because user has not entries in the shiftResume table
+//  (test by a user that hasn't started a shift recently and has no entry in the shiftResume table)
+
+/*Route::get('/testgetlastshiftresume/{userId}', function($userId){
+
+      try {
+
+          //first, verify company
+//            $user = User::find($userId);//works
+
+//          $user = User::find($userId);
+//
+//          $verified = verifyCompany($user);
+//
+//          if(!$verified){
+//
+//              return response()->json($verified);//value = false
+//          }
+
+          //get the last shift resumed by the user
+          $lastShiftIdPerUser = DB::table('shift_resumes')
+              ->join('shifts', 'shifts.id', '=', 'shift_resumes.shift_id')
+              ->select('shifts.id as shiftId',
+                  'shift_resumes.created_at as shiftResumeCreatedAt', 'shifts.assigned_shift_id as assignedId')
+              ->where('shifts.mobile_user_id', '=', $userId)
+              ->where('shifts.deleted_at', '=', null)
+              ->where('shift_resumes.deleted_at', '=', null)
+              ->latest('shift_resumes.created_at')
+              ->first();
+
+          //then, if there is a value, ensure that shift has not ended
+          if ($lastShiftIdPerUser != null) {
+
+              $shiftIdNotEnded = DB::table('shifts')
+                  ->select('id')
+                  ->where('id', '=', $lastShiftIdPerUser->shiftId)
+                  ->where('end_time', '=', null)
+                  ->get();
+
+              if(count($shiftIdNotEnded) != 0){
+
+                  $shiftId = $shiftIdNotEnded[0]->id;
+
+                //1. lastShiftIdPerUser has a value and shiftId has a value
+                  return response()->json([
+                      'success' => true,
+                      'shiftId' => $shiftId,
+                      'lastShiftResumed' => $lastShiftIdPerUser->shiftId,//mostly for testing/checking purposes, this shift may be ended
+                      'assignedId' => $lastShiftIdPerUser->assignedId,
+                      'shiftResumeCreatedAt' => $lastShiftIdPerUser->shiftResumeCreatedAt
+                  ]);
+              }else {
+
+                  //2. lastShiftIdPerUser has a value but shiftId does not have a value
+                  return response()->json([
+                      'success' => true,
+                      'shiftIdEnded' => $shiftIdNotEnded,//the last shift resumed by the user has been ended, but return the empty array for thorough mobile testing
+                      'lastShiftResumed' => $lastShiftIdPerUser->shiftId,//mostly for testing/checking purposes
+                      'assignedId' => $lastShiftIdPerUser->assignedId,
+                      'shiftResumeCreatedAt' => $lastShiftIdPerUser->shiftResumeCreatedAt
+                  ]);
+              }
+          } else {
+              //3. lastShiftIdPerUser has no value because user has no entries in the shiftResume table
+              return response()->json([
+                  'success' => true,
+                  'shiftId' => null//the user does not have an entry in the shift resume table, so return null
+              ]);
+          }
+      }catch (\Exception $e) {
+          //Exception will catch all errors thrown
+          return response()->json([
+              'success' => false
+          ]);
+      }
+});*/
+//getAssignedShifts for a particular userId
+/*Route::get('/testGetAssignedShifts', function(){
+
+    $id = 2084;
+    //the logic is:
+    //step 1: all assignedShifts for the period. (array1)
+    //step 2: all assignedShifts that have been started by the mobile user (array2)
+    // (!Important! > 1 mobile user can be assigned to shift)
+    //step 3: array1 items that don't appear in array2 have not been started, therefore include in results.(array4)
+    //step 4: all assignedShifts that have been started, check if they have ended (array3)
+    //step 5: array2 items that are not in array3 have been started but not completed, therefore include in results.(array5)
+    //step 6: add (array1-2) to (array2-3) to get the complete set of results (= array6)
+
+    //step 1: all assigned shifts
+    $array1 = DB::table('assigned_shifts')
+        ->join('assigned_shift_employees', 'assigned_shift_employees.assigned_shift_id', '=',
+            'assigned_shifts.id')
+        ->select('assigned_shifts.id')
+        ->where('assigned_shift_employees.mobile_user_id', '=', $id)
+        ->where('assigned_shifts.end', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 2 DAY)'))
+        ->where('assigned_shifts.deleted_at', '=', null)
+        ->where('assigned_shift_employees.deleted_at', '=', null)
+        ->get();
+
+    //all assigned shifts for the period specified
+    $array1ids = $array1->pluck('id');
+
+    //step2 :all shifts that have been started by this mobile_user
+    $array2ids = DB::table('shifts')
+        ->whereIn('assigned_shift_id', $array1ids)
+        ->where('mobile_user_id', '=', $id)
+        ->pluck('assigned_shift_id');
+
+    //step 3: array1 items that don't appear in array2 have not been started, therefore include in results.(array1-2)
+    //1st set of data
+    $array4 = $array1ids->diff($array2ids);
+
+    //step4: all shifts out of the shifts that have been started and have been completed
+    $array3ids = DB::table('shifts')
+        //array of ids
+        ->whereIn('assigned_shift_id', $array2ids)
+        ->where('end_time', '!=', null)
+        ->where('mobile_user_id', '=', $id)
+        ->pluck('assigned_shift_id');
+
+    //step 5: array2 items that are not in array3 have been started but not completed, therefore include in results.(array5)
+    $array5 = $array2ids->diff($array3ids);
+
+    //step 6: add (array1-2) to (array2-3) to get the complete set of results (= array6)
+    $array6ids = $array4->merge($array5);
+
+    $myAssigned = DB::table('assigned_shift_employees')
+        ->join('assigned_shifts', 'assigned_shift_employees.assigned_shift_id', '=', 'assigned_shifts.id')
+        ->whereIn('assigned_shifts.id', $array6ids)
+        ->where('mobile_user_id', '=', $id)
+        ->where('assigned_shifts.deleted_at', '=', null)
+        ->where('assigned_shift_employees.deleted_at', '=', null)
+        ->get();
+
+    foreach ($myAssigned as $i => $assigned) {
+        //convert start and end from a datetime object to timestamps
+        //and append to the end of all of the assigned objects
+        $myAssigned[$i]->start_ts = strtotime($assigned->start);
+        $myAssigned[$i]->end_ts = strtotime($assigned->end);
+    }
+
+    dd($myAssigned);
+
+    return response()->json($myAssigned);
+
+});*/
+
+//test routes
+//use the userId sent from the app to get the oauth_access_tokens.id which is the token
+//check the token retrieved from the db with the token sent from the app,
+//if the values match, verified = true
+/*Route::post('/verify/user', function(Request $request){
+
+    try {
+
+        $userId = $request->input('userId');
+        $token = $request->input('token');
+
+        $res = DB::table('oauth_access_tokens')
+            ->select('id')
+            ->where('user_id', '=', $userId)
+            ->where('expires_at', '>=', DB::raw('DATE_ADD(NOW(), INTERVAL 2 DAY)'))
+            ->latest()
+            ->first();
+
+        if($res->id != null) {
+            if ($res->id == $token) {
+                return response()->json([
+                    'verified' => true,
+                    'userId' => $userId,
+                    'token' => $token
+                ]);
+
+            } else {
+                return response()->json([
+                    'verified' => false,
+                    'token' => null
+                ]);
+            }
+        }else{
+
+            return response()->json([
+                'verified' => false,
+                'userId' => null
+            ]);
+        }
+
+    }catch(\Exception $e){
+        //Exception will catch all errors thrown
+        return response()->json(['success' => false]);
+    }
+});*/
+
+
+//Route::get('/lastshiftresumed/{userId}', 'JobsController@getLastShiftResumed');
+
+//Route::get('/commencedshiftdetailstest/{assignedid}/{mobileUserId}', 'JobsController@getCommencedShiftDetails');
+
+//Route::get('/testcheckshiftresume', 'JobsController@checkShiftLastStartedForUser');
+
+//tokenExpiry($userId)
+//Route::get('/testexpirydate/{userId}', 'CompanyAndUsersApiController@tokenExpiry');
+
+//Route::get('/testlatestshiftcheckresume/{mobileUserId}', 'JobsController@getLatestShiftCheckResume');
+
+
+
+
+
+//Route::get('/testverify', function(){
+//
+//try{
+//    //variables sent in request body
+//    $firstName = 'Sample';
+//    $lastName = 'User';
+//    $userId = 2084;
+//
+//    //fixme token expiring process...
+//    //what if expiring in an hour??? we would want them to login again.
+//    //also when start/resume a shift. we need to check when the token will expire
+//    //no, we just need to get a refresh token for them.//todo;
+//
+//    $user = App\User::find($userId);
+//
+//    if(($user->first_name == $firstName)&&($user->last_name == $lastName)){
+//
+//        $expiry = app('App\Http\Controllers\CompanyAndUsersApiController')->tokenExpiry($userId);
+//
+//        $now = Carbon::now();
+//
+//        //convert string to a Carbon datetime object
+//        $expiryCarbon = new Carbon($expiry);
+//
+//        $days = $now->diffInDays($expiryCarbon);
+//
+//        if($days > 2){
+//
+//            $expiresSoon = false;
+//        }else{
+//
+//            $expiresSoon = true;
+//        }
+//
+//        dd($days, $expiresSoon);
+//
+//        //$user details match the request details
+//        return response()->json([
+//            'success' => true,
+//            'valid' => true
+//        ]);
+//
+//    }else{
+//        //user is not validated
+//        return response()->json([
+//            'success' => true,
+//            'valid' => false
+//        ]);
+//
+//
+//    }
+//}catch (\Exception $e) {
+//    //Exception will catch all errors thrown
+//    return response()->json([
+//        'success' => false
+//    ]);
+//}
+//
+//});
+
+
+
 /*Route::get("/map/{userId}/{shiftId}/shift-positions", function ($userId, $shiftId) {
 
 
@@ -608,4 +954,67 @@ Route::get("/test/runtimes", function(){
 //        ]);
 //    }
 //});
+
+
+
+
+
+/*Route::get('/verify/user/{userId}/{token}', function($userId, $token){
+
+    try {
+
+
+//        2084//
+//
+//        $userId = $request->input('userId');
+//        $token = $request->input('token');
+
+        //use the userId to get the oauth_access_tokens.id which is the token
+        //check the token retrieved from the db with the token sent from the app,
+        //if the values match, verified = true
+
+        //todo: change to 2 days once the master pushed
+        $res = DB::table('oauth_access_tokens')
+            ->select('id')
+            ->where('user_id', '=', $userId)
+            ->where('expires_at', '>=', DB::raw('DATE_ADD(NOW(), INTERVAL 2 DAY)'))
+            ->latest()
+            ->first();
+
+//            dd($token->id);
+
+        if($res->id != null) {
+            if ($res->id == $token) {
+                return response()->json([
+                    'verified' => true
+//                'token' => $res,//either null or oauth id
+//                'user' => $user
+                ]);
+
+            } else {
+                return response()->json([
+                    'verified' => false
+//                'token' => $res,//either null or oauth id
+//                'user' => $user
+                ]);
+            }
+        }else{
+
+            return response()->json([
+                'verified' => false,
+                'user' => null
+//                'token' => $res,//either null or oauth id
+//                'user' => $user
+            ]);
+        }
+
+    }catch(\Exception $e){
+        //Exception will catch all errors thrown
+        return response()->json(['success' => false]);
+
+    }
+
+});*/
+
+
 
