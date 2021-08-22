@@ -310,6 +310,26 @@ Route::post("/error-logging", function (Request $request) {
     return response()->json(['message' => 'post successful']);
 });
 
+//Ready to implement once billing set up
+///active/test/1374/404
+//Route::get("/active/test/{id}/{compId}", function ($id, $compId) {
+//    $tag1 = Config::get('constants.TRIAL_TAG');
+//
+//    $newuser = App\User::find($id);
+//
+//    $comp = App\Company::find($compId);
+//    $comp->name = 'Testing Active Campaign';
+//    $comp->save();
+//
+//    $tagUpperCase = ucwords($tag1);
+//
+//    addUpdateContactActiveCampaign($newuser, $tag1, $comp, 'New Company Registration',
+//        'Attempted to add contact with tag: '.$tagUpperCase, 'Succeeded in adding contact with tag: '.$tagUpperCase);
+//
+//    return response()->json(['success' => true]);
+//
+//});
+
 //archived??? used when azure uploads were stored directly to server
 Route::get('/storage/app/public/{file}', function ($file) {
 
@@ -326,6 +346,7 @@ Route::get('/storage/app/public/{file}', function ($file) {
 
 /*Test Routes*/
 
+//todo: remove by end of March
 /*Route::get("/test/runtimes", function(){
 
     $ds = time();
@@ -335,6 +356,8 @@ Route::get('/storage/app/public/{file}', function ($file) {
     $de = time();
 
     $diff = $ds - $de;
+
+    dd($diff);
 
 });*/
 
