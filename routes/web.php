@@ -330,6 +330,33 @@ Route::post("/error-logging", function (Request $request) {
 //
 //});
 
+//Route::get("/active/test/start-paid-subscription", function () {
+//
+//    $user = App\User::find(1374);
+//
+//    $comp = App\Company::find(404);
+//
+//    $removeTag = Config::get('constants.TRIAL_TAG');
+//
+//    $removeTagUpperCase = ucwords($removeTag);
+//
+//    removeTag($user, $removeTag, $comp, 'Start of Paid Subscription',
+//        'Attempted to remove tag: '. $removeTagUpperCase,
+//        'Succeeded in removing tag: '.$removeTagUpperCase);
+//
+//    $addTag = Config::get('constants.PAID_CUSTOMER_TAG');
+//
+//    $addTagUpperCase = ucwords($addTag);
+//
+//    addTag($user, $addTag, $comp, 'Start of Paid Subscription',
+//        'Attempted to add tag: '. $addTagUpperCase,
+//        'Succeeded in adding tag: '.$addTagUpperCase
+//    );
+//
+//    return response()->json(['success' => true]);
+//
+//});
+
 //archived??? used when azure uploads were stored directly to server
 Route::get('/storage/app/public/{file}', function ($file) {
 
