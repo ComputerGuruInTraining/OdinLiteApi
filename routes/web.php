@@ -448,6 +448,8 @@ Route::get('/storage/app/public/{file}', function ($file) {
 //
 //            $shiftResumeId = app('App\Http\Controllers\JobsController')->storeShiftResume('resume', 2124);
 //
+//dd($shiftResumeId);
+//
 });*/
 
 //2104 had shiftId = []
