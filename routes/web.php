@@ -319,24 +319,6 @@ Route::get('/storage/app/public/{file}', function ($file) {
 
 });
 
-//WIP
-/*Route::get("/token/expiry/{userId}", function ($userId) {
-    try {
-        //$expireSoon will be a boolean value, if expires in less than 2 days, value = true else false
-        $expireSoon = app('App\Http\Controllers\CompanyAndUsersApiController')->tokenExpiry($userId);
-
-        return response()->json([
-            'success' => true,
-            'expireSoon' => $expireSoon
-        ]);
-    }catch(Exception $e) {
-        //Exception will catch all errors thrown
-        return response()->json([
-            'success' => false
-        ]);
-    }
-});*/
-
 //I think because the mobile is not a laravel web app, or because it is on a device and the app opens and refreshes everything,
 //the user is not considered logged in.
 /*Route::get('/auth/check', function(){
