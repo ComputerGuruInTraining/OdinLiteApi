@@ -140,12 +140,12 @@ Route::post('/company', function (Request $request) {
         event(new CompanyRegistered($comp));
 
         /****add primary contact to active campaign contacts and add the trial tag to contact****/
-        $tag1 = Config::get('constants.TRIAL_TAG');
+        // $tag1 = Config::get('constants.TRIAL_TAG');
 
-        $tagUpperCase = ucwords($tag1);
+        // $tagUpperCase = ucwords($tag1);
 
-        addUpdateContactActiveCampaign($newuser, $tag1, $comp, 'New Company Registration',
-            'Attempted to add contact with tag: '.$tagUpperCase, 'Succeeded in adding contact with tag: '.$tagUpperCase);
+        // addUpdateContactActiveCampaign($newuser, $tag1, $comp, 'New Company Registration',
+        //     'Attempted to add contact with tag: '.$tagUpperCase, 'Succeeded in adding contact with tag: '.$tagUpperCase);
 
         return response()->json([
             'success' => $newuser,
