@@ -349,28 +349,6 @@ Route::get('/storage/app/public/{file}', function ($file) {
     }
 });*/
 
-/*Route::get('/testduration', function(){
-
-    $start = Carbon::createFromFormat('Y-m-d H:i:s', '2019-04-11 09:00:00');
-    $end = Carbon::createFromFormat('Y-m-d H:i:s', '2019-04-11 11:00:00');
-
-    dd($start->diffInMinutes($end));//120 minutes
-
-
-    dd($start, $end);
-
-});
-
-//Route::get('/testshiftresume', function(){
-//
-//            $shiftResumeId = app('App\Http\Controllers\JobsController')->storeShiftResume('resume', 2124);
-//
-//dd($shiftResumeId);
-//
-});*/
-
-//2104 had shiftId = []
-
 //response alternatives:
 //1. lastShiftIdPerUser has a value and shiftId has a value
 //  (test by last shift has not ended by is in shiftResume for a user)
