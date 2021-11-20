@@ -319,29 +319,6 @@ Route::get('/storage/app/public/{file}', function ($file) {
 
 });
 
-
-//WIP - will soft delete some aspects of company account, but incomplete
-//fixme: change to delete method
-//Route::get('/company/account/remove/{compId}/{userId}', 'CompanyAndUsersApiController@removeAccount');
-
-/*Test Routes*/
-
-//todo: remove by end of March
-/*Route::get("/test/runtimes", function(){
-
-    $ds = time();
-
-    $result = app('App\Http\Controllers\JobsController')->getAssignedShiftsList(404);
-
-    $de = time();
-
-    $diff = $ds - $de;
-
-    dd($diff);
-
-});*/
-
-
 //WIP
 /*Route::get("/token/expiry/{userId}", function ($userId) {
     try {
