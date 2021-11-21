@@ -310,53 +310,6 @@ Route::post("/error-logging", function (Request $request) {
     return response()->json(['message' => 'post successful']);
 });
 
-//Ready to implement once billing set up
-///active/test/1374/404
-//Route::get("/active/test/{id}/{compId}", function ($id, $compId) {
-//    $tag1 = Config::get('constants.TRIAL_TAG');
-//
-//    $newuser = App\User::find($id);
-//
-//    $comp = App\Company::find($compId);
-//    $comp->name = 'Testing Active Campaign';
-//    $comp->save();
-//
-//    $tagUpperCase = ucwords($tag1);
-//
-//    addUpdateContactActiveCampaign($newuser, $tag1, $comp, 'New Company Registration',
-//        'Attempted to add contact with tag: '.$tagUpperCase, 'Succeeded in adding contact with tag: '.$tagUpperCase);
-//
-//    return response()->json(['success' => true]);
-//
-//});
-
-//Route::get("/active/test/start-paid-subscription", function () {
-//
-//    $user = App\User::find(1374);
-//
-//    $comp = App\Company::find(404);
-//
-//    $removeTag = Config::get('constants.TRIAL_TAG');
-//
-//    $removeTagUpperCase = ucwords($removeTag);
-//
-//    removeTag($user, $removeTag, $comp, 'Start of Paid Subscription',
-//        'Attempted to remove tag: '. $removeTagUpperCase,
-//        'Succeeded in removing tag: '.$removeTagUpperCase);
-//
-//    $addTag = Config::get('constants.PAID_CUSTOMER_TAG');
-//
-//    $addTagUpperCase = ucwords($addTag);
-//
-//    addTag($user, $addTag, $comp, 'Start of Paid Subscription',
-//        'Attempted to add tag: '. $addTagUpperCase,
-//        'Succeeded in adding tag: '.$addTagUpperCase
-//    );
-//
-//    return response()->json(['success' => true]);
-//
-//});
-
 //archived??? used when azure uploads were stored directly to server
 Route::get('/storage/app/public/{file}', function ($file) {
 
@@ -612,59 +565,6 @@ Route::get('/storage/app/public/{file}', function ($file) {
 
 });*/
 
-//test routes
-//use the userId sent from the app to get the oauth_access_tokens.id which is the token
-//check the token retrieved from the db with the token sent from the app,
-//if the values match, verified = true
-/*Route::post('/verify/user', function(Request $request){
-
-    try {
-
-        $userId = $request->input('userId');
-        $token = $request->input('token');
-
-        $res = DB::table('oauth_access_tokens')
-            ->select('id')
-            ->where('user_id', '=', $userId)
-            ->where('expires_at', '>=', DB::raw('DATE_ADD(NOW(), INTERVAL 2 DAY)'))
-            ->latest()
-            ->first();
-
-        if($res->id != null) {
-            if ($res->id == $token) {
-                return response()->json([
-                    'verified' => true,
-                    'userId' => $userId,
-                    'token' => $token
-                ]);
-
-            } else {
-                return response()->json([
-                    'verified' => false,
-                    'token' => null
-                ]);
-            }
-        }else{
-
-            return response()->json([
-                'verified' => false,
-                'userId' => null
-            ]);
-        }
-
-    }catch(\Exception $e){
-        //Exception will catch all errors thrown
-        return response()->json(['success' => false]);
-    }
-});*/
-
-
-//Route::get('/lastshiftresumed/{userId}', 'JobsController@getLastShiftResumed');
-
-//Route::get('/commencedshiftdetailstest/{assignedid}/{mobileUserId}', 'JobsController@getCommencedShiftDetails');
-
-//Route::get('/testcheckshiftresume', 'JobsController@checkShiftLastStartedForUser');
-
 //tokenExpiry($userId)
 //Route::get('/testexpirydate/{userId}', 'CompanyAndUsersApiController@tokenExpiry');
 
@@ -674,87 +574,6 @@ Route::get('/storage/app/public/{file}', function ($file) {
 
 
 
-//Route::get('/testverify', function(){
-//
-//try{
-//    //variables sent in request body
-//    $firstName = 'Sample';
-//    $lastName = 'User';
-//    $userId = 2084;
-//
-//    //fixme token expiring process...
-//    //what if expiring in an hour??? we would want them to login again.
-//    //also when start/resume a shift. we need to check when the token will expire
-//    //no, we just need to get a refresh token for them.//todo;
-//
-//    $user = App\User::find($userId);
-//
-//    if(($user->first_name == $firstName)&&($user->last_name == $lastName)){
-//
-//        $expiry = app('App\Http\Controllers\CompanyAndUsersApiController')->tokenExpiry($userId);
-//
-//        $now = Carbon::now();
-//
-//        //convert string to a Carbon datetime object
-//        $expiryCarbon = new Carbon($expiry);
-//
-//        $days = $now->diffInDays($expiryCarbon);
-//
-//        if($days > 2){
-//
-//            $expiresSoon = false;
-//        }else{
-//
-//            $expiresSoon = true;
-//        }
-//
-//        dd($days, $expiresSoon);
-//
-//        //$user details match the request details
-//        return response()->json([
-//            'success' => true,
-//            'valid' => true
-//        ]);
-//
-//    }else{
-//        //user is not validated
-//        return response()->json([
-//            'success' => true,
-//            'valid' => false
-//        ]);
-//
-//
-//    }
-//}catch (\Exception $e) {
-//    //Exception will catch all errors thrown
-//    return response()->json([
-//        'success' => false
-//    ]);
-//}
-//
-//});
-
-
-
-/*Route::get("/map/{userId}/{shiftId}/shift-positions", function ($userId, $shiftId) {
-
-
-    $res = DB::table('current_user_locations')
-        ->select('current_user_locations.mobile_user_id', 'current_user_locations.address',
-            'current_user_locations.latitude', 'current_user_locations.longitude',
-            'current_user_locations.shift_id', 'current_user_locations.user_first_name',
-            'current_user_locations.user_last_name', 'current_user_locations.location_id',
-            'current_user_locations.created_at')
-        ->where('current_user_locations.mobile_user_id', '=', $userId)
-        ->where('current_user_locations.shift_id', '=', $shiftId)
-        ->get();
-
-//    $count = $res->count();
-
-//    return response()->json($count);
-    return response()->json($res);
-
-});*/
 
 
 //Route::get("/reports/list/test/{compId}", 'ReportApiController@getReportList');
